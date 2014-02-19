@@ -20,39 +20,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef UTILS
-#define UTILS
+#ifndef __UTILS_H
+#define __UTILS_H
 
 #include "mytypes.h"
 
-extern int bits(int);
-extern int sprintnbits(char *,WORD32,int);
-extern WORD32 pack32(BYTE*);
-extern void unpack32(WORD32,BYTE *);
-extern SIGNED16 pack16(BYTE*);
-extern void unpack16(SIGNED16,BYTE *);
-extern WORD64 pack(BYTE*);
-extern void unpack(WORD64,BYTE *);
-extern void sprintword32(char *,WORD32);
-extern void sprintdouble(char *,double);
-extern void sprintword(char *,WORD64);
-extern BOOL in_range(WORD32,WORD32);
-extern BOOL delimiter(int);
-extern int compare(const char*,const char *);
-extern const char *skip(const char *,char);
-extern const char *skipover(const char *,char);
-extern int is_symbol(const char *);
-extern const char *eatwhite(const char *);
-extern int fgetreg(const char *&);
-extern int alignment(int,int);
-extern int getreg(const char *&);
-extern WORD64 strtoint64(char *,char **,int);
-extern BOOL getdouble(const char *&ptr,double *);
-extern BOOL getfullnum(const char *&,WORD64 *);
-extern BOOL getnum(const char *&,WORD32 *);
-extern BOOL getsym(symbol_table *,int,const char *&,WORD32 *);
-extern void init_processor(processor *,int,int);
-extern void init_pipeline(pipeline *,int,int,int);
-extern int clock_tick(pipeline *,processor *,BOOL,BOOL,BOOL,RESULT *);
+int bits(int);
+int sprintnbits(char *,WORD32,int);
+WORD32 pack32(BYTE*);
+void unpack32(WORD32,BYTE *);
+SIGNED16 pack16(BYTE*);
+void unpack16(SIGNED16,BYTE *);
+WORD64 pack(BYTE*);
+void unpack(WORD64,BYTE *);
+void sprintword32(char *,WORD32);
+void sprintdouble(char *,double);
+void sprintword(char *,WORD64);
+BOOL in_range(WORD32,WORD32);
+BOOL delimiter(int);
+int compare(const char*,const char *);
+const char *skip(const char *,char);
+const char *skipover(const char *,char);
+int is_symbol(const char *);
+const char *eatwhite(const char *);
+int fgetreg(const char *&);
+int alignment(int,int);
+int getreg(const char *&);
+WORD64 strtoint64(char *,char **,int);
+BOOL getdouble(const char *&ptr,double *);
+BOOL getfullnum(const char *&,WORD64 *);
+BOOL getnum(const char *&,WORD32 *);
+BOOL getsym(symbol_table *,int,const char *&,WORD32 *);
+void init_processor(processor *,int,int);
+void init_pipeline(pipeline *,int,int,int);
+int clock_tick(pipeline *,processor *,BOOL,BOOL,BOOL,RESULT *);
 
 #endif

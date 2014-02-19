@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef MY_TYPES
-#define MY_TYPES
+#ifndef __MY_TYPES_H
+#define __MY_TYPES_H
 
 //
 // Useful types
@@ -253,8 +253,7 @@ typedef union {
 #define F_C_LE_D        0x3E
 #define F_C_EQ_D        0x32
 
-typedef struct
-{
+typedef struct {
     const char *name;
     BYTE type;
     BYTE subtype;
@@ -275,8 +274,7 @@ typedef struct
 #define STEP 8
 #define MASK -1
 
-typedef struct
-{
+typedef struct {
 	int IF;
 	int ID;
 	int EX;
@@ -294,29 +292,25 @@ typedef struct
 
 } RESULT;
 
-typedef struct
-{
+typedef struct {
     char *symb;
     BYTE type;
     WORD32 value;
 } symbol_table;
 
-struct
-{
+typedef struct {
     int type,function,opcode,tf,target;
     int rs,rt,rd;
 	int src1,src2;
     SIGNED32 Imm;
-} typedef instruction;
+} instruction;
 
-struct
-{
+typedef struct {
     WORD64 val;
     SIGNED32 source;
-} typedef reg;
+} reg;
 
-struct
-{
+typedef struct {
 	int    status;
 	WORD32 codesize;
 	WORD32 datasize;
@@ -335,19 +329,17 @@ struct
     reg    rreg[64];
     reg    wreg[64];
 	BOOL fp_cc;
-} typedef processor;
+} processor;
 
-struct 
-{
+typedef struct {
     WORD32 IR;  /* pointer to instruction in memory */
     instruction ins;
     WORD32 NPC;
     BOOL active;
 	BOOL predicted;
-} typedef if_id_reg;
+} if_id_reg;
 
-struct 
-{
+typedef struct {
     WORD32 IR;
     instruction ins;
     int rA,rB;
@@ -356,10 +348,9 @@ struct
     SIGNED32 Imm;
     BOOL active;
     int cycles;
-} typedef id_ex_reg;
+} id_ex_reg;
 
-struct 
-{
+typedef struct {
     WORD32 IR;
     instruction ins;
     int rB;
@@ -367,20 +358,18 @@ struct
     WORD32 NPC;
     BOOL active;
 	BOOL condition;
-} typedef ex_mem_reg;
+} ex_mem_reg;
 
-struct
-{
+typedef struct {
     WORD32 IR;
     instruction ins;
     WORD64 ALUOutput,LMD;
     WORD32 NPC;
     BOOL active;
 	BOOL condition;
-} typedef mem_wb_reg;
+} mem_wb_reg;
 
-struct 
-{
+typedef struct {
     BOOL active;
 	BOOL halting;
     BOOL   branch;
@@ -396,20 +385,18 @@ struct
     id_ex_reg div;
     ex_mem_reg ex_mem;
     mem_wb_reg  mem_wb;
-} typedef pipeline;
+} pipeline;
 
-struct
-{
+typedef struct {
 	BYTE stage;
 	BYTE substage;
 	BYTE cause;
-} typedef entry;
+} entry;
 
-struct
-{
+typedef struct {
 	WORD32 IR;
 	WORD32 start_cycle;
 	entry status[500];
-} typedef record;
+} record;
 
 #endif
