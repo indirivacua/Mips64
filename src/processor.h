@@ -23,9 +23,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __PROCESSOR_H
 #define __PROCESSOR_H
 
+#include <string>
+
 #include "utils.h"
 #include "mytypes.h"
-#include <string>
+
 
 #define MAX_PATH 200
 
@@ -52,142 +54,135 @@ typedef void *CCmdUI;
 #define SYMTABSIZE 1000
 
 class CWinEVEDoc {
-public: // create from serialization only
-	CWinEVEDoc();
+ public: // create from serialization only
+  CWinEVEDoc();
 
-// Attributes
-public:
-	char AppDir[MAX_PATH+1];
-	char LasDir[MAX_PATH+1];
-	CString *codelines;
-	CString *datalines;
-	CString *assembly;
-	CString *mnemonic;
-	CString lastfile;
+  // Attributes
+ protected:
+  char AppDir[MAX_PATH+1];
+  char LasDir[MAX_PATH+1];
+  CString *codelines;
+  CString *datalines;
+  CString *assembly;
+  CString *mnemonic;
+  CString lastfile;
+  
+  unsigned int CODESIZE;
+  unsigned int DATASIZE;
+  
+  processor cpu;
+  pipeline pipe;
+  
+  BOOL forwarding;
+  BOOL delay_slot;
+  BOOL branch_target_buffer;
+  
+  symbol_table code_table[SYMTABSIZE];
+  symbol_table data_table[SYMTABSIZE];
+  unsigned int codeptr;
+  unsigned int dataptr;
+  
+  unsigned int code_symptr;
+  unsigned int data_symptr;
+  int CODEORDATA;
+  unsigned int cycles;
+  unsigned int instructions;
+  unsigned int loads;
+  unsigned int stores;
+  unsigned int branch_taken_stalls;
+  unsigned int branch_misprediction_stalls;
+  unsigned int raw_stalls;
+  unsigned int waw_stalls;
+  unsigned int war_stalls;
+  unsigned int structural_stalls;
+  
+  int multi;
+  unsigned int ADD_LATENCY;
+  unsigned int MUL_LATENCY;
+  unsigned int DIV_LATENCY;
+  
+  BOOL simulation_running;
+  BOOL restart;
+  int stall_type;
+  int stalls;
+  int amount;
+  
+  record history[50];
+  WORD32 entries;
+  WORD32 offset;
+  
+  // Operations
+ public:
+  
+  // Overrides
+ public:
+  virtual BOOL OnNewDocument();
+  
+  // Implementation
+ public:
+  virtual ~CWinEVEDoc();
 
-	unsigned int CODESIZE;
-	unsigned int DATASIZE;
+  int mygets(char *, int, FILE *);
+  BOOL openit(CString);
+  int openfile(CString);
+  
+ protected:
+  BOOL getcodesym(const char *&,WORD32 *);
+  BOOL getdatasym(const char *&,WORD32 *);
+  int instruction(const char *);
+  BOOL directive(int, const char *, const char *);
+  int first_pass(const char *,int);
+  int second_pass(const char *,int);
+  void process_result(RESULT *,BOOL);
+  void clear();
+  int one_cycle(pipeline *,processor *,BOOL);
+  void check_stalls(int,const char *,int,char *);
+  void update_history(pipeline *,processor *,RESULT *);
+  int update_io(processor *);
+  
+  // Generated message map functions
+ protected:
+ public:
+  //{{AFX_MSG(CWinEVEDoc)
+  afx_msg void OnFileReset();
+  afx_msg void OnFileOpen();
+  afx_msg void OnExecuteSingle();
+  afx_msg void OnFileMemory();
+  afx_msg void OnExecuteMulticycle();
+  afx_msg void OnFileMulti();
+  afx_msg void OnExecuteRunto();
+  afx_msg void OnExecuteStop();
+  afx_msg void OnUpdateExecuteStop(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateExecuteRunto(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateExecuteSingle(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateExecuteMulticycle(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateFileMulti(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateFileMemory(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateFileOpen(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateFileReset(CCmdUI* pCmdUI);
+  afx_msg void OnUpdateExecuteInterrupt(CCmdUI* pCmdUI);
+  afx_msg void OnFullReset();
+  afx_msg void OnUpdateFullReset(CCmdUI* pCmdUI);
+  afx_msg int OnReload();
+  afx_msg void OnUpdateReload(CCmdUI* pCmdUI);
+  afx_msg void OnConfigureWordlength();
+  afx_msg void OnFileDelaySlot();
+  afx_msg void OnUpdateFileDelaySlot(CCmdUI* pCmdUI);
+  afx_msg void OnFileForwarding();
+  afx_msg void OnUpdateFileForwarding(CCmdUI* pCmdUI);
+  afx_msg void OnBtb();
+  afx_msg void OnUpdateBtb(CCmdUI* pCmdUI);
+  //}}AFX_MSG
+  
+ public:
+  void dump_mem();
+  void dump_reg();
+  void dump_Terminal();
+  void show_stats();
+  void show_screen();
+  
+  const int isRunning() { return !(cpu.status == HALTED); }
 
-	processor cpu;
-    pipeline pipe;
-
-	BOOL forwarding;
-	BOOL delay_slot;
-	BOOL branch_target_buffer;
-
-	symbol_table code_table[SYMTABSIZE];
-	symbol_table data_table[SYMTABSIZE];
-	unsigned int codeptr;
-	unsigned int dataptr;
-
-	unsigned int code_symptr;
-	unsigned int data_symptr;
-	int CODEORDATA;
-	unsigned int cycles;
-	unsigned int instructions;
-	unsigned int loads;
-	unsigned int stores;
-	unsigned int branch_taken_stalls;
-	unsigned int branch_misprediction_stalls;
-	unsigned int raw_stalls;
-	unsigned int waw_stalls;
-	unsigned int war_stalls;
-	unsigned int structural_stalls;
-
-	int multi;
-	unsigned int ADD_LATENCY;
-	unsigned int MUL_LATENCY;
-	unsigned int DIV_LATENCY;
-	
-	BOOL simulation_running;
-	BOOL restart;
-	int stall_type;
-	int stalls;
-	int amount;
-
-	record history[50];
-	WORD32 entries;
-	WORD32 offset;
-
-// Operations
-public:
-
-// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CWinEVEDoc)
-	public:
-	virtual BOOL OnNewDocument();
-	//virtual void Serialize(CArchive& ar);
-	//}}AFX_VIRTUAL
-
-// Implementation
-public:
-	virtual ~CWinEVEDoc();
-#ifdef _DEBUG
-	virtual void AssertValid() const;
-	virtual void Dump(CDumpContext& dc) const;
-#endif
-	int mygets(char *, int, FILE *);
-	BOOL openit(CString);
-	int openfile(CString);
-
-protected:
-	BOOL getcodesym(const char *&,WORD32 *);
-	BOOL getdatasym(const char *&,WORD32 *);
-	int instruction(const char *);
-	BOOL directive(int, const char *, const char *);
-	int first_pass(const char *,int);
-	int second_pass(const char *,int);
-	void process_result(RESULT *,BOOL);
-	void clear();
-	int one_cycle(pipeline *,processor *,BOOL);
-	void check_stalls(int,const char *,int,char *);
-	void update_history(pipeline *,processor *,RESULT *);
-	int update_io(processor *);
-
-// Generated message map functions
-protected:
-public:
-	//{{AFX_MSG(CWinEVEDoc)
-	afx_msg void OnFileReset();
-	afx_msg void OnFileOpen();
-	afx_msg void OnExecuteSingle();
-	afx_msg void OnFileMemory();
-	afx_msg void OnExecuteMulticycle();
-	afx_msg void OnFileMulti();
-	afx_msg void OnExecuteRunto();
-	afx_msg void OnExecuteStop();
-	afx_msg void OnUpdateExecuteStop(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateExecuteRunto(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateExecuteSingle(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateExecuteMulticycle(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateFileMulti(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateFileMemory(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateFileOpen(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateFileReset(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateExecuteInterrupt(CCmdUI* pCmdUI);
-	afx_msg void OnFullReset();
-	afx_msg void OnUpdateFullReset(CCmdUI* pCmdUI);
-	afx_msg int OnReload();
-	afx_msg void OnUpdateReload(CCmdUI* pCmdUI);
-	afx_msg void OnConfigureWordlength();
-	afx_msg void OnFileDelaySlot();
-	afx_msg void OnUpdateFileDelaySlot(CCmdUI* pCmdUI);
-	afx_msg void OnFileForwarding();
-	afx_msg void OnUpdateFileForwarding(CCmdUI* pCmdUI);
-	afx_msg void OnBtb();
-	afx_msg void OnUpdateBtb(CCmdUI* pCmdUI);
-	//}}AFX_MSG
-
-public:
-	void dump_mem();
-	void dump_reg();
-	void dump_Terminal();
-	void show_stats();
-	void show_screen();
-	const int isRunning() { return !(cpu.status==HALTED); }
 };
 
 #endif
-
-
