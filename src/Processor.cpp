@@ -34,12 +34,12 @@ Processor::Processor() {
 }
 
 Processor::~Processor() {
-	delete code;
-	delete cstat;
+	delete[] code;
+	delete[] cstat;
 
-	delete data;
-	delete dstat;
-	delete screen;
+	delete[] data;
+	delete[] dstat;
+	delete[] screen;
 }
 
 void Processor::initialize(int codesize, int datasize) {
