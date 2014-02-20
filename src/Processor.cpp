@@ -20,7 +20,6 @@ Processor::~Processor() {
 }
 
 void Processor::initialize(int codesize, int datasize) {
-    int i;
     this->codesize = codesize;
     this->datasize = datasize;
 

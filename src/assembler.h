@@ -1,6 +1,8 @@
 #ifndef __ASSEMBLER_H
 #define __ASSEMBLER_H
 
+#define SYMTABSIZE 1000
+
 typedef struct {
     char *symb;
     BYTE type;

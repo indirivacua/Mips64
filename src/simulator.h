@@ -32,11 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "assembler.h"
 
 
-#define MAX_PATH 200
-
-#define MAX_LINE 200
-
-
 #define MIN_CODEBITS 8
 #define MAX_CODEBITS 13
 #define MIN_DATABITS 4
@@ -47,8 +42,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MAX_MUL_LATENCY 8
 #define MIN_DIV_LATENCY 10
 #define MAX_DIV_LATENCY 30
-
-#define SYMTABSIZE 1000
 
 class Simulator {
  public: // create from serialization only

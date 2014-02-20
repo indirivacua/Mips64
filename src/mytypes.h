@@ -31,6 +31,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <string>
 
+#define MAX_PATH 200
+#define MAX_LINE 200
+
 #define FALSE 0
 #define TRUE 1
 
