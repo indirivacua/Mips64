@@ -53,7 +53,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MEMORY  7
 #define WRITEB  8
 
+typedef struct {
+	BYTE stage;
+	BYTE substage;
+	BYTE cause;
+} entry;
 
+typedef struct {
+	WORD32 IR;
+	WORD32 start_cycle;
+	entry status[500];
+} record;
 
 class Simulator {
  public: // create from serialization only

@@ -1,9 +1,72 @@
+/*
+
+Mips64 - A portable WinMIPS64 wannabe replacement
+
+Copyright (C) 2003-2013 Mike Scott <mscott@indigo.ie>
+Copyright (C) 2014 Andoni Zubimendi <andoni.zubimendi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation version 2.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+*/
+
 #ifndef __PIPELINE_H
 #define __PIPELINE_H
 
-#define READ 0
-#define WRITE 1
-#define BOTH 2
+#define READ   0
+#define WRITE  1
+#define BOTH   2
+
+/* pipeline stage status */
+
+#define NOT_A_BRANCH 0
+#define BRANCH_TAKEN 1
+#define BRANCH_NOT_TAKEN 2
+
+// stalls...
+
+#define RAW			1
+#define WAW			2 
+#define STALLED		3
+#define HALTED		4
+#define STRUCTURAL	5
+#define WAR         6
+#define BRANCH_TAKEN_STALL 7
+#define BRANCH_MISPREDICTED_STALL 8
+
+// advisories....
+
+#define DATA_ERR	9
+#define EMPTY		10
+#define DIVIDE_BY_ZERO   11
+#define INTEGER_OVERFLOW 12
+#define NO_SUCH_DATA_MEMORY   13
+#define LOADS		14
+#define STORES		15
+#define NO_SUCH_CODE_MEMORY		16
+#define DATA_MISALIGNED 17
+#define WAITING_FOR_INPUT 18
+
+/* register status */
+
+#define NOT_AVAILABLE  0
+#define FROM_REGISTER  1
+#define FROM_MEM       2
+#define FROM_EX        3
+#define FROM_ID        4
+#define FROM_ADD       5
+#define FROM_MUL       6
+#define FROM_DIV       7
 
 typedef struct {
     WORD32 IR;  /* pointer to instruction in memory */

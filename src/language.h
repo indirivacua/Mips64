@@ -1,3 +1,25 @@
+/*
+
+Mips64 - A portable WinMIPS64 wannabe replacement
+
+Copyright (C) 2003-2013 Mike Scott <mscott@indigo.ie>
+Copyright (C) 2014 Andoni Zubimendi <andoni.zubimendi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation version 2.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+*/
+
 #ifndef __LANGUAGE_H
 #define __LANGUAGE_H
 
@@ -117,8 +139,12 @@
 #define SBC1F (I_COP1 << 26 | I_BC << 21)
 #define SBC1T (I_COP1 << 26 | I_BC << 21 | 1 << 16)  
 
-
-
+typedef struct {
+    const char *name;
+    BYTE type;
+    BYTE subtype;
+    WORD32 op_code;
+} op_code_info;
 
 extern const char *directives[];
 extern op_code_info codes[];

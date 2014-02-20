@@ -85,55 +85,7 @@ typedef union {
 	double d;
 } DOUBLE64;
 
-/* pipeline stage status */
-
-#define NOT_A_BRANCH 0
-#define BRANCH_TAKEN 1
-#define BRANCH_NOT_TAKEN 2
-
 #define OK			0
-
-// stalls...
-
-#define RAW			1
-#define WAW			2 
-#define STALLED		3
-#define HALTED		4
-#define STRUCTURAL	5
-#define WAR         6
-#define BRANCH_TAKEN_STALL 7
-#define BRANCH_MISPREDICTED_STALL 8
-
-// advisories....
-
-#define DATA_ERR	9
-#define EMPTY		10
-#define DIVIDE_BY_ZERO   11
-#define INTEGER_OVERFLOW 12
-#define NO_SUCH_DATA_MEMORY   13
-#define LOADS		14
-#define STORES		15
-#define NO_SUCH_CODE_MEMORY		16
-#define DATA_MISALIGNED 17
-#define WAITING_FOR_INPUT 18
-
-/* register status */
-
-#define NOT_AVAILABLE  0
-#define FROM_REGISTER  1
-#define FROM_MEM       2
-#define FROM_EX        3
-#define FROM_ID        4
-#define FROM_ADD       5
-#define FROM_MUL       6
-#define FROM_DIV       7
-
-typedef struct {
-    const char *name;
-    BYTE type;
-    BYTE subtype;
-    WORD32 op_code;
-} op_code_info;
 
 #define CODE 1
 #define DATA 2
@@ -166,24 +118,6 @@ typedef struct {
     SIGNED32 Imm;
 } instruction;
 
-typedef struct {
-    WORD64 val;
-    SIGNED32 source;
-} reg;
-
-typedef struct {
-	BYTE stage;
-	BYTE substage;
-	BYTE cause;
-} entry;
-
-typedef struct {
-	WORD32 IR;
-	WORD32 start_cycle;
-	entry status[500];
-} record;
-
 #define GSXY 50
-
 
 #endif
