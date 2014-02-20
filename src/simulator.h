@@ -185,7 +185,7 @@ class Simulator {
   void show_stats();
   void show_screen();
   
-  const int isRunning() { return !(cpu.getStatus() == HALTED); }
+  int isRunning() const { return !(cpu.getStatus() == HALTED); }
 
 };
 

@@ -1,9 +1,12 @@
 CXXFLAGS = -Wall
 
+OBJS :=  pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.o \
+	CodeMemory.o DataMemory.o Memory.o
+
 all: mips64
 
-mips64: pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.o
-	g++ -o mips64 pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.o -lcurses
+mips64: $(OBJS)
+	g++ -o mips64 $(OBJS) -lcurses
 
 pipeline.o: pipeline.cpp utils.h mytypes.h
 

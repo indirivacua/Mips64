@@ -25,6 +25,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "mytypes.h"
 
+#include "DataMemory.h"
+#include "CodeMemory.h"
+
+
 #define RUNNING 0
 #define STOPPED 1
 
@@ -40,22 +44,24 @@ class Processor {
 
 public:
   Processor();
-  ~Processor();
+  virtual ~Processor();
 
   void initialize(int, int);
   void reset(BOOL = false);
 
-  const WORD32 getPC() { return PC; }
+  WORD32 getPC() const { return PC; }
   BOOL setPC(WORD32);
 
-  const int getStatus() { return this->status; }
+  int getStatus() const { return this->status; }
   BOOL setStatus(int state) { this->status = state; return TRUE;}
 
   BYTE   *code;
   BYTE   *cstat;
+  //CodeMemory *code;
 
   BYTE   *data;
   BYTE   *dstat;
+  //DataMemory *data;
 
   BYTE   mm[16];
 
@@ -66,7 +72,7 @@ public:
   BOOL drawit;
   WORD32 keyboard;
 
-  const WORD32 *getScreen() { return screen; }
+  WORD32 *getScreen() const { return screen; }
   BOOL setScreenPixel(int x, int y, WORD32 color);
   BOOL clearScreen();
 
