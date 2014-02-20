@@ -20,9 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-// WinEVEDoc.cpp : implementation of the Simulator class
-//
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
