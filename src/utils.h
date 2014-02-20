@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __UTILS_H
 #define __UTILS_H
 
-#include "mytypes.h"
-
 int bits(int);
 int sprintnbits(char *,WORD32,int);
 WORD32 pack32(BYTE*);

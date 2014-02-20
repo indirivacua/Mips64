@@ -29,9 +29,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <iostream>
 
-#include "simulator.h"
+#include "mytypes.h"
 #include "utils.h"
+#include "Processor.h"
 #include "pipeline.h"
+#include "simulator.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
@@ -287,7 +289,7 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
 	}
 }
 
-void Simulator::process_result(RESULT *result,BOOL show)
+void Simulator::process_result(RESULT *result, BOOL show)
 {
 	char txt[300];
 	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;

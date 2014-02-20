@@ -3,10 +3,9 @@
 
 #include "mytypes.h"
 
-#define MMIO 0x10000
-
 
 // HACER: Descablear MMIO de todo el codigo
+#define MMIO 0x10000
 
 class Processor {
 

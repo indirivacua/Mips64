@@ -67,8 +67,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <string.h>
 #include <stdlib.h>
 
+#include "mytypes.h"
 #include "utils.h"
+#include "Processor.h"
+#include "language.h"
 #include "pipeline.h"
+
+#include "assembler.h"
 
 /* get instruction type */
 
