@@ -1,6 +1,10 @@
 #ifndef __PIPELINE_H
 #define __PIPELINE_H
 
+#define READ 0
+#define WRITE 1
+#define BOTH 2
+
 typedef struct {
     WORD32 IR;  /* pointer to instruction in memory */
     instruction ins;

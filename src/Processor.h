@@ -3,6 +3,8 @@
 
 #include "mytypes.h"
 
+#define RUNNING 0
+#define STOPPED 1
 
 // HACER: Descablear MMIO de todo el codigo
 #define MMIO 0x10000
@@ -45,7 +47,6 @@ public:
   BOOL clearTerminal() { this->terminal = ""; return TRUE; }  
   BOOL emptyTerminal() { return this->terminal == ""; }
   const std::string &getTerminal() { return this->terminal; }
-
 
   const BOOL isValidDataMemoryAddress(WORD32 addr);
   const BOOL isValidCodeMemoryAddress(WORD32 addr);

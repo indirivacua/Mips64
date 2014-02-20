@@ -43,6 +43,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MIN_DIV_LATENCY 10
 #define MAX_DIV_LATENCY 30
 
+// Stages
+#define IFETCH  1
+#define IDECODE 2
+#define INTEX   3
+#define ADDEX   4
+#define MULEX   5
+#define DIVEX   6
+#define MEMORY  7
+#define WRITEB  8
+
+
+
 class Simulator {
  public: // create from serialization only
   Simulator();

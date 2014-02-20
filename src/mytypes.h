@@ -23,13 +23,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __MY_TYPES_H
 #define __MY_TYPES_H
 
+#include <stdint.h>
+#include <string>
+
 //
 // Useful types
 //
-
-#include <stdint.h>
-
-#include <string>
 
 #define MAX_PATH 200
 #define MAX_LINE 200
@@ -37,13 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define FALSE 0
 #define TRUE 1
 
-#define READ 0
-#define WRITE 1
-#define BOTH 2
-
-#define ENDLINE 1
-#define SPACE   2
-#define COMMENT 3
+#define RGB(R,G,B) (((R) << 16) + ((G) << 8) + (B))
 
 // Data Memory Status
 #define VACANT  0
@@ -54,25 +47,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // 1 => BreakPoint set
 // 2 => Branch Prediction ?
 // 4 => ERROR 
-
-#define RUNNING 0
-#define STOPPED 1
-
-#define INT 0
-#define ADD 1
-#define MUL 2
-#define DIV 3
-
-// Stages
-
-#define IFETCH  1
-#define IDECODE 2
-#define INTEX   3
-#define ADDEX   4
-#define MULEX   5
-#define DIVEX   6
-#define MEMORY  7
-#define WRITEB  8
 
 #define WHITE  RGB(255,255,255)
 #define BLACK  RGB(0,0,0)
@@ -210,6 +184,6 @@ typedef struct {
 } record;
 
 #define GSXY 50
-#define RGB(R,G,B) (((R) << 16) + ((G) << 8) + (B))
+
 
 #endif

@@ -3,6 +3,10 @@
 
 #define SYMTABSIZE 1000
 
+#define ENDLINE 1
+#define SPACE   2
+#define COMMENT 3
+
 typedef struct {
     char *symb;
     BYTE type;
