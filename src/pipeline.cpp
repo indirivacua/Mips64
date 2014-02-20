@@ -66,11 +66,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+
 #include "utils.h"
+#include "pipeline.h"
 
 /* get instruction type */
 
-#define MMIO 0x10000
+void init_pipeline(pipeline *pipe,int ADDS, int MULS, int DIVS) {
+  int i;
+  pipe->branch = FALSE;
+  pipe->destination = 0;
+  pipe->ADD_LATENCY = ADDS;
+  pipe->MUL_LATENCY = MULS;
+  pipe->DIV_LATENCY = DIVS;
+
+  pipe->if_id.active = FALSE;
+  pipe->integer.active = FALSE;
+  pipe->ex_mem.active = FALSE;
+  pipe->mem_wb.active = FALSE;
+  for (i = 0; i < ADDS; i++)
+    pipe->a[i].active = FALSE;
+  for (i = 0; i < MULS; i++)
+    pipe->m[i].active = FALSE;
+  pipe->div.active = FALSE;
+  pipe->div.cycles = 0;
+  pipe->active = TRUE;
+  pipe->halting = FALSE;
+  pipe->mem_wb.condition = TRUE;
+  pipe->ex_mem.condition = TRUE;
+}
 
 static int get_type(WORD32 instruct)
 {
@@ -283,14 +307,14 @@ static int parse(WORD32 instruct,instruction *ins)
     return type;
 }
 
-static BOOL available(processor *cpu,int r)
+static BOOL available(Processor *cpu,int r)
 {
     if (r==0) return TRUE;
     if (cpu->rreg[r].source<=NOT_AVAILABLE) return FALSE;
     return TRUE;
 }
 
-static void unavail(processor *cpu,int type,int r)
+static void unavail(Processor *cpu,int type,int r)
 {
 	if (type==READ || type == BOTH)
 	{
@@ -306,7 +330,7 @@ static void unavail(processor *cpu,int type,int r)
 	} 
 }
 
-static void make_available(processor *cpu,int r,WORD64 lmd)
+static void make_available(Processor *cpu,int r,WORD64 lmd)
 {
 	if (cpu->rreg[r].source<NOT_AVAILABLE)
 		cpu->rreg[r].source++;
@@ -388,7 +412,7 @@ static BOOL waw(pipeline *pipe,int type,int function,int r)
     return FALSE;
 }
 
-static int IF(pipeline *pipe,processor *cpu,BOOL delay_slot,BOOL branch_target_buffer)
+static int IF(pipeline *pipe,Processor *cpu,BOOL delay_slot,BOOL branch_target_buffer)
 {
     int /*type,*/status;
     instruction ins;
@@ -408,8 +432,8 @@ static int IF(pipeline *pipe,processor *cpu,BOOL delay_slot,BOOL branch_target_b
 */
     if (pipe->active)
     {
-        pipe->if_id.IR=cpu->PC;
-        codeword=*(WORD32 *)&cpu->code[cpu->PC];
+        pipe->if_id.IR=cpu->getPC();
+        codeword=*(WORD32 *)&cpu->code[cpu->getPC()];
         /*type=*/parse(codeword,&ins);
     }
     else
@@ -434,12 +458,12 @@ static int IF(pipeline *pipe,processor *cpu,BOOL delay_slot,BOOL branch_target_b
 
 /* check for branches */ 
     
-	pipe->if_id.NPC=cpu->PC+4;
+	pipe->if_id.NPC=cpu->getPC()+4;
 	pipe->if_id.predicted=FALSE;
 
-	if (!pipe->branch && branch_target_buffer && (cpu->cstat[cpu->PC]&2))
+	if (!pipe->branch && branch_target_buffer && (cpu->cstat[cpu->getPC()]&2))
 	{ // predict branch taken
-		pipe->if_id.NPC = cpu->PC+4+4*ins.Imm;
+		pipe->if_id.NPC = cpu->getPC()+4+4*ins.Imm;
 		pipe->if_id.predicted=TRUE;
 
 	}
@@ -448,13 +472,13 @@ static int IF(pipeline *pipe,processor *cpu,BOOL delay_slot,BOOL branch_target_b
 		if (pipe->branch && pipe->active) pipe->if_id.NPC=pipe->destination;
 	}
 	status=OK;
-	if (pipe->if_id.NPC>=cpu->codesize)
+	if (!cpu->isValidCodeMemoryAddress(pipe->if_id.NPC))
 	{
 		status=NO_SUCH_CODE_MEMORY;
 		pipe->active=FALSE;
 //		pipe->halting=TRUE;
 	}
-    else cpu->PC=pipe->if_id.NPC;
+    else cpu->setPC(pipe->if_id.NPC);
 
     pipe->branch=FALSE;
  
@@ -500,7 +524,7 @@ static BOOL already_waitedfor(pipeline *pipe,int reg)
 	return FALSE;
 }
 
-static int ID(pipeline *pipe,processor *cpu,BOOL forwarding,BOOL branch_target_buffer,int *rawreg)
+static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_buffer,int *rawreg)
 {
     int status,type,branch_status;
     instruction ins;
@@ -882,7 +906,7 @@ static int ID(pipeline *pipe,processor *cpu,BOOL forwarding,BOOL branch_target_b
     return status;
 }
 
-static int EX_DIV(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
+static int EX_DIV(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg)
 {
 	int rA,rB /*,DIVS*/;
     instruction ins;  
@@ -971,7 +995,7 @@ static int EX_DIV(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
 // Note that both the instruction at the front AND the instruction at the back
 // can suffer stalls... so seperate status for each 
 
-static void EX_MUL(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg,int *status)
+static void EX_MUL(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg,int *status)
 {
 	int i,rA,rB,MULS;
 	instruction ins;
@@ -1060,7 +1084,7 @@ static void EX_MUL(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg,int
 
 }
 
-static void EX_ADD(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg,int *status)
+static void EX_ADD(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg, int *status)
 {
 	int i,rA,rB,ADDS;
 	instruction ins;
@@ -1142,7 +1166,7 @@ static void EX_ADD(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg,int
 
 }
 
-static int EX_INT(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
+static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 {
     int rA,rB,opcode,type,function;
 	SIGNED64 rlt;
@@ -1462,7 +1486,7 @@ static int EX_INT(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
     return status;
 }
 
-static int MEM(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
+static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 {
     int i,opcode,function,status,type,rB;
     instruction ins; 
@@ -1493,7 +1517,7 @@ static int MEM(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
 		status=LOADS;
 		unavail(cpu,BOTH,ins.rt);
       
-		if (ptr>=cpu->datasize && (ptr<MMIO || ptr>=MMIO+16))
+		if (!cpu->isValidDataMemoryAddress(ptr))
 		{
 			pipe->mem_wb.LMD=0;
 			status=NO_SUCH_DATA_MEMORY;
@@ -1633,7 +1657,7 @@ static int MEM(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
         if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
 		status=STORES;
 	
-		if (ptr>=cpu->datasize && (ptr<MMIO || ptr>=MMIO+16))
+		if (!cpu->isValidDataMemoryAddress(ptr))
 		{
 			status=NO_SUCH_DATA_MEMORY;
 		}
@@ -1728,7 +1752,7 @@ static int MEM(pipeline *pipe,processor *cpu,BOOL forwarding,int *rawreg)
    read and write registers
 */
 
-static int WB(pipeline *pipe,processor *cpu,BOOL forwarding)
+static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
 {
     int status,type;
 	BOOL condition;
@@ -1835,7 +1859,7 @@ static int WB(pipeline *pipe,processor *cpu,BOOL forwarding)
     return status;
 }
 
-int clock_tick(pipeline *pipe,processor *mips,BOOL forwarding,BOOL delay_slot,BOOL branch_target_buffer,RESULT *result)
+int clock_tick(pipeline *pipe, Processor *mips,BOOL forwarding,BOOL delay_slot,BOOL branch_target_buffer,RESULT *result)
 {
 
     int i,status;

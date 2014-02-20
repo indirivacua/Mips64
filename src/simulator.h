@@ -20,25 +20,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef __PROCESSOR_H
-#define __PROCESSOR_H
+#ifndef __SIMULATOR_H
+#define __SIMULATOR_H
 
 #include <string>
 
-#include "utils.h"
 #include "mytypes.h"
+#include "Processor.h"
+#include "assembler.h"
+#include "utils.h"
 
 
 #define MAX_PATH 200
 
-#define afx_msg
+#define MAX_LINE 200
 
-typedef void *CCmdUI;
-
-#define RGB(R,G,B) (((R) << 16) + ((G) << 8) + (B))
-
-// From IOView.h
-#define GSXY 50
 
 #define MIN_CODEBITS 8
 #define MAX_CODEBITS 13
@@ -53,24 +49,24 @@ typedef void *CCmdUI;
 
 #define SYMTABSIZE 1000
 
-class CWinEVEDoc {
+class Simulator {
  public: // create from serialization only
-  CWinEVEDoc();
+  Simulator();
 
   // Attributes
  protected:
   char AppDir[MAX_PATH+1];
   char LasDir[MAX_PATH+1];
-  CString *codelines;
-  CString *datalines;
-  CString *assembly;
-  CString *mnemonic;
-  CString lastfile;
+  std::string *codelines;
+  std::string *datalines;
+  std::string *assembly;
+  std::string *mnemonic;
+  std::string lastfile;
   
   unsigned int CODESIZE;
   unsigned int DATASIZE;
   
-  processor cpu;
+  Processor cpu;
   pipeline pipe;
   
   BOOL forwarding;
@@ -111,20 +107,14 @@ class CWinEVEDoc {
   WORD32 entries;
   WORD32 offset;
   
-  // Operations
- public:
-  
-  // Overrides
- public:
-  virtual BOOL OnNewDocument();
   
   // Implementation
  public:
-  virtual ~CWinEVEDoc();
+  virtual ~Simulator();
 
   int mygets(char *, int, FILE *);
-  BOOL openit(CString);
-  int openfile(CString);
+  BOOL openit(const std::string &);
+  int openfile(const std::string &);
   
  protected:
   BOOL getcodesym(const char *&,WORD32 *);
@@ -135,44 +125,42 @@ class CWinEVEDoc {
   int second_pass(const char *,int);
   void process_result(RESULT *,BOOL);
   void clear();
-  int one_cycle(pipeline *,processor *,BOOL);
-  void check_stalls(int,const char *,int,char *);
-  void update_history(pipeline *,processor *,RESULT *);
-  int update_io(processor *);
+  int one_cycle(pipeline *, Processor *,BOOL);
+  void check_stalls(int,const char *,int, char *);
+  void update_history(pipeline *, Processor *, RESULT *);
+  int update_io(Processor *);
   
   // Generated message map functions
  protected:
  public:
-  //{{AFX_MSG(CWinEVEDoc)
-  afx_msg void OnFileReset();
-  afx_msg void OnFileOpen();
-  afx_msg void OnExecuteSingle();
-  afx_msg void OnFileMemory();
-  afx_msg void OnExecuteMulticycle();
-  afx_msg void OnFileMulti();
-  afx_msg void OnExecuteRunto();
-  afx_msg void OnExecuteStop();
-  afx_msg void OnUpdateExecuteStop(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateExecuteRunto(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateExecuteSingle(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateExecuteMulticycle(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateFileMulti(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateFileMemory(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateFileOpen(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateFileReset(CCmdUI* pCmdUI);
-  afx_msg void OnUpdateExecuteInterrupt(CCmdUI* pCmdUI);
-  afx_msg void OnFullReset();
-  afx_msg void OnUpdateFullReset(CCmdUI* pCmdUI);
-  afx_msg int OnReload();
-  afx_msg void OnUpdateReload(CCmdUI* pCmdUI);
-  afx_msg void OnConfigureWordlength();
-  afx_msg void OnFileDelaySlot();
-  afx_msg void OnUpdateFileDelaySlot(CCmdUI* pCmdUI);
-  afx_msg void OnFileForwarding();
-  afx_msg void OnUpdateFileForwarding(CCmdUI* pCmdUI);
-  afx_msg void OnBtb();
-  afx_msg void OnUpdateBtb(CCmdUI* pCmdUI);
-  //}}AFX_MSG
+  void OnFileReset();
+  void OnFileOpen();
+  void OnExecuteSingle();
+  void OnFileMemory();
+  void OnExecuteMulticycle();
+  void OnFileMulti();
+  void OnExecuteRunto();
+  void OnExecuteStop();
+  void OnUpdateExecuteStop();
+  void OnUpdateExecuteRunto();
+  void OnUpdateExecuteSingle();
+  void OnUpdateExecuteMulticycle();
+  void OnUpdateFileMulti();
+  void OnUpdateFileMemory();
+  void OnUpdateFileOpen();
+  void OnUpdateFileReset();
+  void OnUpdateExecuteInterrupt();
+  void OnFullReset();
+  void OnUpdateFullReset();
+  int OnReload();
+  void OnUpdateReload();
+  void OnConfigureWordlength();
+  void OnFileDelaySlot();
+  void OnUpdateFileDelaySlot();
+  void OnFileForwarding();
+  void OnUpdateFileForwarding();
+  void OnBtb();
+  void OnUpdateBtb();
   
  public:
   void dump_mem();
@@ -181,7 +169,7 @@ class CWinEVEDoc {
   void show_stats();
   void show_screen();
   
-  const int isRunning() { return !(cpu.status == HALTED); }
+  const int isRunning() { return !(cpu.getStatus() == HALTED); }
 
 };
 

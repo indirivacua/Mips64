@@ -36,23 +36,10 @@ void unpack(WORD64,BYTE *);
 void sprintword32(char *,WORD32);
 void sprintdouble(char *,double);
 void sprintword(char *,WORD64);
+WORD64 strtoint64(const char *ptr, const char **end, int b);
+
 BOOL in_range(WORD32,WORD32);
-BOOL delimiter(int);
 int compare(const char*,const char *);
-const char *skip(const char *,char);
-const char *skipover(const char *,char);
-int is_symbol(const char *);
-const char *eatwhite(const char *);
-int fgetreg(const char *&);
 int alignment(int,int);
-int getreg(const char *&);
-WORD64 strtoint64(char *,char **,int);
-BOOL getdouble(const char *&ptr,double *);
-BOOL getfullnum(const char *&,WORD64 *);
-BOOL getnum(const char *&,WORD32 *);
-BOOL getsym(symbol_table *,int,const char *&,WORD32 *);
-void init_processor(processor *,int,int);
-void init_pipeline(pipeline *,int,int,int);
-int clock_tick(pipeline *,processor *,BOOL,BOOL,BOOL,RESULT *);
 
 #endif

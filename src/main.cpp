@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <string.h>
 #include <stdlib.h>
 
-#include "processor.h"
+#include "simulator.h"
 
 #include <unistd.h>
 #include <term.h>
@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
   if (argc >= 3) {
     grafico = atoi(argv[2]);
   }
-  CWinEVEDoc *x = new CWinEVEDoc();
+  Simulator *x = new Simulator();
   int res = x->openfile(programa);
   //std::cout << "Res de apertura de archivo: " << res << "\n";
   if (res != 0) {

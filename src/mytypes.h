@@ -30,7 +30,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdint.h>
 
 #include <string>
-typedef std::string CString;
 
 #define FALSE 0
 #define TRUE 1
@@ -43,8 +42,15 @@ typedef std::string CString;
 #define SPACE   2
 #define COMMENT 3
 
+// Data Memory Status
 #define VACANT  0
 #define WRITTEN 1
+
+// Code Memory Status Bits
+// 0 => normal
+// 1 => BreakPoint set
+// 2 => Branch Prediction ?
+// 4 => ERROR 
 
 #define RUNNING 0
 #define STOPPED 1
@@ -293,12 +299,6 @@ typedef struct {
 } RESULT;
 
 typedef struct {
-    char *symb;
-    BYTE type;
-    WORD32 value;
-} symbol_table;
-
-typedef struct {
     int type,function,opcode,tf,target;
     int rs,rt,rd;
 	int src1,src2;
@@ -309,27 +309,6 @@ typedef struct {
     WORD64 val;
     SIGNED32 source;
 } reg;
-
-typedef struct {
-	int    status;
-	WORD32 codesize;
-	WORD32 datasize;
-    BYTE   *code;
-	BYTE   *cstat;
-    BYTE   *data;
-	BYTE   *dstat;
-	BYTE   mm[16];
-	WORD32 *screen;
-	WORD32 nlines;
-	WORD32 ncols;
-	BOOL drawit;
-	CString Terminal;
-	WORD32 keyboard;
-    WORD32 PC;
-    reg    rreg[64];
-    reg    wreg[64];
-	BOOL fp_cc;
-} processor;
 
 typedef struct {
     WORD32 IR;  /* pointer to instruction in memory */
@@ -398,5 +377,8 @@ typedef struct {
 	WORD32 start_cycle;
 	entry status[500];
 } record;
+
+#define GSXY 50
+#define RGB(R,G,B) (((R) << 16) + ((G) << 8) + (B))
 
 #endif
