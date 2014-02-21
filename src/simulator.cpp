@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
 
-Simulator::Simulator() {
+Simulator::Simulator() : pipe(&cpu) {
 	unsigned int i, codebits, databits;
 	char txt[12];
 	int val;
@@ -114,7 +114,7 @@ Simulator::Simulator() {
 */
 	cpu.initialize(CODESIZE, DATASIZE);
 
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 	codelines = new std::string[CODESIZE/4];
 	assembly = new std::string[CODESIZE/4];
 	mnemonic = new std::string[CODESIZE/4];
@@ -188,7 +188,7 @@ void Simulator::OnFileReset() {
 	 // Reset the processor
 	unsigned int i;
 
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 	cpu.reset();
 
 	//UpdateAllViews(NULL);
@@ -199,7 +199,7 @@ void Simulator::OnFullReset() {
 	unsigned i;
 	for (i=0;i<DATASIZE/8;i++) datalines[i]="";
 
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 	cpu.reset(TRUE);
 	clear();
 	//UpdateAllViews(NULL);
@@ -659,7 +659,7 @@ int Simulator::one_cycle(BOOL show) {
 	if (cpu.getStatus() == HALTED) 
 		return HALTED;
 
-	status = pipe.clock_tick(&cpu, forwarding, delay_slot, branch_target_buffer, &result);
+	status = pipe.clock_tick(&result);
 
 	cycles++;
 	process_result(&result,show);
@@ -845,7 +845,7 @@ void Simulator::OnFileMemory()
 
 	cpu.initialize(CODESIZE, DATASIZE);
 
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 
 	forwarding = TRUE;
 	delay_slot = FALSE;

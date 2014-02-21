@@ -77,7 +77,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 /* get instruction type */
 
-void pipeline::initialize(int ADDS, int MULS, int DIVS) {
+pipeline::pipeline(Processor *cpu) {
+  this->cpu = cpu;
+}
+
+void pipeline::initialize(int ADDS, int MULS, int DIVS, BOOL delay_slot, BOOL branch_target_buffer, BOOL forwarding) {
   int i;
   this->branch = FALSE;
   this->destination = 0;
@@ -99,6 +103,10 @@ void pipeline::initialize(int ADDS, int MULS, int DIVS) {
   this->halting = FALSE;
   this->mem_wb.condition = TRUE;
   this->ex_mem.condition = TRUE;
+
+  this->forwarding = forwarding;
+  this->branch_target_buffer = branch_target_buffer;
+  this->delay_slot = delay_slot;
 }
 
 static int get_type(WORD32 instruct)
@@ -1864,7 +1872,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
     return status;
 }
 
-int pipeline::clock_tick(Processor *mips,BOOL forwarding,BOOL delay_slot,BOOL branch_target_buffer,RESULT *result)
+int pipeline::clock_tick(RESULT *result)
 {
 
     int i,status;
@@ -1872,7 +1880,7 @@ int pipeline::clock_tick(Processor *mips,BOOL forwarding,BOOL delay_slot,BOOL br
 
 /* activate WB first as it activates on leading edge */
 
-    status=WB(this,mips,forwarding);
+    status=WB(this,cpu,forwarding);
     if (status==HALTED || this->halting) 
 	{ // check that pipeline is empty...
 		this->halting=TRUE;
@@ -1894,29 +1902,29 @@ int pipeline::clock_tick(Processor *mips,BOOL forwarding,BOOL delay_slot,BOOL br
 	}
 	
 	result->WB=status;
-    result->MEM=MEM(this,mips,forwarding,&result->memrr);
+    result->MEM=MEM(this,cpu,forwarding,&result->memrr);
 
 //	int extype=this->integer.ins.type;
 //	if (extype==STORE || extype==FSTORE)
 //	{ // in this case pull the store instruction through first
-//		result->EX=EX_INT(pipe,mips,forwarding,&result->exrr);	
-//		EX_MUL(pipe,mips,forwarding,&result->mulrr,result->MULTIPLIER);
-//		EX_ADD(pipe,mips,forwarding,&result->addrr,result->ADDER);
-//		result->DIVIDER=EX_DIV(pipe,mips,forwarding,&result->divrr);
+//		result->EX=EX_INT(pipe,cpu,forwarding,&result->exrr);	
+//		EX_MUL(pipe,cpu,forwarding,&result->mulrr,result->MULTIPLIER);
+//		EX_ADD(pipe,cpu,forwarding,&result->addrr,result->ADDER);
+//		result->DIVIDER=EX_DIV(pipe,cpu,forwarding,&result->divrr);
 //	}
 //	else
 //	{
-		EX_MUL(this,mips,forwarding,&result->mulrr,result->MULTIPLIER);
-		EX_ADD(this,mips,forwarding,&result->addrr,result->ADDER);
-		result->DIVIDER=EX_DIV(this,mips,forwarding,&result->divrr);
-		result->EX=EX_INT(this,mips,forwarding,&result->exrr);	
+		EX_MUL(this,cpu,forwarding,&result->mulrr,result->MULTIPLIER);
+		EX_ADD(this,cpu,forwarding,&result->addrr,result->ADDER);
+		result->DIVIDER=EX_DIV(this,cpu,forwarding,&result->divrr);
+		result->EX=EX_INT(this,cpu,forwarding,&result->exrr);	
 //	}
-    result->ID=ID(this,mips,forwarding,branch_target_buffer,&result->idrr);
-    result->IF=IF(this,mips,delay_slot,branch_target_buffer);
+    result->ID=ID(this,cpu,forwarding,branch_target_buffer,&result->idrr);
+    result->IF=IF(this,cpu,delay_slot,branch_target_buffer);
 
 /* Copy Write to Read registers */
  
-    for (i=0;i<64;i++) mips->rreg[i]=mips->wreg[i];
+    for (i=0;i<64;i++) cpu->rreg[i]=cpu->wreg[i];
 
     return OK;
 }

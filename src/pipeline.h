@@ -109,6 +109,9 @@ typedef struct {
 class pipeline {
 
 public:
+
+    pipeline(Processor *);
+
     BOOL active;
 	BOOL halting;
     BOOL   branch;
@@ -125,8 +128,14 @@ public:
     ex_mem_reg ex_mem;
     mem_wb_reg  mem_wb;
 
-    void initialize(int, int, int);
-    int clock_tick(Processor *, BOOL, BOOL, BOOL, RESULT *);
+    BOOL delay_slot;
+    BOOL branch_target_buffer;
+    BOOL forwarding;
+
+    Processor *cpu;
+    
+    void initialize(int ADDS, int MULS, int DIVS, BOOL, BOOL, BOOL);
+    int clock_tick(RESULT *);
 };
 
 
