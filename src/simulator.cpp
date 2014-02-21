@@ -477,7 +477,7 @@ int Simulator::update_io() {
 	return status;
 }
 
-void Simulator::update_history(pipeline *pipe, RESULT *result) {
+void Simulator::update_history(RESULT *result) {
 	int substage,stage;
 	unsigned int i,cc;
 	WORD32 previous;
@@ -503,8 +503,8 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 		switch (stage) {
 
 		case IFETCH:
-			if (pipe->if_id.active)	{
-				if (pipe->if_id.IR==previous) {
+			if (pipe.if_id.active)	{
+				if (pipe.if_id.IR==previous) {
 
 					history[i].status[cc].stage=IDECODE;
 					history[i].status[cc].cause=0;
@@ -520,24 +520,24 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 		case IDECODE:
 			passed=FALSE;
 			
-			if (pipe->integer.active && pipe->integer.IR==previous && result->ID!=STALLED) {
+			if (pipe.integer.active && pipe.integer.IR==previous && result->ID!=STALLED) {
 				passed=TRUE;
 				history[i].status[cc].stage=INTEX;
 				history[i].status[cc].cause=0;
 			}
-			if (pipe->m[0].active && pipe->m[0].IR==previous && result->ID!=STALLED) {
+			if (pipe.m[0].active && pipe.m[0].IR==previous && result->ID!=STALLED) {
 				passed=TRUE;
 				history[i].status[cc].stage=MULEX;
 				history[i].status[cc].substage=0;
 				history[i].status[cc].cause=0;
 			}
-			if (pipe->a[0].active && pipe->a[0].IR==previous && result->ID!=STALLED) {
+			if (pipe.a[0].active && pipe.a[0].IR==previous && result->ID!=STALLED) {
 				passed=TRUE;
 				history[i].status[cc].stage=ADDEX;
 				history[i].status[cc].substage=0;
 				history[i].status[cc].cause=0;
 			}
-			if (pipe->div.active && pipe->div.IR==previous && result->ID!=STALLED) {
+			if (pipe.div.active && pipe.div.IR==previous && result->ID!=STALLED) {
 				passed=TRUE;
 				history[i].status[cc].stage=DIVEX;
 				history[i].status[cc].cause=0;
@@ -549,7 +549,7 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 			}
 			break;
 		case INTEX:
-			if (pipe->ex_mem.active && pipe->ex_mem.IR==previous) {
+			if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
 				history[i].status[cc].stage=MEMORY;
 				history[i].status[cc].cause=0;
 			} else {
@@ -559,8 +559,8 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 			break;
 
 		case MULEX:
-			if (substage==pipe->MUL_LATENCY-1) {
-				if (pipe->ex_mem.active && pipe->ex_mem.IR==previous) {
+			if (substage==pipe.MUL_LATENCY-1) {
+				if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
 					history[i].status[cc].stage=MEMORY;
 					history[i].status[cc].cause=0;
 				} else {
@@ -569,7 +569,7 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 					history[i].status[cc].cause= (BYTE) result->MULTIPLIER[MUL_LATENCY-1];
 				}
 			} else {
-				if (pipe->m[substage+1].active && pipe->m[substage+1].IR==previous) {
+				if (pipe.m[substage+1].active && pipe.m[substage+1].IR==previous) {
 					history[i].status[cc].stage=MULEX;
 					history[i].status[cc].substage= (BYTE) (substage + 1);
 					history[i].status[cc].cause=0;
@@ -582,8 +582,8 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 			break;
 
 		case ADDEX:
-			if (substage == pipe->ADD_LATENCY - 1) {
-				if (pipe->ex_mem.active && pipe->ex_mem.IR==previous) {
+			if (substage == pipe.ADD_LATENCY - 1) {
+				if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
 					history[i].status[cc].stage=MEMORY;
 					history[i].status[cc].cause=0;
 				} else {
@@ -592,7 +592,7 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 					history[i].status[cc].cause=(BYTE) result->ADDER[ADD_LATENCY-1];
 				}
 			} else {
-				if (pipe->a[substage+1].active && pipe->a[substage+1].IR==previous) {
+				if (pipe.a[substage+1].active && pipe.a[substage+1].IR==previous) {
 					history[i].status[cc].stage=ADDEX;
 					history[i].status[cc].substage=(BYTE) (substage + 1);
 					history[i].status[cc].cause=0;
@@ -604,7 +604,7 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 			}
 			break;
 		case DIVEX:
-			if (pipe->ex_mem.active && pipe->ex_mem.IR==previous) {
+			if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
 				history[i].status[cc].stage=MEMORY;
 				history[i].status[cc].cause=0;
 			} else {
@@ -614,7 +614,7 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 			break;
 
 		case MEMORY:
-			if (pipe->mem_wb.active && pipe->mem_wb.IR==previous) {
+			if (pipe.mem_wb.active && pipe.mem_wb.IR==previous) {
 				history[i].status[cc].stage=WRITEB;
 				history[i].status[cc].cause=0;
 			} else {
@@ -636,7 +636,7 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 
 // make a new entry
 //	if (cpu->PC!=history[entries-1].IR)
-	if ((result->ID == OK || result->ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe->active) {
+	if ((result->ID == OK || result->ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe.active) {
 		history[entries].IR = cpu.getPC();
 		history[entries].status[0].stage = IFETCH;
 		history[entries].status[0].cause = 0;
@@ -652,18 +652,18 @@ void Simulator::update_history(pipeline *pipe, RESULT *result) {
 
 }
 
-int Simulator::one_cycle(pipeline *pipe, BOOL show) {
+int Simulator::one_cycle(BOOL show) {
 	int status=0;
 	RESULT result;
 
 	if (cpu.getStatus() == HALTED) 
 		return HALTED;
 
-	status = clock_tick(pipe, &cpu, forwarding, delay_slot, branch_target_buffer, &result);
+	status = clock_tick(&pipe, &cpu, forwarding, delay_slot, branch_target_buffer, &result);
 
 	cycles++;
 	process_result(&result,show);
-	update_history(pipe, &result);
+	update_history(&result);
 	if (update_io()) 
 		return WAITING_FOR_INPUT;
 
@@ -678,7 +678,7 @@ int Simulator::one_cycle(pipeline *pipe, BOOL show) {
 void Simulator::OnExecuteSingle() {
 	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
 	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
-	int status = one_cycle(&pipe, TRUE);
+	int status = one_cycle(TRUE);
 	if (status == WAITING_FOR_INPUT) {
 	//	pStatus->SetPaneText(0,"Esperando Entrada");
 	}
@@ -692,12 +692,12 @@ void Simulator::OnExecuteMulticycle() {
 	int i,status;
 	simulation_running=TRUE;
 	for (i = 0; i < multi - 1; i++) {
-		status = one_cycle(&pipe, FALSE);
+		status = one_cycle(FALSE);
 		if (status)
 			 break;
 	}
 	if (status == 0)
-		 status = one_cycle(&pipe, TRUE); // show status after last one.
+		 status = one_cycle(TRUE); // show status after last one.
 
 	if (status == WAITING_FOR_INPUT) {
 		//pStatus->SetPaneText(0,"Esperando Entrada");
@@ -731,7 +731,7 @@ void Simulator::OnExecuteRunto()
 		}
 */
 		lapsed++;
-		status = one_cycle(&pipe,FALSE);
+		status = one_cycle(FALSE);
 		if (status) 
 			break;
 	} while (stalls || ((cpu.cstat[cpu.getPC()] & 1) == 0 && cpu.getStatus() != HALTED && simulation_running));
