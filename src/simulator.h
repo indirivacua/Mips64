@@ -141,10 +141,10 @@ class Simulator {
   int second_pass(const char *,int);
   void process_result(RESULT *,BOOL);
   void clear();
-  int one_cycle(pipeline *, Processor *,BOOL);
+  int one_cycle(pipeline *, BOOL);
   void check_stalls(int,const char *,int, char *);
-  void update_history(pipeline *, Processor *, RESULT *);
-  int update_io(Processor *);
+  void update_history(pipeline *, RESULT *);
+  int update_io();
   
   // Generated message map functions
  protected:

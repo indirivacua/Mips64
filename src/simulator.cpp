@@ -366,8 +366,8 @@ void Simulator::process_result(RESULT *result, BOOL show)
 	}
 }
 
-int Simulator::update_io(Processor *cpu) {
-	WORD32 func = *(WORD32 *)&cpu->mm[0];
+int Simulator::update_io() {
+	WORD32 func = *(WORD32 *)&cpu.mm[0];
 	int i, x, y, status = 0;
 
 	BYTE *az;
@@ -376,32 +376,32 @@ int Simulator::update_io(Processor *cpu) {
 
 	char txt[30];
 	DOUBLE64 fp;
-	fp.u = *(WORD64 *)&cpu->mm[8]; 
+	fp.u = *(WORD64 *)&cpu.mm[8]; 
 
 	switch (func) {
 	case (WORD32)1:
 		sprintf(txt,"%I64u\n",fp.u);
-		cpu->writeTerminal(txt);
+		cpu.writeTerminal(txt);
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)2:
 		sprintf(txt,"%I64d\n",fp.s);
-		cpu->writeTerminal(txt);
+		cpu.writeTerminal(txt);
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)3:
 		sprintf(txt,"%lf\n",fp.d);
-		cpu->writeTerminal(txt);
+		cpu.writeTerminal(txt);
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)4:
 		// need to test here if fp.u is a legal address!
 
 		// ARREGLAR!! Feo, feo!!!
-		az = &cpu->data[fp.u];
+		az = &cpu.data[fp.u];
 
-		if (fp.u<cpu->getDataMemorySize()) 
-		cpu->writeTerminal(std::string((const char *)az));
+		if (fp.u<cpu.getDataMemorySize()) 
+		cpu.writeTerminal(std::string((const char *)az));
 
 		//UpdateAllViews(NULL,2);
 		break;
@@ -410,28 +410,28 @@ int Simulator::update_io(Processor *cpu) {
 
 		y=(WORD32)((fp.u>>32)&255);
 		x=(WORD32)((fp.u>>40)&255);
-		cpu->drawit=TRUE;
+		cpu.drawit=TRUE;
 //			char txt[80];
 //			sprintf(txt,"%d %d",x,y);
 //			AfxMessageBox(txt);
 
 		if (x<GSXY && y<GSXY) {
-			cpu->setScreenPixel(x,y, (WORD32)fp.u);
+			cpu.setScreenPixel(x,y, (WORD32)fp.u);
 		}
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)6:
-		cpu->clearTerminal();
+		cpu.clearTerminal();
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)7:
-		cpu->clearScreen();
-		cpu->drawit=FALSE;
+		cpu.clearScreen();
+		cpu.drawit=FALSE;
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)8:
 /*
-		cpu->keyboard=1;
+		cpu.keyboard=1;
 		status=1;
 */
 		{
@@ -442,17 +442,17 @@ int Simulator::update_io(Processor *cpu) {
 				number.d=atof(line);
 			else
 				number.s=atoll(line);
-	  	*(WORD64 *)&(cpu->mm[8]) = number.u; 
+	  	*(WORD64 *)&(cpu.mm[8]) = number.u; 
 		}
 		break;
 	case (WORD32)9:
 /*
-		cpu->keyboard=2;
+		cpu.keyboard=2;
 		status=1;
 */
 {
 		
-	  	(cpu->mm[8]) = getchar(); 
+	  	(cpu.mm[8]) = getchar(); 
 }
 		break;
 	default:
@@ -473,11 +473,11 @@ int Simulator::update_io(Processor *cpu) {
 	
 //	UpdateAllViews(NULL,1L);
 
-	*(WORD32 *)&cpu->mm[0]=0;
+	*(WORD32 *)&cpu.mm[0]=0;
 	return status;
 }
 
-void Simulator::update_history(pipeline *pipe, Processor *cpu, RESULT *result) {
+void Simulator::update_history(pipeline *pipe, RESULT *result) {
 	int substage,stage;
 	unsigned int i,cc;
 	WORD32 previous;
@@ -636,8 +636,8 @@ void Simulator::update_history(pipeline *pipe, Processor *cpu, RESULT *result) {
 
 // make a new entry
 //	if (cpu->PC!=history[entries-1].IR)
-	if ((result->ID == OK || result->ID == EMPTY || cpu->getPC() != history[entries-1].IR) && pipe->active) {
-		history[entries].IR = cpu->getPC();
+	if ((result->ID == OK || result->ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe->active) {
+		history[entries].IR = cpu.getPC();
 		history[entries].status[0].stage = IFETCH;
 		history[entries].status[0].cause = 0;
 		history[entries].start_cycle = cycles;
@@ -652,23 +652,23 @@ void Simulator::update_history(pipeline *pipe, Processor *cpu, RESULT *result) {
 
 }
 
-int Simulator::one_cycle(pipeline *pipe, Processor *cpu, BOOL show) {
+int Simulator::one_cycle(pipeline *pipe, BOOL show) {
 	int status=0;
 	RESULT result;
 
-	if (cpu->getStatus() == HALTED) 
+	if (cpu.getStatus() == HALTED) 
 		return HALTED;
 
-	status = clock_tick(pipe, cpu, forwarding, delay_slot, branch_target_buffer, &result);
+	status = clock_tick(pipe, &cpu, forwarding, delay_slot, branch_target_buffer, &result);
 
 	cycles++;
 	process_result(&result,show);
-	update_history(pipe, cpu, &result);
-	if (update_io(cpu)) 
+	update_history(pipe, &result);
+	if (update_io()) 
 		return WAITING_FOR_INPUT;
 
 	if (status == HALTED) {
-		cpu->setStatus(HALTED);
+		cpu.setStatus(HALTED);
 		return HALTED;
 	}
 
@@ -678,7 +678,7 @@ int Simulator::one_cycle(pipeline *pipe, Processor *cpu, BOOL show) {
 void Simulator::OnExecuteSingle() {
 	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
 	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
-	int status = one_cycle(&pipe, &cpu, TRUE);
+	int status = one_cycle(&pipe, TRUE);
 	if (status == WAITING_FOR_INPUT) {
 	//	pStatus->SetPaneText(0,"Esperando Entrada");
 	}
@@ -692,12 +692,12 @@ void Simulator::OnExecuteMulticycle() {
 	int i,status;
 	simulation_running=TRUE;
 	for (i = 0; i < multi - 1; i++) {
-		status = one_cycle(&pipe, &cpu, FALSE);
+		status = one_cycle(&pipe, FALSE);
 		if (status)
 			 break;
 	}
 	if (status == 0)
-		 status = one_cycle(&pipe, &cpu, TRUE); // show status after last one.
+		 status = one_cycle(&pipe, TRUE); // show status after last one.
 
 	if (status == WAITING_FOR_INPUT) {
 		//pStatus->SetPaneText(0,"Esperando Entrada");
@@ -731,7 +731,7 @@ void Simulator::OnExecuteRunto()
 		}
 */
 		lapsed++;
-		status = one_cycle(&pipe,&cpu,FALSE);
+		status = one_cycle(&pipe,FALSE);
 		if (status) 
 			break;
 	} while (stalls || ((cpu.cstat[cpu.getPC()] & 1) == 0 && cpu.getStatus() != HALTED && simulation_running));
