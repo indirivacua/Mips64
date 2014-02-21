@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "pipeline.h"
 #include "simulator.h"
 
+#include "assembler.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
 
@@ -773,7 +775,10 @@ int Simulator::openfile(const std::string &fname) {
 	if (fname == "")
           return 1;
 
-	res = openit(fname);
+        Assembler *assembler = new Assembler(CODESIZE, DATASIZE, &cpu, codelines, datalines, assembly, mnemonic);
+	res = assembler->openit(fname);
+        delete assembler;
+
 	if (res > 0) {
 		remove("winmips64.ini");
 		remove("winmips64.las"); 
@@ -1018,7 +1023,7 @@ void Simulator::show_stats() {
 	std::cout << "Atasco(s) Estructural  : " << structural_stalls << std::endl;
 	std::cout << "Atasco(s) Branch Taken : " << branch_taken_stalls << std::endl;
 	std::cout << "Atasco(s) Branch Mispr.: " << branch_misprediction_stalls << std::endl;
-	std::cout << "Tamanio del Codigo     : " << codeptr << std::endl;
+	//std::cout << "Tamanio del Codigo     : " << codeptr << std::endl;
 
 }
 

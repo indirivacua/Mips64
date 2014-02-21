@@ -89,14 +89,7 @@ class Simulator {
   BOOL delay_slot;
   BOOL branch_target_buffer;
   
-  symbol_table code_table[SYMTABSIZE];
-  symbol_table data_table[SYMTABSIZE];
-  unsigned int codeptr;
-  unsigned int dataptr;
   
-  unsigned int code_symptr;
-  unsigned int data_symptr;
-  int CODEORDATA;
   unsigned int cycles;
   unsigned int instructions;
   unsigned int loads;
@@ -128,18 +121,10 @@ class Simulator {
  public:
   virtual ~Simulator();
 
-  int mygets(char *, int, FILE *);
-  BOOL openit(const std::string &);
   int openfile(const std::string &);
   
  protected:
-  BOOL getcodesym(const char *&,WORD32 *);
-  BOOL getdatasym(const char *&,WORD32 *);
-  int instruction(const char *);
-  BOOL directive(int, const char *, const char *);
-  int first_pass(const char *,int);
-  int second_pass(const char *,int);
-  void process_result(RESULT *,BOOL);
+  void process_result(RESULT *, BOOL);
   void clear();
   int one_cycle(BOOL);
   void check_stalls(int,const char *,int, char *);

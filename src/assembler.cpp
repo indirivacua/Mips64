@@ -300,7 +300,18 @@ BOOL getsym(symbol_table *table, int size, const char *&ptr, WORD32 *n) {
 }
 
 
-int Simulator::openit(const std::string &fname)
+Assembler::Assembler(int CODESIZE, int DATASIZE, Processor *cpu, std::string *codelines, std::string *datalines, std::string *assembly, std::string *mnemonic) {
+ this->CODESIZE = CODESIZE;
+ this->DATASIZE = DATASIZE; 
+ this->cpu = cpu;
+
+ this->codelines = codelines;
+ this->datalines = datalines;
+ this->assembly = assembly;
+ this->mnemonic = mnemonic;
+}
+
+int Assembler::openit(const std::string &fname)
 {
 	int i,j,k,gotline,lineptr,errors;
 	char preline[MAX_LINE+1];
@@ -380,7 +391,7 @@ int Simulator::openit(const std::string &fname)
 
 // fill in symbol tables and check for syntax errors
 
-int Simulator::first_pass(const char *line,int lineptr)
+int Assembler::first_pass(const char *line,int lineptr)
 {
     int i,len;
     const char *ptr=line;
@@ -468,7 +479,7 @@ std::cout << txt << "\n";
     return 1;
 }
 
-int Simulator::second_pass(const char *line,int /* lineptr */)
+int Assembler::second_pass(const char *line,int /* lineptr */)
 {
     WORD32 w,byte;
     WORD32 op,code_word=0;
@@ -725,12 +736,11 @@ int Simulator::second_pass(const char *line,int /* lineptr */)
 	codeptr=alignment(codeptr,4);
 
 	int ret_val=0;
-    if (error) 
-    {
-       // printf("%08x ???????? %s",codeptr,line);
-       // for (i=0;i<4;i++) cpu.code[codeptr++]=0x00;
-		code_word=0;
-		cpu.cstat[codeptr]=4;
+    if (error) {
+       // printf("%08x ???????? %s",codeptr, line);
+       // for (i=0;i<4;i++) cpu->code[codeptr++]=0x00;
+	code_word = 0;
+	cpu->cstat[codeptr] = 4;
         ret_val=1;     
     }
 
@@ -763,22 +773,22 @@ int Simulator::second_pass(const char *line,int /* lineptr */)
 	codelines[codeptr/4]=(std::string)line;
     // printf("%08x %08x %s",codeptr,code_word,line);
     unpack32(code_word,b);
-    for (i=0;i<4;i++) cpu.code[codeptr++]=b[i];
+    for (i=0;i<4;i++) cpu->code[codeptr++]=b[i];
 
     return ret_val;    
 }
 
-BOOL Simulator::getcodesym(const char *&ptr,WORD32 *m)
+BOOL Assembler::getcodesym(const char *&ptr,WORD32 *m)
 {
     return getsym(code_table,code_symptr,ptr,m);
 }
 
-BOOL Simulator::getdatasym(const char *&ptr,WORD32 *m)
+BOOL Assembler::getdatasym(const char *&ptr,WORD32 *m)
 {
     return getsym(data_table,data_symptr,ptr,m);
 }
 
-int Simulator::instruction(const char *start)
+int Assembler::instruction(const char *start)
 {
     int i=0;
     char text[10];    /* all instructions are 6 chars or less */
@@ -800,7 +810,7 @@ int Simulator::instruction(const char *start)
     return i;
 }
 
-BOOL Simulator::directive(int pass,const char *ptr,const char *line)
+BOOL Assembler::directive(int pass,const char *ptr,const char *line)
 { // process assembler directives. return number of bytes consumed
     
     BOOL zero,bs;
@@ -904,8 +914,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
                     {
                         if (*ptr=='n') ch='\n';
                         else ch=*ptr;
-						cpu.dstat[dataptr]=WRITTEN;
-						cpu.data[dataptr++]= (BYTE) ch;
+						cpu->dstat[dataptr]=WRITTEN;
+						cpu->data[dataptr++]= (BYTE) ch;
                         bs=FALSE;
                     }
                     else
@@ -913,8 +923,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
                         if (*ptr=='\\') bs=TRUE;
                         else
                         {
-							cpu.dstat[dataptr]=WRITTEN;
-							cpu.data[dataptr++]= *ptr;
+							cpu->dstat[dataptr]=WRITTEN;
+							cpu->data[dataptr++]= *ptr;
                         }
                     } 
   
@@ -963,8 +973,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 				unpack(fw,b);
 				for (i=0;i<STEP;i++) 
 				{
-					cpu.dstat[dataptr]=WRITTEN;
-					cpu.data[dataptr++]=b[i];
+					cpu->dstat[dataptr]=WRITTEN;
+					cpu->data[dataptr++]=b[i];
 				}
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
@@ -973,8 +983,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 					unpack(fw,b);
 					for (i=0;i<STEP;i++) 
 					{
-						cpu.dstat[dataptr]=WRITTEN;
-						cpu.data[dataptr++]=b[i];
+						cpu->dstat[dataptr]=WRITTEN;
+						cpu->data[dataptr++]=b[i];
 					}
 				}
 			}
@@ -1004,8 +1014,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 				unpack32(num,b);
 				for (i=0;i<4;i++) 
 				{
-					cpu.dstat[dataptr]=WRITTEN;
-					cpu.data[dataptr++]=b[i];
+					cpu->dstat[dataptr]=WRITTEN;
+					cpu->data[dataptr++]=b[i];
 				}
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
@@ -1013,8 +1023,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 					unpack32(num,b);
 					for (i=0;i<4;i++) 
 					{
-						cpu.dstat[dataptr]=WRITTEN;
-						cpu.data[dataptr++]=b[i];
+						cpu->dstat[dataptr]=WRITTEN;
+						cpu->data[dataptr++]=b[i];
 					}
 				}
 			}
@@ -1043,8 +1053,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 				unpack16((WORD16)num,b);
 				for (i=0;i<2;i++) 
 				{
-					cpu.dstat[dataptr]=WRITTEN;
-					cpu.data[dataptr++]=b[i];
+					cpu->dstat[dataptr]=WRITTEN;
+					cpu->data[dataptr++]=b[i];
 				}
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
@@ -1053,8 +1063,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 					unpack16((WORD16)num,b);
 					for (i=0;i<2;i++) 
 					{
-						cpu.dstat[dataptr]=WRITTEN;
-						cpu.data[dataptr++]=b[i];
+						cpu->dstat[dataptr]=WRITTEN;
+						cpu->data[dataptr++]=b[i];
 					}
 				}
 			}
@@ -1081,14 +1091,14 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 			if (CODEORDATA==DATA)
 			{
 				datalines[dataptr/STEP]=(std::string)line;
-				cpu.dstat[dataptr]=WRITTEN;
-				cpu.data[dataptr++]=(unsigned char)num;
+				cpu->dstat[dataptr]=WRITTEN;
+				cpu->data[dataptr++]=(unsigned char)num;
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
 					if (!getnum(ptr,&num)) return FALSE;
 					if (!in_range(num,0xff)) return FALSE;
-					cpu.dstat[dataptr]=WRITTEN;
-					cpu.data[dataptr++]=(unsigned char)num;
+					cpu->dstat[dataptr]=WRITTEN;
+					cpu->data[dataptr++]=(unsigned char)num;
 				}
 			}
         }
@@ -1126,8 +1136,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 				unpack(db.u,b);
 				for (i=0;i<STEP;i++) 
 				{
-					cpu.dstat[dataptr]=WRITTEN;
-					cpu.data[dataptr++]=b[i];
+					cpu->dstat[dataptr]=WRITTEN;
+					cpu->data[dataptr++]=b[i];
 				}
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
@@ -1136,8 +1146,8 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 					unpack(db.u,b);
 					for (i=0;i<STEP;i++) 
 					{
-						cpu.dstat[dataptr]=WRITTEN;
-						cpu.data[dataptr++]=b[i];
+						cpu->dstat[dataptr]=WRITTEN;
+						cpu->data[dataptr++]=b[i];
 					}
 				}
 			}
@@ -1186,7 +1196,7 @@ BOOL Simulator::directive(int pass,const char *ptr,const char *line)
 // This function reads a line even if not termimated by CR
 //
 
-int Simulator::mygets(char *line,int max,FILE *fp)
+int Assembler::mygets(char *line,int max,FILE *fp)
 {
 	if (feof(fp)) {
 		return 1;

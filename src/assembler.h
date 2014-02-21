@@ -47,4 +47,41 @@ const char *skipover(const char *,char);
 const char *eatwhite(const char *);
 BOOL getdouble(const char *&ptr,double *);
 
+class Assembler {
+
+  public:
+    Assembler(int CODESIZE, int DATASIZE, Processor *cpu, std::string *codelines, std::string *datalines, std::string *assembly, std::string *mnemonic);
+    int openit(const std::string &fname);
+
+  protected:
+    int first_pass(const char *line,int lineptr);
+    int second_pass(const char *line,int /* lineptr */);
+    BOOL getcodesym(const char *&ptr, WORD32 *m);
+    BOOL getdatasym(const char *&ptr, WORD32 *m);
+    int instruction(const char *start);
+    BOOL directive(int pass,const char *ptr, const char *line);
+    int mygets(char *line, int max, FILE *fp);
+
+
+  int CODEORDATA;
+  unsigned int code_symptr;
+  unsigned int data_symptr;
+  symbol_table code_table[SYMTABSIZE];
+  symbol_table data_table[SYMTABSIZE];
+
+  unsigned int codeptr;
+  unsigned int dataptr;
+
+  // To be deleted
+  int CODESIZE;
+  int DATASIZE;
+  Processor *cpu;
+
+  std::string *codelines;
+  std::string *datalines;
+  std::string *assembly;
+  std::string *mnemonic;
+};
+
 #endif
+
