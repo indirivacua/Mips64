@@ -57,7 +57,6 @@ Simulator::Simulator() : pipe(&cpu) {
 	history[0].IR = 0;
 	history[0].start_cycle = 0;
 	history[0].status[0].stage = IFETCH;
-
 /*
 	GetCurrentDirectory(MAX_PATH,AppDir); // where I am running from?
 
@@ -288,7 +287,7 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
 	}
 }
 
-void Simulator::process_result(RESULT *result, BOOL show)
+void Simulator::process_result(BOOL show)
 {
 	char txt[300];
 	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
@@ -296,71 +295,71 @@ void Simulator::process_result(RESULT *result, BOOL show)
 	BOOL something=FALSE;
 
 
-	if (result->WB==OK || result->WB==HALTED) instructions++;
+	if (result.WB == OK || result.WB == HALTED)
+  	instructions++;
 	txt[0]=0;
-	if (!delay_slot && result->ID==BRANCH_TAKEN_STALL) {
-		something=TRUE;
+	if (!delay_slot && result.ID == BRANCH_TAKEN_STALL) {
+		something = TRUE;
 		branch_taken_stalls++;
 		strcat(txt,"  Atasco Branch Taken");
 	}
-	if (result->ID==BRANCH_MISPREDICTED_STALL) {
-		something=TRUE;
+	if (result.ID == BRANCH_MISPREDICTED_STALL) {
+		something = TRUE;
 		branch_misprediction_stalls++;
 		strcat(txt,"  Atasco Branch Misprediction");
 	}
 
-	if (result->MEM==LOADS || result->MEM==DATA_ERR) 
+	if (result.MEM == LOADS || result.MEM==DATA_ERR) 
 		loads++;
-	if (result->MEM==STORES)
+	if (result.MEM==STORES)
 		stores++;
 
-	check_stalls(result->ID, "ID", result->idrr, txt);
-	check_stalls(result->EX, "EX", result->exrr, txt);
-	check_stalls(result->ADDER[0], "ADD", result->addrr, txt);
-	check_stalls(result->MULTIPLIER[0], "MUL", result->mulrr, txt);
-	check_stalls(result->DIVIDER, "DIV", result->divrr, txt);
-	check_stalls(result->MEM, "MEM", result->memrr, txt);
+	check_stalls(result.ID, "ID", result.idrr, txt);
+	check_stalls(result.EX, "EX", result.exrr, txt);
+	check_stalls(result.ADDER[0], "ADD", result.addrr, txt);
+	check_stalls(result.MULTIPLIER[0], "MUL", result.mulrr, txt);
+	check_stalls(result.DIVIDER, "DIV", result.divrr, txt);
+	check_stalls(result.MEM, "MEM", result.memrr, txt);
 
-	if (result->MEM!=RAW) {
-		if (result->EX == STALLED) {
+	if (result.MEM!=RAW) {
+		if (result.EX == STALLED) {
 			structural_stalls++;
 			strcat(txt,"  Atasco Estructural en EX");
 		}
-		if (result->DIVIDER == STALLED) {
+		if (result.DIVIDER == STALLED) {
 			structural_stalls++;
 			strcat(txt,"  Atasco Estructural en FP-DIV");
 		}
-		if (result->MULTIPLIER[MUL_LATENCY-1] == STALLED) {
+		if (result.MULTIPLIER[MUL_LATENCY-1] == STALLED) {
 			structural_stalls++;
 			strcat(txt,"  Atasco Estructural en FP-MUL");
 		}
-		if (result->ADDER[ADD_LATENCY-1] == STALLED) {
+		if (result.ADDER[ADD_LATENCY-1] == STALLED) {
 			structural_stalls++;
 			strcat(txt,"  Atasco Estructural en FP-ADD");
 		}
 	}
-	if (result->IF == NO_SUCH_CODE_MEMORY) {
+	if (result.IF == NO_SUCH_CODE_MEMORY) {
 		strcat(txt,"  No existe esa dirección de código!");
 		cpu.setStatus(HALTED);
 	}
-	if (result->EX == INTEGER_OVERFLOW) {
+	if (result.EX == INTEGER_OVERFLOW) {
 		strcat(txt,"  Desbordamiento de número entero!");
 	}
-	if (result->DIVIDER == DIVIDE_BY_ZERO) {
+	if (result.DIVIDER == DIVIDE_BY_ZERO) {
 		strcat(txt,"  División por Cero en DIV!");
 	}
 
-	if (result->MEM == DATA_ERR) {
+	if (result.MEM == DATA_ERR) {
 		strcat(txt,"  Memoria no inicializada en MEM!");
 	}
-	if (result->MEM==NO_SUCH_DATA_MEMORY) {
+	if (result.MEM==NO_SUCH_DATA_MEMORY) {
 		strcat(txt,"  No existe esa dirección de datos!");
 	}
-	if (result->MEM==DATA_MISALIGNED) {
+	if (result.MEM==DATA_MISALIGNED) {
 		strcat(txt, " Error Fatal - LOAD/StTORE de memoria mal alineado!");
 	}
-	if (show)
-	{
+	if (show) {
 /*
 		if (txt[0]==0) pStatus->SetPaneText(0,"Listo");
 		else pStatus->SetPaneText(0,txt);
@@ -479,24 +478,24 @@ int Simulator::update_io() {
 	return status;
 }
 
-void Simulator::update_history(RESULT *result) {
+void Simulator::update_history() {
 	int substage,stage;
 	unsigned int i,cc;
 	WORD32 previous;
 	BOOL passed;
 
-	if (result->MEM!=RAW) {
-		if (result->EX==STALLED) 
-			result->EX=STRUCTURAL;
-		if (result->DIVIDER==STALLED) 
-			result->DIVIDER=STRUCTURAL;
-		if (result->MULTIPLIER[MUL_LATENCY-1]==STALLED) 
-			result->MULTIPLIER[MUL_LATENCY-1]=STRUCTURAL;
-		if (result->ADDER[ADD_LATENCY-1]==STALLED) 
-			result->ADDER[ADD_LATENCY-1]=STRUCTURAL;
+	if (result.MEM != RAW) {
+		if (result.EX == STALLED) 
+			result.EX = STRUCTURAL;
+		if (result.DIVIDER == STALLED) 
+			result.DIVIDER = STRUCTURAL;
+		if (result.MULTIPLIER[MUL_LATENCY-1] == STALLED) 
+			result.MULTIPLIER[MUL_LATENCY-1] = STRUCTURAL;
+		if (result.ADDER[ADD_LATENCY-1] == STALLED) 
+			result.ADDER[ADD_LATENCY-1] = STRUCTURAL;
 	}	
 
-	for (i=0;i<entries;i++)	{
+	for (i = 0; i < entries; i++) {
 		previous = history[i].IR;
 		cc = cycles-history[i].start_cycle;
 		stage = history[i].status[cc-1].stage; // previous stage
@@ -506,122 +505,122 @@ void Simulator::update_history(RESULT *result) {
 
 		case IFETCH:
 			if (pipe.if_id.active)	{
-				if (pipe.if_id.IR==previous) {
+				if (pipe.if_id.IR == previous) {
 
-					history[i].status[cc].stage=IDECODE;
-					history[i].status[cc].cause=0;
+					history[i].status[cc].stage = IDECODE;
+					history[i].status[cc].cause = 0;
 				} else {
-					history[i].status[cc].stage=IFETCH;
-					history[i].status[cc].cause= (BYTE) result->IF;
+					history[i].status[cc].stage = IFETCH;
+					history[i].status[cc].cause = (BYTE) result.IF;
 				}
 			} else {
-				history[i].status[cc].stage=0;
-				history[i].status[cc].cause=0;
+				history[i].status[cc].stage = 0;
+				history[i].status[cc].cause = 0;
 			}
 			break;
 		case IDECODE:
-			passed=FALSE;
+			passed = FALSE;
 			
-			if (pipe.integer.active && pipe.integer.IR==previous && result->ID!=STALLED) {
-				passed=TRUE;
-				history[i].status[cc].stage=INTEX;
-				history[i].status[cc].cause=0;
+			if (pipe.integer.active && pipe.integer.IR == previous && result.ID != STALLED) {
+				passed = TRUE;
+				history[i].status[cc].stage = INTEX;
+				history[i].status[cc].cause = 0;
 			}
-			if (pipe.m[0].active && pipe.m[0].IR==previous && result->ID!=STALLED) {
-				passed=TRUE;
-				history[i].status[cc].stage=MULEX;
-				history[i].status[cc].substage=0;
-				history[i].status[cc].cause=0;
+			if (pipe.m[0].active && pipe.m[0].IR == previous && result.ID != STALLED) {
+				passed = TRUE;
+				history[i].status[cc].stage = MULEX;
+				history[i].status[cc].substage = 0;
+				history[i].status[cc].cause = 0;
 			}
-			if (pipe.a[0].active && pipe.a[0].IR==previous && result->ID!=STALLED) {
-				passed=TRUE;
-				history[i].status[cc].stage=ADDEX;
-				history[i].status[cc].substage=0;
-				history[i].status[cc].cause=0;
+			if (pipe.a[0].active && pipe.a[0].IR == previous && result.ID != STALLED) {
+				passed = TRUE;
+				history[i].status[cc].stage = ADDEX;
+				history[i].status[cc].substage = 0;
+				history[i].status[cc].cause = 0;
 			}
-			if (pipe.div.active && pipe.div.IR==previous && result->ID!=STALLED) {
-				passed=TRUE;
-				history[i].status[cc].stage=DIVEX;
-				history[i].status[cc].cause=0;
+			if (pipe.div.active && pipe.div.IR == previous && result.ID != STALLED) {
+				passed = TRUE;
+				history[i].status[cc].stage = DIVEX;
+				history[i].status[cc].cause = 0;
 			}
 			
 			if (!passed) {
-				history[i].status[cc].stage=IDECODE;
-				history[i].status[cc].cause=(BYTE) result->ID;
+				history[i].status[cc].stage = IDECODE;
+				history[i].status[cc].cause = (BYTE) result.ID;
 			}
 			break;
 		case INTEX:
-			if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
-				history[i].status[cc].stage=MEMORY;
-				history[i].status[cc].cause=0;
+			if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+				history[i].status[cc].stage = MEMORY;
+				history[i].status[cc].cause = 0;
 			} else {
-				history[i].status[cc].stage=INTEX;
-				history[i].status[cc].cause=(BYTE) result->EX;
+				history[i].status[cc].stage = INTEX;
+				history[i].status[cc].cause = (BYTE) result.EX;
 			}
 			break;
 
 		case MULEX:
-			if (substage==pipe.MUL_LATENCY-1) {
-				if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
-					history[i].status[cc].stage=MEMORY;
-					history[i].status[cc].cause=0;
+			if (substage == pipe.MUL_LATENCY - 1) {
+				if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+					history[i].status[cc].stage = MEMORY;
+					history[i].status[cc].cause = 0;
 				} else {
-					history[i].status[cc].stage=MULEX;
-					history[i].status[cc].substage= (BYTE) substage;
-					history[i].status[cc].cause= (BYTE) result->MULTIPLIER[MUL_LATENCY-1];
+					history[i].status[cc].stage = MULEX;
+					history[i].status[cc].substage = (BYTE) substage;
+					history[i].status[cc].cause = (BYTE) result.MULTIPLIER[MUL_LATENCY - 1];
 				}
 			} else {
-				if (pipe.m[substage+1].active && pipe.m[substage+1].IR==previous) {
-					history[i].status[cc].stage=MULEX;
-					history[i].status[cc].substage= (BYTE) (substage + 1);
-					history[i].status[cc].cause=0;
+				if (pipe.m[substage+1].active && pipe.m[substage+1].IR == previous) {
+					history[i].status[cc].stage = MULEX;
+					history[i].status[cc].substage = (BYTE) (substage + 1);
+					history[i].status[cc].cause = 0;
 				} else {
-					history[i].status[cc].stage=MULEX;
-					history[i].status[cc].substage=(BYTE) substage;
-					history[i].status[cc].cause=(BYTE) result->MULTIPLIER[substage];
+					history[i].status[cc].stage = MULEX;
+					history[i].status[cc].substage = (BYTE) substage;
+					history[i].status[cc].cause = (BYTE) result.MULTIPLIER[substage];
 				}
 			}
 			break;
 
 		case ADDEX:
 			if (substage == pipe.ADD_LATENCY - 1) {
-				if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
-					history[i].status[cc].stage=MEMORY;
-					history[i].status[cc].cause=0;
+				if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+					history[i].status[cc].stage = MEMORY;
+					history[i].status[cc].cause = 0;
 				} else {
-					history[i].status[cc].stage=ADDEX;
-					history[i].status[cc].substage=(BYTE) substage;
-					history[i].status[cc].cause=(BYTE) result->ADDER[ADD_LATENCY-1];
+					history[i].status[cc].stage = ADDEX;
+					history[i].status[cc].substage = (BYTE) substage;
+					history[i].status[cc].cause = (BYTE) result.ADDER[ADD_LATENCY-1];
 				}
 			} else {
-				if (pipe.a[substage+1].active && pipe.a[substage+1].IR==previous) {
-					history[i].status[cc].stage=ADDEX;
-					history[i].status[cc].substage=(BYTE) (substage + 1);
-					history[i].status[cc].cause=0;
+				if (pipe.a[substage+1].active && pipe.a[substage+1].IR == previous) {
+					history[i].status[cc].stage = ADDEX;
+					history[i].status[cc].substage = (BYTE) (substage + 1);
+					history[i].status[cc].cause = 0;
 				} else {
-					history[i].status[cc].stage=ADDEX;
-					history[i].status[cc].substage=(BYTE) substage;
-					history[i].status[cc].cause= (BYTE) result->ADDER[substage];
+					history[i].status[cc].stage = ADDEX;
+					history[i].status[cc].substage = (BYTE) substage;
+					history[i].status[cc].cause = (BYTE) result.ADDER[substage];
 				}
 			}
 			break;
 		case DIVEX:
-			if (pipe.ex_mem.active && pipe.ex_mem.IR==previous) {
-				history[i].status[cc].stage=MEMORY;
-				history[i].status[cc].cause=0;
+			if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+				history[i].status[cc].stage = MEMORY;
+				history[i].status[cc].cause = 0;
 			} else {
-				history[i].status[cc].stage=DIVEX;
-				history[i].status[cc].cause=(BYTE) result->DIVIDER;
+				history[i].status[cc].stage = DIVEX;
+				history[i].status[cc].cause = (BYTE) result.DIVIDER;
 			}
 			break;
 
 		case MEMORY:
-			if (pipe.mem_wb.active && pipe.mem_wb.IR==previous) {
-				history[i].status[cc].stage=WRITEB;
-				history[i].status[cc].cause=0;
+			if (pipe.mem_wb.active && pipe.mem_wb.IR == previous) {
+				history[i].status[cc].stage = WRITEB;
+				history[i].status[cc].cause = 0;
 			} else {
-				history[i].status[cc].stage=MEMORY;
-				history[i].status[cc].cause=(BYTE) result->MEM;
+				history[i].status[cc].stage = MEMORY;
+				history[i].status[cc].cause = (BYTE) result.MEM;
 			}
 			break;
 
@@ -638,7 +637,7 @@ void Simulator::update_history(RESULT *result) {
 
 // make a new entry
 //	if (cpu->PC!=history[entries-1].IR)
-	if ((result->ID == OK || result->ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe.active) {
+	if ((result.ID == OK || result.ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe.active) {
 		history[entries].IR = cpu.getPC();
 		history[entries].status[0].stage = IFETCH;
 		history[entries].status[0].cause = 0;
@@ -655,17 +654,15 @@ void Simulator::update_history(RESULT *result) {
 }
 
 int Simulator::one_cycle(BOOL show) {
-	int status=0;
-	RESULT result;
+	int status = 0;
 
 	if (cpu.getStatus() == HALTED) 
 		return HALTED;
 
 	status = pipe.clock_tick(&result);
-
-	cycles++;
-	process_result(&result,show);
-	update_history(&result);
+	++cycles;
+	process_result(show);
+	update_history();
 	if (update_io()) 
 		return WAITING_FOR_INPUT;
 
@@ -712,7 +709,7 @@ void Simulator::OnExecuteMulticycle() {
 
 void Simulator::OnExecuteStop() 
 {
-	simulation_running=FALSE;
+	simulation_running = FALSE;
 }
 
 void Simulator::OnExecuteRunto() 

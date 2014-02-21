@@ -1847,45 +1847,49 @@ int pipeline::WB() {
         }
         break;
     case HALT:
-        status=HALTED;
+        status = HALTED;
         break;
     default:
         break;
     }
-    this->mem_wb.active=FALSE;
+    this->mem_wb.active = FALSE;
     return status;
 }
 
-int pipeline::clock_tick(RESULT *result)
-{
+int pipeline::clock_tick(RESULT *result) {
+  int i,status;
+  BOOL empty;
 
-    int i,status;
-	BOOL empty;
-
-/* activate WB first as it activates on leading edge */
-
-    status = WB();
-    if (status == HALTED || this->halting) {
-	 // check that pipeline is empty...
-		this->halting = TRUE;
-		empty = TRUE;
-		for (i = 0; i < this->MUL_LATENCY; i++)
-                   if (this->m[i].active) 
-                     empty = FALSE;
-		for (i = 0;i<this->ADD_LATENCY;i++) if (this->a[i].active) empty=FALSE;
-		if (this->div.active && this->div.cycles>0) empty=FALSE;
-		if (this->ex_mem.active) empty=FALSE;
-		if (this->mem_wb.active) empty=FALSE;
-		if (empty) {
-			result->WB=result->MEM=result->DIVIDER=result->EX=result->ID=result->IF=OK;
-			for (i=0;i<this->MUL_LATENCY;i++) result->MULTIPLIER[i]=OK;
-			for (i=0;i<this->ADD_LATENCY;i++) result->ADDER[i]=OK;
-			return HALTED;           /* halted */
-		}
-	}
+  /* activate WB first as it activates on leading edge */
+  status = WB();
+  if (status == HALTED || this->halting) {
+    // check that pipeline is empty...
+    this->halting = TRUE;
+    empty = TRUE;
+    for (i = 0; i < this->MUL_LATENCY; i++)
+      if (this->m[i].active) 
+        empty = FALSE;
+    for (i = 0; i < this->ADD_LATENCY; i++)
+        if (this->a[i].active)
+          empty = FALSE;
+    if (this->div.active && this->div.cycles>0) 
+          empty = FALSE;
+    if (this->ex_mem.active)
+      empty = FALSE;
+    if (this->mem_wb.active)
+      empty = FALSE;
+    if (empty) {
+      result->WB = result->MEM = result->DIVIDER = result->EX = result->ID = result->IF = OK;
+      for (i = 0; i < this->MUL_LATENCY; i++)
+        result->MULTIPLIER[i] = OK;
+      for (i = 0; i < this->ADD_LATENCY; i++)
+        result->ADDER[i] = OK;
+      return HALTED;           /* halted */
+    }
+  }
 	
-	result->WB = status;
-    result->MEM = MEM(&result->memrr);
+  result->WB = status;
+  result->MEM = MEM(&result->memrr);
 
 //	int extype=this->integer.ins.type;
 //	if (extype==STORE || extype==FSTORE)
@@ -1897,18 +1901,17 @@ int pipeline::clock_tick(RESULT *result)
 //	}
 //	else
 //	{
-		EX_MUL(&result->mulrr,result->MULTIPLIER);
-		EX_ADD(&result->addrr, result->ADDER);
-		result->DIVIDER = EX_DIV(&result->divrr);
-		result->EX = EX_INT(&result->exrr);	
+  EX_MUL(&result->mulrr,result->MULTIPLIER);
+  EX_ADD(&result->addrr, result->ADDER);
+  result->DIVIDER = EX_DIV(&result->divrr);
+  result->EX = EX_INT(&result->exrr);	
 //	}
-    result->ID = ID(&result->idrr);
-    result->IF = IF();
+  result->ID = ID(&result->idrr);
+  result->IF = IF();
 
-/* Copy Write to Read registers */
- 
-    for (i = 0; i < 64; i++) 
-	cpu->rreg[i] = cpu->wreg[i];
+  /* Copy Write to Read registers */
+  for (i = 0; i < 64; i++) 
+    cpu->rreg[i] = cpu->wreg[i];
 
-    return OK;
+  return OK;
 }

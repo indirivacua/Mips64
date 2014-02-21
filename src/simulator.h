@@ -116,6 +116,7 @@ class Simulator {
   WORD32 entries;
   WORD32 offset;
   
+  RESULT result;
   
   // Implementation
  public:
@@ -124,12 +125,13 @@ class Simulator {
   int openfile(const std::string &);
   
  protected:
-  void process_result(RESULT *, BOOL);
   void clear();
   int one_cycle(BOOL);
   void check_stalls(int,const char *,int, char *);
-  void update_history(RESULT *);
+  void process_result(BOOL);
+  void update_history();
   int update_io();
+
   
   // Generated message map functions
  protected:
