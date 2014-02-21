@@ -402,7 +402,7 @@ int Simulator::update_io() {
 		az = &cpu.data[fp.u];
 
 		if (fp.u<cpu.getDataMemorySize()) 
-		cpu.writeTerminal(std::string((const char *)az));
+			cpu.writeTerminal(std::string((const char *)az));
 
 		//UpdateAllViews(NULL,2);
 		break;
@@ -998,7 +998,7 @@ void Simulator::dump_reg() {
 }
 
 void Simulator::dump_Terminal() {
-	if (!cpu.emptyTerminal()) 
+	if (cpu.emptyTerminal()) 
 		return;
 	std::cout << "Terminal: ";
 	std::cout << cpu.getTerminal() << std::endl;
