@@ -128,14 +128,28 @@ public:
     ex_mem_reg ex_mem;
     mem_wb_reg  mem_wb;
 
-    BOOL delay_slot;
-    BOOL branch_target_buffer;
-    BOOL forwarding;
-
     Processor *cpu;
     
     void initialize(int ADDS, int MULS, int DIVS, BOOL, BOOL, BOOL);
     int clock_tick(RESULT *);
+
+protected:
+
+    int IF();
+    int ID(int *rawreg);
+
+    void EX_MUL(int *rawreg,int *status);
+    int EX_DIV(int *rawreg);
+    void EX_ADD(int *rawreg, int *status);
+    int EX_INT(int *rawreg);
+
+    int MEM(int *rawreg);
+    int WB();
+
+    BOOL delay_slot;
+    BOOL branch_target_buffer;
+    BOOL forwarding;
+
 };
 
 

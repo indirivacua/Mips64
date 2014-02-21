@@ -425,15 +425,14 @@ static BOOL waw(pipeline *pipe,int type,int function,int r)
     return FALSE;
 }
 
-static int IF(pipeline *pipe,Processor *cpu,BOOL delay_slot,BOOL branch_target_buffer)
-{
+int pipeline::IF() {
     int /*type,*/status;
     instruction ins;
     WORD32 codeword;
 
 /* instruction fetch */
 
-    if (pipe->if_id.active) return STALLED;
+    if (this->if_id.active) return STALLED;
 /*
     if (cpu->cstat!=NULL)
         if (cpu->cstat[cpu->PC]) 
@@ -443,57 +442,58 @@ static int IF(pipeline *pipe,Processor *cpu,BOOL delay_slot,BOOL branch_target_b
 
         }
 */
-    if (pipe->active)
+    if (this->active)
     {
-        pipe->if_id.IR=cpu->getPC();
+        this->if_id.IR=cpu->getPC();
         codeword=*(WORD32 *)&cpu->code[cpu->getPC()];
         /*type=*/parse(codeword,&ins);
     }
     else
     { /* if pipeline is inactive, deactivate the pipe */
-        pipe->if_id.active=FALSE;
+        this->if_id.active=FALSE;
         return OK;
     }
     
-    pipe->if_id.ins=ins;
+    this->if_id.ins=ins;
 
 
 /* Instruction just fetched may need to be nullified */
 
-	pipe->if_id.active=TRUE;
-	if (!delay_slot && pipe->branch) 
+	this->if_id.active=TRUE;
+	if (!delay_slot && this->branch) 
 	{
-        pipe->if_id.active=FALSE;
-		pipe->if_id.ins.type=NOP;
+        this->if_id.active=FALSE;
+		this->if_id.ins.type=NOP;
 	}
  
-	if (pipe->if_id.ins.type==HALT) pipe->active=FALSE;
+	if (this->if_id.ins.type==HALT) this->active=FALSE;
 
 /* check for branches */ 
     
-	pipe->if_id.NPC=cpu->getPC()+4;
-	pipe->if_id.predicted=FALSE;
+	this->if_id.NPC=cpu->getPC()+4;
+	this->if_id.predicted=FALSE;
 
-	if (!pipe->branch && branch_target_buffer && (cpu->cstat[cpu->getPC()]&2))
+	if (!this->branch && branch_target_buffer && (cpu->cstat[cpu->getPC()]&2))
 	{ // predict branch taken
-		pipe->if_id.NPC = cpu->getPC()+4+4*ins.Imm;
-		pipe->if_id.predicted=TRUE;
+		this->if_id.NPC = cpu->getPC()+4+4*ins.Imm;
+		this->if_id.predicted=TRUE;
 
 	}
 	else
 	{
-		if (pipe->branch && pipe->active) pipe->if_id.NPC=pipe->destination;
+		if (this->branch && this->active) 
+			this->if_id.NPC=this->destination;
 	}
 	status=OK;
-	if (!cpu->isValidCodeMemoryAddress(pipe->if_id.NPC))
+	if (!cpu->isValidCodeMemoryAddress(this->if_id.NPC))
 	{
 		status=NO_SUCH_CODE_MEMORY;
-		pipe->active=FALSE;
-//		pipe->halting=TRUE;
+		this->active=FALSE;
+//		this->halting=TRUE;
 	}
-    else cpu->setPC(pipe->if_id.NPC);
+    else cpu->setPC(this->if_id.NPC);
 
-    pipe->branch=FALSE;
+    this->branch=FALSE;
  
     return status;
 }
@@ -537,21 +537,20 @@ static BOOL already_waitedfor(pipeline *pipe,int reg)
 	return FALSE;
 }
 
-static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_buffer,int *rawreg)
-{
+int pipeline::ID(int *rawreg) {
     int status,type,branch_status;
     instruction ins;
 	BOOL predictable;
     WORD64 A,B;
 	//BOOL branch_complete;
 
-    if (!pipe->if_id.active) return EMPTY;      /* nothing to do   */
+    if (!this->if_id.active) return EMPTY;      /* nothing to do   */
 
-    ins=pipe->if_id.ins;
+    ins=this->if_id.ins;
     type=ins.type;
 
 
-	if (pipe->integer.active)
+	if (this->integer.active)
 	{
 
 		if (type!=REG3F && type!=REG3X)  return STALLED; /* exit is blocked */
@@ -559,7 +558,7 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 	//	else
 	//	{
 /* Stall in ID on WAR hazard V1.53 Fix */
-	//		if (forwarding && (pipe->integer.rA==ins.rd || pipe->integer.rB==ins.rd))
+	//		if (forwarding && (this->integer.rA==ins.rd || this->integer.rB==ins.rd))
 	//		{ 
 	//			*rawreg=ins.rd;
 	//			return WAR;
@@ -578,8 +577,8 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 		{ // Stall it in ID - must wait for reg to be Written Back 
 			if (!available(cpu,ins.rs)) {*rawreg=ins.rs; return RAW;}
 		}
-        pipe->integer.rA=ins.rs;
-		pipe->integer.rB=-1;
+        this->integer.rA=ins.rs;
+		this->integer.rB=-1;
         break;
 
 	case REGID:
@@ -587,8 +586,8 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 		{ // Stall it in ID - must wait for reg to be Written Back 
 			if (!available(cpu,ins.rt)) {*rawreg=ins.rt; return RAW;}
 		}
-        pipe->integer.rA=ins.rt;
-		pipe->integer.rB=-1;
+        this->integer.rA=ins.rt;
+		this->integer.rB=-1;
 		break;
 
 	case REGDI:
@@ -596,8 +595,8 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 		{ // Stall it in ID - must wait for reg to be Written Back 
 			if (!available(cpu,ins.rd)) {*rawreg=ins.rd; return RAW;}
 		}
-        pipe->integer.rA=ins.rd;
-		pipe->integer.rB=-1;
+        this->integer.rA=ins.rd;
+		this->integer.rB=-1;
 		break;
 
 
@@ -610,8 +609,8 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 			if (!available(cpu,ins.rt)) {*rawreg=ins.rt; return RAW;}
 			if (!available(cpu,ins.rs)) {*rawreg=ins.rs; return RAW;}
 		}
-        pipe->integer.rA=ins.rs;
-        pipe->integer.rB=ins.rt;
+        this->integer.rA=ins.rs;
+        this->integer.rB=ins.rt;
         break;
 
 	case REG3F:
@@ -652,38 +651,38 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
     {
 	case REG2F:
 	case REG2S:
-		if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(pipe,ins.rd)) {*rawreg=ins.rd; return WAW;}
-		if (already_waitedfor(pipe,ins.rd)) {*rawreg=ins.rd; return WAR;} // new
+		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
+		if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;} // new
 		break;
 	case REG2C:
 	case STORE:
 	case FSTORE:
-		if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
 		break;
 	case REG2I:
 	case LOAD:
 	case FLOAD:
-		if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_waitedfor(pipe,ins.rt)) {*rawreg=ins.rt; return WAR;}
+		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_waitedfor(this,ins.rt)) {*rawreg=ins.rt; return WAR;}
 		break;
 	case REG1I:
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_waitedfor(pipe,ins.rt)) {*rawreg=ins.rt; return WAR;}
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_waitedfor(this,ins.rt)) {*rawreg=ins.rt; return WAR;}
 		break;
 	case REG3:
-		if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_target(pipe,ins.rd)) {*rawreg=ins.rd; return WAW;}
-		if (already_waitedfor(pipe,ins.rd)) {*rawreg=ins.rd; return WAR;}
+		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
+		if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
 		break;
 	case REGDI:
 	case REGID:
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_target(pipe,ins.rd)) {*rawreg=ins.rd; return WAW;}
-		if (already_waitedfor(pipe,ins.rd)) {*rawreg=ins.rd; return WAR;} 
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
+		if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;} 
 		break;
 	case REG3F:
 	case REG3X:
@@ -691,17 +690,17 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
         {
             case F_ADD_D:
             case F_SUB_D:
-                if (pipe->a[0].active) return STALLED;
-				if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-				if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
-				if (already_target(pipe,ins.rd)) {*rawreg=ins.rd; return WAW;}
-				if (already_waitedfor(pipe,ins.rd)) {*rawreg=ins.rd; return WAR;}
-				pipe->a[0].rA=ins.rs;
-				pipe->a[0].rB=ins.rt;
-		        pipe->a[0].active=TRUE;
-				pipe->a[0].NPC=pipe->if_id.NPC;
-				pipe->a[0].IR =pipe->if_id.IR;
-				pipe->a[0].ins=ins;
+                if (this->a[0].active) return STALLED;
+				if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+				if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+				if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
+				if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
+				this->a[0].rA=ins.rs;
+				this->a[0].rB=ins.rt;
+		        this->a[0].active=TRUE;
+				this->a[0].NPC=this->if_id.NPC;
+				this->a[0].IR =this->if_id.IR;
+				this->a[0].ins=ins;
                 break;
             case F_MUL_D:
 			case R_DMUL:
@@ -709,43 +708,43 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 //char txt[80];
 //sprintf(txt,"need ins.rs= %d and ins.rt= %d",ins.rs,ins.rt);
 //AfxMessageBox(txt);
-                if (pipe->m[0].active) return STALLED;
-				if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-				if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
-				if (already_target(pipe,ins.rd)) {*rawreg=ins.rd; return WAW;}
-				if (already_waitedfor(pipe,ins.rd)) {*rawreg=ins.rd; return WAR;}
-				pipe->m[0].rA=ins.rs;
-				pipe->m[0].rB=ins.rt;
-		        pipe->m[0].active=TRUE;
-				pipe->m[0].NPC=pipe->if_id.NPC;
-				pipe->m[0].IR =pipe->if_id.IR;
-				pipe->m[0].ins=ins;
+                if (this->m[0].active) return STALLED;
+				if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+				if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+				if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
+				if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
+				this->m[0].rA=ins.rs;
+				this->m[0].rB=ins.rt;
+		        this->m[0].active=TRUE;
+				this->m[0].NPC=this->if_id.NPC;
+				this->m[0].IR =this->if_id.IR;
+				this->m[0].ins=ins;
 			//	unavail(cpu,BOTH,ins.rd);
                 break;
             case F_DIV_D:
 			case R_DDIV:
 			case R_DDIVU:
-                if (pipe->div.active) return STRUCTURAL;
-				if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-				if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
-				if (already_target(pipe,ins.rd)) {*rawreg=ins.rd; return WAW;}
-				if (already_waitedfor(pipe,ins.rd)) {*rawreg=ins.rd; return WAR;}
-				pipe->div.rA=ins.rs;
-				pipe->div.rB=ins.rt;
-		        pipe->div.active=TRUE;
-				pipe->div.NPC=pipe->if_id.NPC;
-				pipe->div.IR =pipe->if_id.IR;
-				pipe->div.ins=ins;
-				pipe->div.cycles=pipe->DIV_LATENCY;
+                if (this->div.active) return STRUCTURAL;
+				if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+				if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+				if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
+				if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
+				this->div.rA=ins.rs;
+				this->div.rB=ins.rt;
+		        this->div.active=TRUE;
+				this->div.NPC=this->if_id.NPC;
+				this->div.IR =this->if_id.IR;
+				this->div.ins=ins;
+				this->div.cycles=this->DIV_LATENCY;
                 break;
             default:
                 break;
         }
-		pipe->if_id.active=FALSE;
+		this->if_id.active=FALSE;
 		return OK;
     case BRANCH:
-		if (already_target(pipe,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
 	
 		//branch_complete=TRUE;
 		branch_status=BRANCH_NOT_TAKEN;
@@ -753,16 +752,16 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
         if (ins.opcode==I_BEQ && (A==B))
         {
 			branch_status=BRANCH_TAKEN;
-            pipe->branch=TRUE;
-            pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
+            this->branch=TRUE;
+            this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
         }
         if (ins.opcode==I_BNE && (A!=B))
         { 
 			branch_status=BRANCH_TAKEN;
-            pipe->branch=TRUE;
-            pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
+            this->branch=TRUE;
+            this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
         }
-		pipe->if_id.active=FALSE;
+		this->if_id.active=FALSE;
         break;
 
 	case BC:
@@ -772,20 +771,20 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 		if (ins.tf && cpu->fp_cc)
 		{
 			branch_status=BRANCH_TAKEN;
-			pipe->branch=TRUE;
-			pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
+			this->branch=TRUE;
+			this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
 		}
 		if (!ins.tf && !cpu->fp_cc)
 		{
 			branch_status=BRANCH_TAKEN;
-			pipe->branch=TRUE;
-			pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
+			this->branch=TRUE;
+			this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
 		}
-		pipe->if_id.active=FALSE;
+		this->if_id.active=FALSE;
 		break;
 
     case JREGN:
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
 		
 		//branch_complete=TRUE;
 		branch_status=BRANCH_NOT_TAKEN;
@@ -793,16 +792,16 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
         if (B==0 && ins.opcode==I_BEQZ) 
         {
 			branch_status=BRANCH_TAKEN;
-            pipe->branch=TRUE;
-            pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
+            this->branch=TRUE;
+            this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
         }
         if (B!=0 && ins.opcode==I_BNEZ) 
         {     
 			branch_status=BRANCH_TAKEN;
-            pipe->branch=TRUE;
-            pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
+            this->branch=TRUE;
+            this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
         }
-		pipe->if_id.active=FALSE;
+		this->if_id.active=FALSE;
         break;
     case JUMP:
 		predictable=TRUE;
@@ -810,17 +809,17 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
         if (ins.opcode==I_J)
         {
 			//branch_complete=TRUE;		
-            pipe->branch=TRUE;
-            pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
-			pipe->if_id.active=FALSE;
+            this->branch=TRUE;
+            this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
+			this->if_id.active=FALSE;
         }
         if (ins.opcode==I_JAL)
         {
-            pipe->branch=TRUE;
-            pipe->destination=pipe->if_id.NPC+4*pipe->if_id.ins.Imm;
+            this->branch=TRUE;
+            this->destination=this->if_id.NPC+4*this->if_id.ins.Imm;
        //     if (forwarding)
        //     {
-       //         cpu->wreg[31].val=pipe->if_id.NPC;
+       //         cpu->wreg[31].val=this->if_id.NPC;
        //         cpu->wreg[31].source=FROM_ID;
        //     }
        //     else
@@ -828,24 +827,24 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
         }
         break;
     case JREG:
-		if (already_target(pipe,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
 	
 		branch_status=BRANCH_TAKEN;
         if (ins.opcode==I_SPECIAL && ins.function==R_JR)
         {
 			//branch_complete=TRUE;
-            pipe->branch=TRUE;
-            pipe->destination=(WORD32)B;
-			pipe->if_id.active=FALSE;
+            this->branch=TRUE;
+            this->destination=(WORD32)B;
+			this->if_id.active=FALSE;
         }
     //    break;
         if (ins.opcode==I_SPECIAL && ins.function==R_JALR)
         {
-            pipe->branch=TRUE;
-            pipe->destination=(WORD32)B;
+            this->branch=TRUE;
+            this->destination=(WORD32)B;
         //    if (forwarding)
         //    {
-        //        cpu->wreg[31].val=pipe->if_id.NPC;
+        //        cpu->wreg[31].val=this->if_id.NPC;
         //        cpu->wreg[31].source=FROM_ID;
         //    }
         //    else
@@ -866,32 +865,32 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 		if (branch_status==BRANCH_TAKEN)
 		{
 			status=BRANCH_TAKEN_STALL;
-			if ((cpu->cstat[pipe->if_id.IR]&2)==0) 
+			if ((cpu->cstat[this->if_id.IR]&2)==0) 
 			{ // throw in an extra stall...
-				cpu->cstat[pipe->if_id.IR]|=2;
-				pipe->if_id.active=TRUE;
+				cpu->cstat[this->if_id.IR]|=2;
+				this->if_id.active=TRUE;
 				return status;
 			}
-			if (pipe->if_id.predicted) 
+			if (this->if_id.predicted) 
 			{
-				pipe->branch=FALSE;
+				this->branch=FALSE;
 				status=OK;
 			}
 		}
 		if (branch_status==BRANCH_NOT_TAKEN)
 		{
-			if (pipe->if_id.predicted)
+			if (this->if_id.predicted)
 			{ // its was predicted, but it didn't happen!
 				status=BRANCH_MISPREDICTED_STALL;
-				if (cpu->cstat[pipe->if_id.IR]&2)
+				if (cpu->cstat[this->if_id.IR]&2)
 				{
-					cpu->cstat[pipe->if_id.IR]&=0xfd;
-					pipe->if_id.active=TRUE;
+					cpu->cstat[this->if_id.IR]&=0xfd;
+					this->if_id.active=TRUE;
 					return status;
 				}
 			// tell IF to re-fetch from here + 4 - costs another stall!
-				pipe->branch=TRUE;
-				pipe->destination=pipe->if_id.IR+4;
+				this->branch=TRUE;
+				this->destination=this->if_id.IR+4;
 			
 			}
 		}
@@ -902,25 +901,23 @@ static int ID(pipeline *pipe,Processor *cpu,BOOL forwarding,BOOL branch_target_b
 	}
 
 
-    pipe->integer.NPC=pipe->if_id.NPC;
-    pipe->integer.IR =pipe->if_id.IR;
-    pipe->integer.ins=ins;
-    pipe->integer.Imm=ins.Imm;
+    this->integer.NPC=this->if_id.NPC;
+    this->integer.IR =this->if_id.IR;
+    this->integer.ins=ins;
+    this->integer.Imm=ins.Imm;
 
 /* If branch instruction has completed - deactivate it so as 
    not to cause problems further down the pipe.               */
 	
 /*	if (branch_complete)	pipe->integer.active=FALSE;
 	else		*/
-	pipe->integer.active=TRUE;
-    pipe->if_id.active=FALSE;
-
+	this->integer.active=TRUE;
+    this->if_id.active=FALSE;
 
     return status;
 }
 
-static int EX_DIV(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg)
-{
+int pipeline::EX_DIV(int *rawreg) {
 	int rA,rB /*,DIVS*/;
     instruction ins;  
     DOUBLE64 fpA,fpB,fpR;
@@ -931,18 +928,18 @@ static int EX_DIV(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg)
    if cycles = 0 and active is TRUE, then result is available
 */
 
-	ins=pipe->div.ins;
-	rA=pipe->div.rA;
-	rB=pipe->div.rB;
-	//DIVS=pipe->DIV_LATENCY;
-    if (pipe->div.active)
+	ins=this->div.ins;
+	rA=this->div.rA;
+	rB=this->div.rB;
+	//DIVS=this->DIV_LATENCY;
+    if (this->div.active)
     { /* Have I got a result ?? */
 
-		if (pipe->div.cycles==pipe->DIV_LATENCY)
+		if (this->div.cycles==this->DIV_LATENCY)
 		{ // Trying to start a new one...
 			if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
 			if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
-			if (waw(pipe,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+			if (waw(this,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
 
 			unavail(cpu,BOTH,ins.rd);
 			fpA.u=cpu->rreg[rA].val;
@@ -968,33 +965,33 @@ static int EX_DIV(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg)
 				break;
 			}
 
-			pipe->div.ALUOutput=fpR.u;
-			pipe->div.cycles--;
+			this->div.ALUOutput=fpR.u;
+			this->div.cycles--;
 		}
 		else
-			if (pipe->div.cycles>0) 
+			if (this->div.cycles>0) 
 			{
-				pipe->div.cycles--;
+				this->div.cycles--;
 				status=OK;
 			}
-        if (pipe->div.cycles==0)
+        if (this->div.cycles==0)
 		{
-			if (!pipe->ex_mem.active)
+			if (!this->ex_mem.active)
 			{ /*  finish divide  */
 			
-				pipe->ex_mem.ins=ins;
-				pipe->ex_mem.IR=pipe->div.IR;
+				this->ex_mem.ins=ins;
+				this->ex_mem.IR=this->div.IR;
 
-				pipe->ex_mem.ALUOutput=pipe->div.ALUOutput;
+				this->ex_mem.ALUOutput=this->div.ALUOutput;
 				if (forwarding)
 				{  
-					cpu->wreg[ins.rd].val=pipe->div.ALUOutput;
+					cpu->wreg[ins.rd].val=this->div.ALUOutput;
 					cpu->wreg[ins.rd].source=FROM_DIV;
 				}
-				pipe->ex_mem.active=TRUE;
-				pipe->ex_mem.NPC=pipe->div.NPC;
-				pipe->ex_mem.rB=pipe->div.rB;
-				pipe->div.active=FALSE;
+				this->ex_mem.active=TRUE;
+				this->ex_mem.NPC=this->div.NPC;
+				this->ex_mem.rB=this->div.rB;
+				this->div.active=FALSE;
 				return status;
 			}
 			else return STALLED;
@@ -1008,36 +1005,35 @@ static int EX_DIV(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg)
 // Note that both the instruction at the front AND the instruction at the back
 // can suffer stalls... so seperate status for each 
 
-static void EX_MUL(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg,int *status)
-{
+void pipeline::EX_MUL(int *rawreg,int *status) {
 	int i,rA,rB,MULS;
 	instruction ins;
 	DOUBLE64 fpA,fpB,fpR;
     id_ex_reg idle;
 
-	MULS=pipe->MUL_LATENCY;
+	MULS=this->MUL_LATENCY;
 	for (i=0;i<MULS;i++) status[i]=OK;
-	ins=pipe->m[MULS-1].ins;     
+	ins=this->m[MULS-1].ins;     
     idle.active=FALSE;
-    if (pipe->m[MULS-1].active)   // last one active
+    if (this->m[MULS-1].active)   // last one active
     {
-        if (!pipe->ex_mem.active)
+        if (!this->ex_mem.active)
         { /* execute multiply */
   
-            pipe->ex_mem.ins=ins;
-            pipe->ex_mem.IR=pipe->m[MULS-1].IR;
+            this->ex_mem.ins=ins;
+            this->ex_mem.IR=this->m[MULS-1].IR;
 
-            pipe->ex_mem.ALUOutput=pipe->m[MULS-1].ALUOutput;
+            this->ex_mem.ALUOutput=this->m[MULS-1].ALUOutput;
             if (forwarding)
             { 
-                cpu->wreg[ins.rd].val=pipe->m[MULS-1].ALUOutput;
+                cpu->wreg[ins.rd].val=this->m[MULS-1].ALUOutput;
                 cpu->wreg[ins.rd].source=FROM_MUL;
             }
 
-			pipe->m[MULS-1].active=FALSE;
-            pipe->ex_mem.active=TRUE;
-			pipe->ex_mem.NPC=pipe->m[MULS-1].NPC;
-			pipe->ex_mem.rB=pipe->m[MULS-1].rB;
+			this->m[MULS-1].active=FALSE;
+            this->ex_mem.active=TRUE;
+			this->ex_mem.NPC=this->m[MULS-1].NPC;
+			this->ex_mem.rB=this->m[MULS-1].rB;
         }
 		else status[MULS-1]=STALLED; 
     }
@@ -1046,27 +1042,27 @@ static void EX_MUL(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg,int
 // shift them over if possible
     for (i=MULS-1;i>1;i--)
 	{
-        if (!pipe->m[i].active) 
+        if (!this->m[i].active) 
 		{
-			pipe->m[i]=pipe->m[i-1];
-			pipe->m[i-1].active=FALSE;
+			this->m[i]=this->m[i-1];
+			this->m[i-1].active=FALSE;
 		}
-		else if (pipe->m[i-1].active) status[i-1]=STALLED;
+		else if (this->m[i-1].active) status[i-1]=STALLED;
 	}	
 
-	if (!pipe->m[1].active)
+	if (!this->m[1].active)
 	{
 
-		if (pipe->m[0].active)
+		if (this->m[0].active)
 		{ // Trying to start a new one...
-			rA=pipe->m[0].rA;
-			rB=pipe->m[0].rB;
-			ins=pipe->m[0].ins;	
+			rA=this->m[0].rA;
+			rB=this->m[0].rB;
+			ins=this->m[0].ins;	
 
 			if (!available(cpu,rA)) {*rawreg=rA; status[0]=RAW; return;}
 			if (!available(cpu,rB)) {*rawreg=rB; status[0]=RAW; return;}
 			
-			if (waw(pipe,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;} // new
+			if (waw(this,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;} // new
 
 			unavail(cpu,BOTH,ins.rd);
 
@@ -1087,46 +1083,45 @@ static void EX_MUL(pipeline *pipe,Processor *cpu,BOOL forwarding,int *rawreg,int
 				break;
 			}
          
-			pipe->m[0].ALUOutput=fpR.u;
+			this->m[0].ALUOutput=fpR.u;
 
 		}
-		pipe->m[1]=pipe->m[0];
-		pipe->m[0]=idle;
+		this->m[1]=this->m[0];
+		this->m[0]=idle;
 	}
-	else if (pipe->m[0].active) status[0]=STALLED;
+	else if (this->m[0].active) status[0]=STALLED;
 
 }
 
-static void EX_ADD(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg, int *status)
-{
+void pipeline::EX_ADD(int *rawreg, int *status) {
 	int i,rA,rB,ADDS;
 	instruction ins;
 	DOUBLE64 fpA,fpB,fpR;
     id_ex_reg idle;
 	
-	ADDS=pipe->ADD_LATENCY;
+	ADDS=this->ADD_LATENCY;
 	for (i=0;i<ADDS;i++) status[i]=OK;
-    ins=pipe->a[ADDS-1].ins;     
+    ins=this->a[ADDS-1].ins;     
     idle.active=FALSE;
-    if (pipe->a[ADDS-1].active)
+    if (this->a[ADDS-1].active)
     {
-        if (!pipe->ex_mem.active)
+        if (!this->ex_mem.active)
         { /* execute addition */
              
-            pipe->ex_mem.ins=ins;
-            pipe->ex_mem.IR=pipe->a[ADDS-1].IR;
+            this->ex_mem.ins=ins;
+            this->ex_mem.IR=this->a[ADDS-1].IR;
 
-            pipe->ex_mem.ALUOutput=pipe->a[ADDS-1].ALUOutput;
+            this->ex_mem.ALUOutput=this->a[ADDS-1].ALUOutput;
             if (forwarding)
             { 
-                cpu->wreg[ins.rd].val=pipe->a[ADDS-1].ALUOutput;
+                cpu->wreg[ins.rd].val=this->a[ADDS-1].ALUOutput;
                 cpu->wreg[ins.rd].source=FROM_ADD;
             }
 
-			pipe->a[ADDS-1].active=FALSE;
-            pipe->ex_mem.active=TRUE;
- 			pipe->ex_mem.NPC=pipe->a[ADDS-1].NPC;
-			pipe->ex_mem.rB=pipe->a[ADDS-1].rB;
+			this->a[ADDS-1].active=FALSE;
+            this->ex_mem.active=TRUE;
+ 			this->ex_mem.NPC=this->a[ADDS-1].NPC;
+			this->ex_mem.rB=this->a[ADDS-1].rB;
         }
 		else status[ADDS-1]=STALLED;
     }
@@ -1135,25 +1130,25 @@ static void EX_ADD(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg,
    /* shift forward by one and put NOP in the start */
     for (i=ADDS-1;i>1;i--)
 	{
-		if (!pipe->a[i].active)
+		if (!this->a[i].active)
 		{
-			pipe->a[i]=pipe->a[i-1];
-			pipe->a[i-1].active=FALSE;
+			this->a[i]=this->a[i-1];
+			this->a[i-1].active=FALSE;
 		}
-		else if (pipe->a[i-1].active) status[i-1]=STALLED;
+		else if (this->a[i-1].active) status[i-1]=STALLED;
 	}
 
-	if (!pipe->a[1].active)
+	if (!this->a[1].active)
 	{
-		if (pipe->a[0].active)
+		if (this->a[0].active)
 		{ // Trying to start a new one...
-			rA=pipe->a[0].rA;
-			rB=pipe->a[0].rB;
-			ins=pipe->a[0].ins;
+			rA=this->a[0].rA;
+			rB=this->a[0].rB;
+			ins=this->a[0].ins;
 
 			if (!available(cpu,rA)) {*rawreg=rA; status[0]=RAW; return;}
 			if (!available(cpu,rB)) {*rawreg=rB; status[0]=RAW; return;}
-			if (waw(pipe,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;}
+			if (waw(this,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;}
 
 			unavail(cpu,BOTH,ins.rd);
 
@@ -1169,18 +1164,17 @@ static void EX_ADD(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg,
 			default:
 				break;
 			}
-			pipe->a[0].ALUOutput=fpR.u;
+			this->a[0].ALUOutput=fpR.u;
 
 		}
-		pipe->a[1]=pipe->a[0];
-		pipe->a[0]=idle;
+		this->a[1]=this->a[0];
+		this->a[0]=idle;
 	}
-	else if (pipe->a[0].active) status[0]=STALLED;
+	else if (this->a[0].active) status[0]=STALLED;
 
 }
 
-static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
-{
+int pipeline::EX_INT(int *rawreg) {
     int rA,rB,opcode,type,function;
 	SIGNED64 rlt;
     instruction ins;
@@ -1189,13 +1183,13 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
     
     DOUBLE64 fpA,fpB,fpR;
 
-	if (pipe->integer.active)
+	if (this->integer.active)
 	{
-		if (pipe->ex_mem.active) return STALLED;
+		if (this->ex_mem.active) return STALLED;
     }
 	else return EMPTY;
  
-    ins=pipe->integer.ins;
+    ins=this->integer.ins;
     type=ins.type;
     function=ins.function;
     opcode=ins.opcode;
@@ -1203,53 +1197,53 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 /* All systems go. Get instruction, and pass to appropriate unit
    Mark destination register as not available for earlier stages...
 */
-    rA=pipe->integer.rA;
-    rB=pipe->integer.rB;
+    rA=this->integer.rA;
+    rB=this->integer.rB;
 
     switch (type)
     {
     case FLOAD:
-        if (waw(pipe,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
+        if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
 		unavail(cpu,READ,ins.rt);
         fpA.u=cpu->rreg[rA].val;
-        pipe->ex_mem.ALUOutput=fpA.u + ins.Imm;
+        this->ex_mem.ALUOutput=fpA.u + ins.Imm;
         break;
     case LOAD:
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
 		unavail(cpu,READ,ins.rt);
         fpA.u=cpu->rreg[rA].val;
-        pipe->ex_mem.ALUOutput=fpA.u + ins.Imm;
+        this->ex_mem.ALUOutput=fpA.u + ins.Imm;
         break;
     case FSTORE:
     case STORE:
-        if (waw(pipe,type,function,ins.rt)) {*rawreg=ins.rt; return RAW;}  
+        if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return RAW;}  
 													/* bodge */
 	
    /* calculate address for memory access - same for all flavours */
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
         fpA.u=cpu->rreg[rA].val;
-        pipe->ex_mem.ALUOutput=fpA.u + ins.Imm;
+        this->ex_mem.ALUOutput=fpA.u + ins.Imm;
         break;
     case REG1I:
-		if (waw(pipe,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
+		if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
 		unavail(cpu,BOTH,ins.rt);
         switch (opcode)
         {
         case I_LUI:
-            pipe->ex_mem.ALUOutput=((SIGNED64)ins.Imm<<16); /* thanks Katia */
+            this->ex_mem.ALUOutput=((SIGNED64)ins.Imm<<16); /* thanks Katia */
         default:
             break;
         }
         if (forwarding && ins.rt!=0) 
         {
-            cpu->wreg[ins.rt].val=pipe->ex_mem.ALUOutput;
+            cpu->wreg[ins.rt].val=this->ex_mem.ALUOutput;
             cpu->wreg[ins.rt].source=FROM_EX;
         }
         break;
     case REG2I:
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		if (waw(pipe,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
+		if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
 		unavail(cpu,BOTH,ins.rt);
 
         fpA.u=cpu->rreg[rA].val;
@@ -1257,59 +1251,59 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
         {
         case I_DADDI:
 			rlt=fpA.s + ins.Imm;
-            pipe->ex_mem.ALUOutput = rlt;
+            this->ex_mem.ALUOutput = rlt;
 			if (ins.Imm>0 && rlt<fpA.s) status=INTEGER_OVERFLOW;
 			if (ins.Imm<0 && rlt>fpA.s) status=INTEGER_OVERFLOW;
             break;
         case I_DADDIU:
-            pipe->ex_mem.ALUOutput = fpA.u + ins.Imm;
+            this->ex_mem.ALUOutput = fpA.u + ins.Imm;
             break;
         case I_ANDI:
-            pipe->ex_mem.ALUOutput = fpA.u & (ins.Imm & 0xffff);
+            this->ex_mem.ALUOutput = fpA.u & (ins.Imm & 0xffff);
             break;
         case I_ORI:
-            pipe->ex_mem.ALUOutput = fpA.u | (ins.Imm & 0xffff);
+            this->ex_mem.ALUOutput = fpA.u | (ins.Imm & 0xffff);
             break;
         case I_XORI:
-            pipe->ex_mem.ALUOutput = fpA.u ^ (ins.Imm & 0xffff);
+            this->ex_mem.ALUOutput = fpA.u ^ (ins.Imm & 0xffff);
             break;
         case I_SLTI:
-            if (fpA.s < ins.Imm) pipe->ex_mem.ALUOutput=1;
-            else                 pipe->ex_mem.ALUOutput=0;
+            if (fpA.s < ins.Imm) this->ex_mem.ALUOutput=1;
+            else                 this->ex_mem.ALUOutput=0;
             break;
         case I_SLTIU:
-            if (fpA.u < ins.Imm) pipe->ex_mem.ALUOutput=1;
-            else                 pipe->ex_mem.ALUOutput=0;
+            if (fpA.u < ins.Imm) this->ex_mem.ALUOutput=1;
+            else                 this->ex_mem.ALUOutput=0;
             break;
         }
         if (forwarding && ins.rt!=0) 
         {
-            cpu->wreg[ins.rt].val = pipe->ex_mem.ALUOutput;
+            cpu->wreg[ins.rt].val = this->ex_mem.ALUOutput;
             cpu->wreg[ins.rt].source = FROM_EX;
         }
         break;
     case REG2S:
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		if (waw(pipe,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+		if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
 		unavail(cpu,BOTH,ins.rd);
         fpA.u=cpu->rreg[rA].val;
         switch (function)
         {
         case R_DSLL:
-            pipe->ex_mem.ALUOutput=fpA.u << ins.Imm;    
+            this->ex_mem.ALUOutput=fpA.u << ins.Imm;    
             break;
         case R_DSRL:
-            pipe->ex_mem.ALUOutput=fpA.u >> ins.Imm;    
+            this->ex_mem.ALUOutput=fpA.u >> ins.Imm;    
             break;
         case R_DSRA:
-            pipe->ex_mem.ALUOutput=fpA.s >> ins.Imm;    
+            this->ex_mem.ALUOutput=fpA.s >> ins.Imm;    
             break;
         default: 
             break; 
         }
         if (forwarding && ins.rd!=0)
         {
-            cpu->wreg[ins.rd].val = pipe->ex_mem.ALUOutput;
+            cpu->wreg[ins.rd].val = this->ex_mem.ALUOutput;
             cpu->wreg[ins.rd].source = FROM_EX;
         }
         break;
@@ -1320,7 +1314,7 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 			unavail(cpu,BOTH,31);
 		    if (forwarding)
             {
-                cpu->wreg[31].val=pipe->integer.NPC;
+                cpu->wreg[31].val=this->integer.NPC;
                 cpu->wreg[31].source=FROM_EX;
             }
          //   else
@@ -1335,61 +1329,61 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
     case REG3:
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
 		if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
-		if (waw(pipe,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+		if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
         fpA.u=cpu->rreg[rA].val;
         fpB.u=cpu->rreg[rB].val;
 	
         switch (function)
         {
         case R_AND:
-            pipe->ex_mem.ALUOutput=fpA.u & fpB.u;
+            this->ex_mem.ALUOutput=fpA.u & fpB.u;
             break;
         case R_OR:
-            pipe->ex_mem.ALUOutput=fpA.u | fpB.u;
+            this->ex_mem.ALUOutput=fpA.u | fpB.u;
             break;
         case R_XOR:
-            pipe->ex_mem.ALUOutput=fpA.u ^ fpB.u;
+            this->ex_mem.ALUOutput=fpA.u ^ fpB.u;
             break;
         case R_SLT:
-            if (fpA.s < fpB.s) pipe->ex_mem.ALUOutput=1;
-            else               pipe->ex_mem.ALUOutput=0;
+            if (fpA.s < fpB.s) this->ex_mem.ALUOutput=1;
+            else               this->ex_mem.ALUOutput=0;
             break;
         case R_SLTU:
-            if (fpA.u < fpB.u) pipe->ex_mem.ALUOutput=1;
-            else               pipe->ex_mem.ALUOutput=0;
+            if (fpA.u < fpB.u) this->ex_mem.ALUOutput=1;
+            else               this->ex_mem.ALUOutput=0;
             break;
         case R_DADD:
 			rlt=fpA.s+fpB.s;
-            pipe->ex_mem.ALUOutput=rlt;
+            this->ex_mem.ALUOutput=rlt;
 			if (rlt<fpA.s) status=INTEGER_OVERFLOW;
             break;
         case R_DADDU:
-            pipe->ex_mem.ALUOutput=fpA.u + fpB.u;
+            this->ex_mem.ALUOutput=fpA.u + fpB.u;
             break;
         case R_DSUB:
 			rlt=fpA.s - fpB.s;
-            pipe->ex_mem.ALUOutput=rlt;
+            this->ex_mem.ALUOutput=rlt;
 			if (rlt>fpA.s) status=INTEGER_OVERFLOW;
             break;
         case R_DSUBU:
-            pipe->ex_mem.ALUOutput=fpA.u - fpB.u;
+            this->ex_mem.ALUOutput=fpA.u - fpB.u;
             break;
  
 		case R_DSLLV:
-            pipe->ex_mem.ALUOutput=fpA.u << (fpB.u & 0x3F);
+            this->ex_mem.ALUOutput=fpA.u << (fpB.u & 0x3F);
             break;
         case R_DSRLV:
-            pipe->ex_mem.ALUOutput=fpA.u >> (fpB.u & 0x3F);
+            this->ex_mem.ALUOutput=fpA.u >> (fpB.u & 0x3F);
             break;
         case R_DSRAV:
-            pipe->ex_mem.ALUOutput=fpA.s >> (fpB.u & 0x3F);
+            this->ex_mem.ALUOutput=fpA.s >> (fpB.u & 0x3F);
             break;
         case R_MOVZ:
-            if (fpB.u==0) pipe->ex_mem.ALUOutput=fpA.u;
+            if (fpB.u==0) this->ex_mem.ALUOutput=fpA.u;
 			else condition=FALSE;
             break;
         case R_MOVN:
-            if (fpB.u!=0) pipe->ex_mem.ALUOutput=fpA.u;
+            if (fpB.u!=0) this->ex_mem.ALUOutput=fpA.u;
 			else condition=FALSE;
             break;
         default:
@@ -1401,31 +1395,31 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 		}
 		if (condition && forwarding && ins.rd!=0)
         {
-            cpu->wreg[ins.rd].val = pipe->ex_mem.ALUOutput;
+            cpu->wreg[ins.rd].val = this->ex_mem.ALUOutput;
             cpu->wreg[ins.rd].source = FROM_EX;
         }
         break;
     case REGID:
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-        if (waw(pipe,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;}
+        if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;}
 		unavail(cpu,BOTH,ins.rd);
         fpA.u=cpu->rreg[rA].val;
-        pipe->ex_mem.ALUOutput=fpA.s;
+        this->ex_mem.ALUOutput=fpA.s;
         if (forwarding && ins.rd!=0)
         {
-            cpu->wreg[ins.rd].val = pipe->ex_mem.ALUOutput;
+            cpu->wreg[ins.rd].val = this->ex_mem.ALUOutput;
             cpu->wreg[ins.rd].source = FROM_EX;
         }
         break;
     case REGDI:
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-        if (waw(pipe,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
+        if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
 		unavail(cpu,BOTH,ins.rt);
         fpA.u=cpu->rreg[rA].val;
-        pipe->ex_mem.ALUOutput=fpA.s;
+        this->ex_mem.ALUOutput=fpA.s;
         if (forwarding && ins.rt!=0)
         {
-            cpu->wreg[ins.rt].val = pipe->ex_mem.ALUOutput;
+            cpu->wreg[ins.rt].val = this->ex_mem.ALUOutput;
             cpu->wreg[ins.rt].source = FROM_EX;
         }
         break;
@@ -1455,7 +1449,7 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 
     case REG2F:
         if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-        if (waw(pipe,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+        if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
 
 		unavail(cpu,BOTH,ins.rd);
 
@@ -1464,22 +1458,22 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
         {
         case F_CVT_D_L:
             fpR.d = (double)fpA.s;
-            pipe->ex_mem.ALUOutput=fpR.u;
+            this->ex_mem.ALUOutput=fpR.u;
             break;
 		case F_CVT_L_D:
             fpR.s = (int64_t)fpA.d;
-            pipe->ex_mem.ALUOutput=fpR.u;
+            this->ex_mem.ALUOutput=fpR.u;
             break;
 		case F_MOV_D:
 			fpR.u=fpA.u;
-			pipe->ex_mem.ALUOutput=fpR.u;
+			this->ex_mem.ALUOutput=fpR.u;
 			break;
         default:
             break;
         }
         if (forwarding && ins.rd!=0)
         {
-            cpu->wreg[ins.rd].val = pipe->ex_mem.ALUOutput;
+            cpu->wreg[ins.rd].val = this->ex_mem.ALUOutput;
             cpu->wreg[ins.rd].source = FROM_EX;
         }
         break;
@@ -1488,19 +1482,18 @@ static int EX_INT(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
     default:
         break;
     }
-    pipe->ex_mem.IR=pipe->integer.IR;
-    pipe->ex_mem.ins=ins;
-    pipe->ex_mem.NPC=pipe->integer.NPC;
-    pipe->ex_mem.rB=pipe->integer.rB;
-    pipe->ex_mem.active=TRUE;
-	pipe->ex_mem.condition=condition;
-    pipe->integer.active=FALSE;
+    this->ex_mem.IR=this->integer.IR;
+    this->ex_mem.ins=ins;
+    this->ex_mem.NPC=this->integer.NPC;
+    this->ex_mem.rB=this->integer.rB;
+    this->ex_mem.active=TRUE;
+	this->ex_mem.condition=condition;
+    this->integer.active=FALSE;
     
     return status;
 }
 
-static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
-{
+int pipeline::MEM(int *rawreg) {
     int i,opcode,function,status,type,rB;
     instruction ins; 
     BYTE   b;
@@ -1510,18 +1503,18 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
     SIGNED64 s;
 	BOOL condition,mmio;
 
-    pipe->mem_wb.active=FALSE;
-    if (!pipe->ex_mem.active) return EMPTY;
+    this->mem_wb.active=FALSE;
+    if (!this->ex_mem.active) return EMPTY;
 
-	condition=pipe->ex_mem.condition;
-    ins=pipe->ex_mem.ins;
-    pipe->mem_wb.ins=ins;
+	condition=this->ex_mem.condition;
+    ins=this->ex_mem.ins;
+    this->mem_wb.ins=ins;
 
     type=ins.type;
     status=OK;
     opcode=ins.opcode;
     function=ins.function;
-    ptr=(WORD32)pipe->ex_mem.ALUOutput;
+    ptr=(WORD32)this->ex_mem.ALUOutput;
 
     switch (type)
     {
@@ -1532,7 +1525,7 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
       
 		if (!cpu->isValidDataMemoryAddress(ptr))
 		{
-			pipe->mem_wb.LMD=0;
+			this->mem_wb.LMD=0;
 			status=NO_SUCH_DATA_MEMORY;
 		}
         else 
@@ -1551,7 +1544,7 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 					b=*(BYTE *)(&cpu->data[ptr]);
 				}
 				s=b;
-				pipe->mem_wb.LMD=(s<<56)>>56;
+				this->mem_wb.LMD=(s<<56)>>56;
 				break;
         case I_LBU:
 				if (mmio)
@@ -1562,13 +1555,13 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 					b=*(BYTE *)(&cpu->data[ptr]);
 				}
 				u=b;
-				pipe->mem_wb.LMD=(u<<56)>>56;
+				this->mem_wb.LMD=(u<<56)>>56;
 				break;
         case I_LH:
 				if (ptr%2!=0)
 				{
 					status=DATA_MISALIGNED;
-					pipe->mem_wb.LMD=0;
+					this->mem_wb.LMD=0;
 					break;
 				}
 				if (mmio)
@@ -1580,13 +1573,13 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 					h=*(WORD16 *)(&cpu->data[ptr]);
 				}
 				s=h;
-				pipe->mem_wb.LMD=(s<<48)>>48;
+				this->mem_wb.LMD=(s<<48)>>48;
 				break;
         case I_LHU:
 				if (ptr%2!=0)
 				{
 					status=DATA_MISALIGNED;
-					pipe->mem_wb.LMD=0;
+					this->mem_wb.LMD=0;
 					break;
 				}
 				if (mmio)
@@ -1598,13 +1591,13 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 					h=*(WORD16 *)(&cpu->data[ptr]);
 				}
 				u=h;
-				pipe->mem_wb.LMD=(u<<48)>>48;
+				this->mem_wb.LMD=(u<<48)>>48;
 				break;
         case I_LW:
  				if (ptr%4!=0)
 				{
 					status=DATA_MISALIGNED;
-					pipe->mem_wb.LMD=0;
+					this->mem_wb.LMD=0;
 					break;
 				}
 				if (mmio)
@@ -1616,13 +1609,13 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 					w=*(WORD32 *)(&cpu->data[ptr]);
 				}
 				s=w;
-				pipe->mem_wb.LMD=(s<<32)>>32;
+				this->mem_wb.LMD=(s<<32)>>32;
 				break;
         case I_LWU:
 				if (ptr%4!=0)
 				{
 					status=DATA_MISALIGNED;
-					pipe->mem_wb.LMD=0;
+					this->mem_wb.LMD=0;
 					break;
 				}
 				if (mmio)
@@ -1635,23 +1628,23 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 				}
 //AfxMessageBox("Hello");
 				u=w;
-				pipe->mem_wb.LMD=(u<<32)>>32;
+				this->mem_wb.LMD=(u<<32)>>32;
 				break;
         case I_LD:
         case I_L_D:
 				if (ptr%8!=0)
 				{
 					status=DATA_MISALIGNED;
-					pipe->mem_wb.LMD=0;
+					this->mem_wb.LMD=0;
 					break;
 				}
 				if (mmio)
-					pipe->mem_wb.LMD=*(WORD64 *)(&cpu->mm[ptr-MMIO]);
+					this->mem_wb.LMD=*(WORD64 *)(&cpu->mm[ptr-MMIO]);
 				else
 				{
 					for (i=0;i<8;i++) 
 						if (cpu->dstat[ptr+i]==VACANT) status=DATA_ERR;
-					pipe->mem_wb.LMD=*(WORD64 *)(&cpu->data[ptr]);
+					this->mem_wb.LMD=*(WORD64 *)(&cpu->data[ptr]);
 				}
 				break;
 			default:
@@ -1660,13 +1653,13 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
 		}
         if (forwarding && ins.rt!=0)
         {
-            cpu->wreg[ins.rt].val=pipe->mem_wb.LMD;
+            cpu->wreg[ins.rt].val=this->mem_wb.LMD;
             cpu->wreg[ins.rt].source=FROM_MEM;
         }
         break;
     case STORE:
     case FSTORE:
-        rB=pipe->ex_mem.rB;
+        rB=this->ex_mem.rB;
         if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
 		status=STORES;
 	
@@ -1750,13 +1743,13 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
         break;
     }
 
-    pipe->ex_mem.active=FALSE;
-    pipe->mem_wb.active=TRUE;
-    pipe->mem_wb.ALUOutput=pipe->ex_mem.ALUOutput;
-    pipe->mem_wb.IR=pipe->ex_mem.IR;
-    pipe->mem_wb.ins=ins;
-    pipe->mem_wb.NPC=pipe->ex_mem.NPC;
-	pipe->mem_wb.condition=pipe->ex_mem.condition;
+    this->ex_mem.active=FALSE;
+    this->mem_wb.active=TRUE;
+    this->mem_wb.ALUOutput=this->ex_mem.ALUOutput;
+    this->mem_wb.IR=this->ex_mem.IR;
+    this->mem_wb.ins=ins;
+    this->mem_wb.NPC=this->ex_mem.NPC;
+    this->mem_wb.condition=this->ex_mem.condition;
     return status;
 }
 
@@ -1765,15 +1758,14 @@ static int MEM(pipeline *pipe, Processor *cpu, BOOL forwarding, int *rawreg)
    read and write registers
 */
 
-static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
-{
+int pipeline::WB() {
     int status,type;
 	BOOL condition;
-    instruction ins=pipe->mem_wb.ins;
+    instruction ins=this->mem_wb.ins;
 
-    if (!pipe->mem_wb.active) return EMPTY;
+    if (!this->mem_wb.active) return EMPTY;
 
-	condition=pipe->mem_wb.condition;
+	condition=this->mem_wb.condition;
     type=ins.type;
     status=OK;
     switch (type)
@@ -1783,7 +1775,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
         if (ins.rt==0) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rt,pipe->mem_wb.LMD);
+			make_available(cpu,ins.rt,this->mem_wb.LMD);
         }
         else
         { /* be careful in case a new value is now being forwarded */
@@ -1798,7 +1790,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
         if (ins.rt==0) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rt,pipe->mem_wb.ALUOutput);
+			make_available(cpu,ins.rt,this->mem_wb.ALUOutput);
         }
         else
         {
@@ -1811,7 +1803,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
         if (ins.rd==0) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rd,pipe->mem_wb.ALUOutput);
+			make_available(cpu,ins.rd,this->mem_wb.ALUOutput);
         }
         else
         {
@@ -1826,7 +1818,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
         if (ins.rd==0 || !condition) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rd,pipe->mem_wb.ALUOutput);
+			make_available(cpu,ins.rd,this->mem_wb.ALUOutput);
         }
         else
         {
@@ -1839,7 +1831,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
         {
             if (!forwarding)
             {
-				make_available(cpu,31,pipe->mem_wb.NPC);
+				make_available(cpu,31,this->mem_wb.NPC);
             }  
             else
             {
@@ -1853,7 +1845,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
         {
             if (!forwarding)
             { 
-				make_available(cpu,31,pipe->mem_wb.NPC);
+				make_available(cpu,31,this->mem_wb.NPC);
             }
             else
             {
@@ -1868,7 +1860,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
     default:
         break;
     }
-    pipe->mem_wb.active=FALSE;
+    this->mem_wb.active=FALSE;
     return status;
 }
 
@@ -1880,51 +1872,51 @@ int pipeline::clock_tick(RESULT *result)
 
 /* activate WB first as it activates on leading edge */
 
-    status=WB(this,cpu,forwarding);
-    if (status==HALTED || this->halting) 
-	{ // check that pipeline is empty...
-		this->halting=TRUE;
-		empty=TRUE;
-		for (i=0;i<this->MUL_LATENCY;i++) if (this->m[i].active) empty=FALSE;
-		for (i=0;i<this->ADD_LATENCY;i++) if (this->a[i].active) empty=FALSE;
+    status = WB();
+    if (status == HALTED || this->halting) {
+	 // check that pipeline is empty...
+		this->halting = TRUE;
+		empty = TRUE;
+		for (i = 0; i < this->MUL_LATENCY; i++)
+                   if (this->m[i].active) 
+                     empty = FALSE;
+		for (i = 0;i<this->ADD_LATENCY;i++) if (this->a[i].active) empty=FALSE;
 		if (this->div.active && this->div.cycles>0) empty=FALSE;
 		if (this->ex_mem.active) empty=FALSE;
 		if (this->mem_wb.active) empty=FALSE;
-		if (empty) 	
-		{
+		if (empty) {
 			result->WB=result->MEM=result->DIVIDER=result->EX=result->ID=result->IF=OK;
 			for (i=0;i<this->MUL_LATENCY;i++) result->MULTIPLIER[i]=OK;
 			for (i=0;i<this->ADD_LATENCY;i++) result->ADDER[i]=OK;
-
-
 			return HALTED;           /* halted */
 		}
 	}
 	
-	result->WB=status;
-    result->MEM=MEM(this,cpu,forwarding,&result->memrr);
+	result->WB = status;
+    result->MEM = MEM(&result->memrr);
 
 //	int extype=this->integer.ins.type;
 //	if (extype==STORE || extype==FSTORE)
 //	{ // in this case pull the store instruction through first
 //		result->EX=EX_INT(pipe,cpu,forwarding,&result->exrr);	
 //		EX_MUL(pipe,cpu,forwarding,&result->mulrr,result->MULTIPLIER);
-//		EX_ADD(pipe,cpu,forwarding,&result->addrr,result->ADDER);
+//		EX_ADD(&result->addrr,result->ADDER);
 //		result->DIVIDER=EX_DIV(pipe,cpu,forwarding,&result->divrr);
 //	}
 //	else
 //	{
-		EX_MUL(this,cpu,forwarding,&result->mulrr,result->MULTIPLIER);
-		EX_ADD(this,cpu,forwarding,&result->addrr,result->ADDER);
-		result->DIVIDER=EX_DIV(this,cpu,forwarding,&result->divrr);
-		result->EX=EX_INT(this,cpu,forwarding,&result->exrr);	
+		EX_MUL(&result->mulrr,result->MULTIPLIER);
+		EX_ADD(&result->addrr, result->ADDER);
+		result->DIVIDER = EX_DIV(&result->divrr);
+		result->EX = EX_INT(&result->exrr);	
 //	}
-    result->ID=ID(this,cpu,forwarding,branch_target_buffer,&result->idrr);
-    result->IF=IF(this,cpu,delay_slot,branch_target_buffer);
+    result->ID = ID(&result->idrr);
+    result->IF = IF();
 
 /* Copy Write to Read registers */
  
-    for (i=0;i<64;i++) cpu->rreg[i]=cpu->wreg[i];
+    for (i = 0; i < 64; i++) 
+	cpu->rreg[i] = cpu->wreg[i];
 
     return OK;
 }
