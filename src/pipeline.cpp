@@ -320,31 +320,26 @@ static int parse(WORD32 instruct,instruction *ins)
     return type;
 }
 
-static BOOL available(Processor *cpu,int r)
-{
+BOOL pipeline::available(int r) {
     if (r==0) return TRUE;
     if (cpu->rreg[r].source<=NOT_AVAILABLE) return FALSE;
     return TRUE;
 }
 
-static void unavail(Processor *cpu,int type,int r)
-{
-	if (type==READ || type == BOTH)
-	{
+void pipeline::unavail(int type,int r) {
+	if (type==READ || type == BOTH) {
 		if (cpu->rreg[r].source>NOT_AVAILABLE) cpu->rreg[r].source=NOT_AVAILABLE;
 		else 
 			cpu->rreg[r].source--;  // even less available!
 	}
-	if (type==WRITE || type==BOTH)
-	{
+	if (type==WRITE || type==BOTH) {
 		if (cpu->wreg[r].source>NOT_AVAILABLE) cpu->wreg[r].source=NOT_AVAILABLE;
 		else 
 			cpu->wreg[r].source--;
 	} 
 }
 
-static void make_available(Processor *cpu,int r,WORD64 lmd)
-{
+void pipeline::make_available(int r,WORD64 lmd) {
 	if (cpu->rreg[r].source<NOT_AVAILABLE)
 		cpu->rreg[r].source++;
 	else
@@ -369,8 +364,7 @@ static void make_available(Processor *cpu,int r,WORD64 lmd)
    by one of the FP units.... it may be necessary to stall
 */
 
-static BOOL waw(pipeline *pipe,int type,int function,int r)
-{
+BOOL pipeline::waw(int type, int function, int r) {
     int i;
     switch (type)
     {
@@ -386,11 +380,11 @@ static BOOL waw(pipeline *pipe,int type,int function,int r)
 	case REG1I:
 	case REG2I:
 	case REG2S:
-       if (pipe->div.active && pipe->div.cycles<pipe->DIV_LATENCY && pipe->div.ins.rd==r) return TRUE;
-       for (i=1;i<pipe->MUL_LATENCY;i++) 
-            if (pipe->m[i].active && pipe->m[i].ins.rd==r) return TRUE;
-       for (i=1;i<pipe->ADD_LATENCY;i++) 
-            if (pipe->a[i].active && pipe->a[i].ins.rd==r) return TRUE;
+       if (this->div.active && this->div.cycles<this->DIV_LATENCY && this->div.ins.rd==r) return TRUE;
+       for (i=1;i<this->MUL_LATENCY;i++) 
+            if (this->m[i].active && this->m[i].ins.rd==r) return TRUE;
+       for (i=1;i<this->ADD_LATENCY;i++) 
+            if (this->a[i].active && this->a[i].ins.rd==r) return TRUE;
 		break;
  
     case REG3F:
@@ -404,15 +398,15 @@ static BOOL waw(pipeline *pipe,int type,int function,int r)
         case F_MUL_D:
 		case R_DMUL:
 		case R_DMULU:
-            if (pipe->div.active && pipe->div.cycles<pipe->DIV_LATENCY && pipe->div.ins.rd==r) return TRUE;
-            for (i=1;i<pipe->ADD_LATENCY;i++) 
-                if (pipe->a[i].active && pipe->a[i].ins.rd==r) return TRUE;
+            if (this->div.active && this->div.cycles<this->DIV_LATENCY && this->div.ins.rd==r) return TRUE;
+            for (i=1;i<this->ADD_LATENCY;i++) 
+                if (this->a[i].active && this->a[i].ins.rd==r) return TRUE;
             break;
         case F_ADD_D:
         case F_SUB_D:
-            if (pipe->div.active && pipe->div.cycles<pipe->DIV_LATENCY && pipe->div.ins.rd==r) return TRUE;
-            for (i=1;i<pipe->MUL_LATENCY;i++) 
-                if (pipe->m[i].active && pipe->m[i].ins.rd==r) return TRUE;
+            if (this->div.active && this->div.cycles<this->DIV_LATENCY && this->div.ins.rd==r) return TRUE;
+            for (i=1;i<this->MUL_LATENCY;i++) 
+                if (this->m[i].active && this->m[i].ins.rd==r) return TRUE;
             break;
         default: 
             break;
@@ -498,41 +492,39 @@ int pipeline::IF() {
     return status;
 }
 
-static BOOL already_target(pipeline *pipe,int reg)
-{
-	if (pipe->div.active  && pipe->div.cycles==pipe->DIV_LATENCY  && pipe->div.ins.rd==reg)
+BOOL pipeline::already_target(int reg) {
+	if (this->div.active  && this->div.cycles==this->DIV_LATENCY  && this->div.ins.rd==reg)
 		return TRUE;
-	if (pipe->m[0].active && pipe->m[0].ins.rd==reg)
+	if (this->m[0].active && this->m[0].ins.rd==reg)
 		return TRUE;
-	if (pipe->a[0].active && pipe->a[0].ins.rd==reg)
+	if (this->a[0].active && this->a[0].ins.rd==reg)
 		return TRUE;
 
 // check if there is an integer instruction in EX targetting reg
 
-	if (pipe->integer.active && pipe->integer.ins.target==reg)
+	if (this->integer.active && this->integer.ins.target==reg)
 		return TRUE;
 
 	return FALSE;
 }
 
-static BOOL already_waitedfor(pipeline *pipe,int reg)
-{
-	if (pipe->m[0].active)
+BOOL pipeline::already_waitedfor(int reg) {
+	if (this->m[0].active)
 	{
-		if (pipe->m[0].ins.rs==reg || pipe->m[0].ins.rt==reg) return TRUE;
+		if (this->m[0].ins.rs==reg || this->m[0].ins.rt==reg) return TRUE;
 	}
-	if (pipe->a[0].active)
+	if (this->a[0].active)
 	{
-		if (pipe->a[0].ins.rs==reg || pipe->a[0].ins.rt==reg) return TRUE;
+		if (this->a[0].ins.rs==reg || this->a[0].ins.rt==reg) return TRUE;
 	}
-	if (pipe->div.active && pipe->div.cycles==pipe->DIV_LATENCY)
+	if (this->div.active && this->div.cycles==this->DIV_LATENCY)
 	{
-		if (pipe->div.ins.rs==reg || pipe->div.ins.rt==reg) return TRUE;
+		if (this->div.ins.rs==reg || this->div.ins.rt==reg) return TRUE;
 	}
 /* V1.53 */
-	if (pipe->integer.active)
+	if (this->integer.active)
 	{
-		if (pipe->integer.ins.src1==reg || pipe->integer.ins.src2==reg) return TRUE;
+		if (this->integer.ins.src1==reg || this->integer.ins.src2==reg) return TRUE;
 	}
 	return FALSE;
 }
@@ -575,7 +567,7 @@ int pipeline::ID(int *rawreg) {
 	case REG2F:
 		if (!forwarding)
 		{ // Stall it in ID - must wait for reg to be Written Back 
-			if (!available(cpu,ins.rs)) {*rawreg=ins.rs; return RAW;}
+			if (!available(ins.rs)) {*rawreg=ins.rs; return RAW;}
 		}
         this->integer.rA=ins.rs;
 		this->integer.rB=-1;
@@ -584,7 +576,7 @@ int pipeline::ID(int *rawreg) {
 	case REGID:
 		if (!forwarding)
 		{ // Stall it in ID - must wait for reg to be Written Back 
-			if (!available(cpu,ins.rt)) {*rawreg=ins.rt; return RAW;}
+			if (!available(ins.rt)) {*rawreg=ins.rt; return RAW;}
 		}
         this->integer.rA=ins.rt;
 		this->integer.rB=-1;
@@ -593,7 +585,7 @@ int pipeline::ID(int *rawreg) {
 	case REGDI:
 		if (!forwarding)
 		{ // Stall it in ID - must wait for reg to be Written Back 
-			if (!available(cpu,ins.rd)) {*rawreg=ins.rd; return RAW;}
+			if (!available(ins.rd)) {*rawreg=ins.rd; return RAW;}
 		}
         this->integer.rA=ins.rd;
 		this->integer.rB=-1;
@@ -606,8 +598,8 @@ int pipeline::ID(int *rawreg) {
 	case REG2C:
 		if (!forwarding)
 		{
-			if (!available(cpu,ins.rt)) {*rawreg=ins.rt; return RAW;}
-			if (!available(cpu,ins.rs)) {*rawreg=ins.rs; return RAW;}
+			if (!available(ins.rt)) {*rawreg=ins.rt; return RAW;}
+			if (!available(ins.rs)) {*rawreg=ins.rs; return RAW;}
 		}
         this->integer.rA=ins.rs;
         this->integer.rB=ins.rt;
@@ -617,18 +609,18 @@ int pipeline::ID(int *rawreg) {
 	case REG3X:
 		if (!forwarding)
 		{
-			if (!available(cpu,ins.rt)) {*rawreg=ins.rt; return RAW;}
-			if (!available(cpu,ins.rs)) {*rawreg=ins.rs; return RAW;}
+			if (!available(ins.rt)) {*rawreg=ins.rt; return RAW;}
+			if (!available(ins.rs)) {*rawreg=ins.rs; return RAW;}
 		} 
 		break;
     case JREG:
     case JREGN:
-        if (!available(cpu,ins.rt)) {*rawreg=ins.rt; return RAW;}
+        if (!available(ins.rt)) {*rawreg=ins.rt; return RAW;}
         B=cpu->rreg[ins.rt].val;
         break;
     case BRANCH:
-        if (!available(cpu,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (!available(cpu,ins.rt)) {*rawreg=ins.rt; return RAW;}
+        if (!available(ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (!available(ins.rt)) {*rawreg=ins.rt; return RAW;}
         A=cpu->rreg[ins.rs].val;
         B=cpu->rreg[ins.rt].val;
         break;
@@ -651,38 +643,38 @@ int pipeline::ID(int *rawreg) {
     {
 	case REG2F:
 	case REG2S:
-		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
-		if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;} // new
+		if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(ins.rd)) {*rawreg=ins.rd; return WAW;}
+		if (already_waitedfor(ins.rd)) {*rawreg=ins.rd; return WAR;} // new
 		break;
 	case REG2C:
 	case STORE:
 	case FSTORE:
-		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
 		break;
 	case REG2I:
 	case LOAD:
 	case FLOAD:
-		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_waitedfor(this,ins.rt)) {*rawreg=ins.rt; return WAR;}
+		if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_waitedfor(ins.rt)) {*rawreg=ins.rt; return WAR;}
 		break;
 	case REG1I:
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_waitedfor(this,ins.rt)) {*rawreg=ins.rt; return WAR;}
+		if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_waitedfor(ins.rt)) {*rawreg=ins.rt; return WAR;}
 		break;
 	case REG3:
-		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
-		if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
+		if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(ins.rd)) {*rawreg=ins.rd; return WAW;}
+		if (already_waitedfor(ins.rd)) {*rawreg=ins.rd; return WAR;}
 		break;
 	case REGDI:
 	case REGID:
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
-		if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
-		if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;} 
+		if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(ins.rd)) {*rawreg=ins.rd; return WAW;}
+		if (already_waitedfor(ins.rd)) {*rawreg=ins.rd; return WAR;} 
 		break;
 	case REG3F:
 	case REG3X:
@@ -691,10 +683,10 @@ int pipeline::ID(int *rawreg) {
             case F_ADD_D:
             case F_SUB_D:
                 if (this->a[0].active) return STALLED;
-				if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-				if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
-				if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
-				if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
+				if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+				if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
+				if (already_target(ins.rd)) {*rawreg=ins.rd; return WAW;}
+				if (already_waitedfor(ins.rd)) {*rawreg=ins.rd; return WAR;}
 				this->a[0].rA=ins.rs;
 				this->a[0].rB=ins.rt;
 		        this->a[0].active=TRUE;
@@ -709,26 +701,26 @@ int pipeline::ID(int *rawreg) {
 //sprintf(txt,"need ins.rs= %d and ins.rt= %d",ins.rs,ins.rt);
 //AfxMessageBox(txt);
                 if (this->m[0].active) return STALLED;
-				if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-				if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
-				if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
-				if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
+				if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+				if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
+				if (already_target(ins.rd)) {*rawreg=ins.rd; return WAW;}
+				if (already_waitedfor(ins.rd)) {*rawreg=ins.rd; return WAR;}
 				this->m[0].rA=ins.rs;
 				this->m[0].rB=ins.rt;
 		        this->m[0].active=TRUE;
 				this->m[0].NPC=this->if_id.NPC;
 				this->m[0].IR =this->if_id.IR;
 				this->m[0].ins=ins;
-			//	unavail(cpu,BOTH,ins.rd);
+			//	unavail(BOTH,ins.rd);
                 break;
             case F_DIV_D:
 			case R_DDIV:
 			case R_DDIVU:
                 if (this->div.active) return STRUCTURAL;
-				if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-				if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
-				if (already_target(this,ins.rd)) {*rawreg=ins.rd; return WAW;}
-				if (already_waitedfor(this,ins.rd)) {*rawreg=ins.rd; return WAR;}
+				if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+				if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
+				if (already_target(ins.rd)) {*rawreg=ins.rd; return WAW;}
+				if (already_waitedfor(ins.rd)) {*rawreg=ins.rd; return WAR;}
 				this->div.rA=ins.rs;
 				this->div.rB=ins.rt;
 		        this->div.active=TRUE;
@@ -743,8 +735,8 @@ int pipeline::ID(int *rawreg) {
 		this->if_id.active=FALSE;
 		return OK;
     case BRANCH:
-		if (already_target(this,ins.rs)) {*rawreg=ins.rs; return RAW;}
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(ins.rs)) {*rawreg=ins.rs; return RAW;}
+		if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
 	
 		//branch_complete=TRUE;
 		branch_status=BRANCH_NOT_TAKEN;
@@ -784,7 +776,7 @@ int pipeline::ID(int *rawreg) {
 		break;
 
     case JREGN:
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+		if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
 		
 		//branch_complete=TRUE;
 		branch_status=BRANCH_NOT_TAKEN;
@@ -823,11 +815,11 @@ int pipeline::ID(int *rawreg) {
        //         cpu->wreg[31].source=FROM_ID;
        //     }
        //     else
-	//			unavail(cpu,WRITE,31);
+	//			unavail(WRITE,31);
         }
         break;
     case JREG:
-		if (already_target(this,ins.rt)) {*rawreg=ins.rt; return RAW;}
+	if (already_target(ins.rt)) {*rawreg=ins.rt; return RAW;}
 	
 		branch_status=BRANCH_TAKEN;
         if (ins.opcode==I_SPECIAL && ins.function==R_JR)
@@ -848,7 +840,7 @@ int pipeline::ID(int *rawreg) {
         //        cpu->wreg[31].source=FROM_ID;
         //    }
         //    else
-		//		unavail(cpu,WRITE,31);
+		//		unavail(WRITE,31);
         }
         break;
     default:
@@ -937,11 +929,11 @@ int pipeline::EX_DIV(int *rawreg) {
 
 		if (this->div.cycles==this->DIV_LATENCY)
 		{ // Trying to start a new one...
-			if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-			if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
-			if (waw(this,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+			if (!available(rA)) {*rawreg=rA; return RAW;}
+			if (!available(rB)) {*rawreg=rB; return RAW;}
+			if (waw(ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
 
-			unavail(cpu,BOTH,ins.rd);
+			unavail(BOTH,ins.rd);
 			fpA.u=cpu->rreg[rA].val;
 			fpB.u=cpu->rreg[rB].val;
 
@@ -1059,12 +1051,12 @@ void pipeline::EX_MUL(int *rawreg,int *status) {
 			rB=this->m[0].rB;
 			ins=this->m[0].ins;	
 
-			if (!available(cpu,rA)) {*rawreg=rA; status[0]=RAW; return;}
-			if (!available(cpu,rB)) {*rawreg=rB; status[0]=RAW; return;}
+			if (!available(rA)) {*rawreg=rA; status[0]=RAW; return;}
+			if (!available(rB)) {*rawreg=rB; status[0]=RAW; return;}
 			
-			if (waw(this,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;} // new
+			if (waw(ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;} // new
 
-			unavail(cpu,BOTH,ins.rd);
+			unavail(BOTH,ins.rd);
 
             fpA.u=cpu->rreg[rA].val;
             fpB.u=cpu->rreg[rB].val;
@@ -1146,11 +1138,11 @@ void pipeline::EX_ADD(int *rawreg, int *status) {
 			rB=this->a[0].rB;
 			ins=this->a[0].ins;
 
-			if (!available(cpu,rA)) {*rawreg=rA; status[0]=RAW; return;}
-			if (!available(cpu,rB)) {*rawreg=rB; status[0]=RAW; return;}
-			if (waw(this,ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;}
+			if (!available(rA)) {*rawreg=rA; status[0]=RAW; return;}
+			if (!available(rB)) {*rawreg=rB; status[0]=RAW; return;}
+			if (waw(ins.type,ins.function,ins.rd)) {*rawreg=ins.rd; status[0]=WAW; return;}
 
-			unavail(cpu,BOTH,ins.rd);
+			unavail(BOTH,ins.rd);
 
             fpA.u=cpu->rreg[rA].val;
             fpB.u=cpu->rreg[rB].val;
@@ -1203,31 +1195,31 @@ int pipeline::EX_INT(int *rawreg) {
     switch (type)
     {
     case FLOAD:
-        if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		unavail(cpu,READ,ins.rt);
+        if (waw(type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+		unavail(READ,ins.rt);
         fpA.u=cpu->rreg[rA].val;
         this->ex_mem.ALUOutput=fpA.u + ins.Imm;
         break;
     case LOAD:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		unavail(cpu,READ,ins.rt);
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+		unavail(READ,ins.rt);
         fpA.u=cpu->rreg[rA].val;
         this->ex_mem.ALUOutput=fpA.u + ins.Imm;
         break;
     case FSTORE:
     case STORE:
-        if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return RAW;}  
+        if (waw(type,function,ins.rt)) {*rawreg=ins.rt; return RAW;}  
 													/* bodge */
 	
    /* calculate address for memory access - same for all flavours */
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
+        if (!available(rA)) {*rawreg=rA; return RAW;}
         fpA.u=cpu->rreg[rA].val;
         this->ex_mem.ALUOutput=fpA.u + ins.Imm;
         break;
     case REG1I:
-		if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
-		unavail(cpu,BOTH,ins.rt);
+		if (waw(type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
+		unavail(BOTH,ins.rt);
         switch (opcode)
         {
         case I_LUI:
@@ -1242,9 +1234,9 @@ int pipeline::EX_INT(int *rawreg) {
         }
         break;
     case REG2I:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
-		unavail(cpu,BOTH,ins.rt);
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+		if (waw(type,function,ins.rt)) {*rawreg=ins.rt; return WAW;} //new
+		unavail(BOTH,ins.rt);
 
         fpA.u=cpu->rreg[rA].val;
         switch (opcode)
@@ -1283,9 +1275,9 @@ int pipeline::EX_INT(int *rawreg) {
         }
         break;
     case REG2S:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
-		unavail(cpu,BOTH,ins.rd);
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+		if (waw(type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+		unavail(BOTH,ins.rd);
         fpA.u=cpu->rreg[rA].val;
         switch (function)
         {
@@ -1311,14 +1303,14 @@ int pipeline::EX_INT(int *rawreg) {
     case JREG:
 		if (ins.opcode==I_JAL || (ins.opcode==I_SPECIAL && ins.function==R_JALR))
 		{
-			unavail(cpu,BOTH,31);
+			unavail(BOTH,31);
 		    if (forwarding)
             {
                 cpu->wreg[31].val=this->integer.NPC;
                 cpu->wreg[31].source=FROM_EX;
             }
          //   else
-		//		unavail(cpu,WRITE,31);
+		//		unavail(WRITE,31);
 		}
       //  if (forwarding && opcode==I_JAL || (opcode==I_SPECIAL && function==R_JALR))
       //      cpu->wreg[31].source = FROM_EX;
@@ -1327,9 +1319,9 @@ int pipeline::EX_INT(int *rawreg) {
         break;
 
     case REG3:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
-		if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+		if (!available(rB)) {*rawreg=rB; return RAW;}
+		if (waw(type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
         fpA.u=cpu->rreg[rA].val;
         fpB.u=cpu->rreg[rB].val;
 	
@@ -1391,7 +1383,7 @@ int pipeline::EX_INT(int *rawreg) {
         }
         if (condition) 
 		{
-			unavail(cpu,BOTH,ins.rd);
+			unavail(BOTH,ins.rd);
 		}
 		if (condition && forwarding && ins.rd!=0)
         {
@@ -1400,9 +1392,9 @@ int pipeline::EX_INT(int *rawreg) {
         }
         break;
     case REGID:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-        if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;}
-		unavail(cpu,BOTH,ins.rd);
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+        if (waw(type,function,ins.rd)) {*rawreg=ins.rd; return WAW;}
+		unavail(BOTH,ins.rd);
         fpA.u=cpu->rreg[rA].val;
         this->ex_mem.ALUOutput=fpA.s;
         if (forwarding && ins.rd!=0)
@@ -1412,9 +1404,9 @@ int pipeline::EX_INT(int *rawreg) {
         }
         break;
     case REGDI:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-        if (waw(this,type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
-		unavail(cpu,BOTH,ins.rt);
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+        if (waw(type,function,ins.rt)) {*rawreg=ins.rt; return WAW;}
+		unavail(BOTH,ins.rt);
         fpA.u=cpu->rreg[rA].val;
         this->ex_mem.ALUOutput=fpA.s;
         if (forwarding && ins.rt!=0)
@@ -1427,8 +1419,8 @@ int pipeline::EX_INT(int *rawreg) {
         break;
 
 	case REG2C:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-		if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+		if (!available(rB)) {*rawreg=rB; return RAW;}
 		fpA.u=cpu->rreg[rA].val;
 		fpB.u=cpu->rreg[rB].val;
 		cpu->fp_cc=FALSE;
@@ -1448,10 +1440,10 @@ int pipeline::EX_INT(int *rawreg) {
 		break;
 
     case REG2F:
-        if (!available(cpu,rA)) {*rawreg=rA; return RAW;}
-        if (waw(this,type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
+        if (!available(rA)) {*rawreg=rA; return RAW;}
+        if (waw(type,function,ins.rd)) {*rawreg=ins.rd; return WAW;} //new
 
-		unavail(cpu,BOTH,ins.rd);
+		unavail(BOTH,ins.rd);
 
         fpA.u=cpu->rreg[rA].val;
         switch (function)
@@ -1521,7 +1513,7 @@ int pipeline::MEM(int *rawreg) {
     case LOAD:
     case FLOAD:
 		status=LOADS;
-		unavail(cpu,BOTH,ins.rt);
+		unavail(BOTH,ins.rt);
       
 		if (!cpu->isValidDataMemoryAddress(ptr))
 		{
@@ -1660,7 +1652,7 @@ int pipeline::MEM(int *rawreg) {
     case STORE:
     case FSTORE:
         rB=this->ex_mem.rB;
-        if (!available(cpu,rB)) {*rawreg=rB; return RAW;}
+        if (!available(rB)) {*rawreg=rB; return RAW;}
 		status=STORES;
 	
 		if (!cpu->isValidDataMemoryAddress(ptr))
@@ -1775,7 +1767,7 @@ int pipeline::WB() {
         if (ins.rt==0) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rt,this->mem_wb.LMD);
+			make_available(ins.rt,this->mem_wb.LMD);
         }
         else
         { /* be careful in case a new value is now being forwarded */
@@ -1790,7 +1782,7 @@ int pipeline::WB() {
         if (ins.rt==0) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rt,this->mem_wb.ALUOutput);
+			make_available(ins.rt,this->mem_wb.ALUOutput);
         }
         else
         {
@@ -1803,7 +1795,7 @@ int pipeline::WB() {
         if (ins.rd==0) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rd,this->mem_wb.ALUOutput);
+			make_available(ins.rd,this->mem_wb.ALUOutput);
         }
         else
         {
@@ -1818,7 +1810,7 @@ int pipeline::WB() {
         if (ins.rd==0 || !condition) break;
         if (!forwarding)
         {
-			make_available(cpu,ins.rd,this->mem_wb.ALUOutput);
+			make_available(ins.rd,this->mem_wb.ALUOutput);
         }
         else
         {
@@ -1831,7 +1823,7 @@ int pipeline::WB() {
         {
             if (!forwarding)
             {
-				make_available(cpu,31,this->mem_wb.NPC);
+				make_available(31,this->mem_wb.NPC);
             }  
             else
             {
@@ -1845,7 +1837,7 @@ int pipeline::WB() {
         {
             if (!forwarding)
             { 
-				make_available(cpu,31,this->mem_wb.NPC);
+				make_available(31,this->mem_wb.NPC);
             }
             else
             {

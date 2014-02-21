@@ -146,6 +146,13 @@ protected:
     int MEM(int *rawreg);
     int WB();
 
+    BOOL available(int r);
+    void unavail(int type, int r);
+    void make_available(int r, WORD64 lmd);
+    BOOL waw(int type, int function, int r);
+    BOOL already_target(int reg);
+    BOOL already_waitedfor(int reg);
+
     BOOL delay_slot;
     BOOL branch_target_buffer;
     BOOL forwarding;
