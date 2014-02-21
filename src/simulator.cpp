@@ -114,7 +114,7 @@ Simulator::Simulator() {
 */
 	cpu.initialize(CODESIZE, DATASIZE);
 
-	init_pipeline(&pipe, ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
 	codelines = new std::string[CODESIZE/4];
 	assembly = new std::string[CODESIZE/4];
 	mnemonic = new std::string[CODESIZE/4];
@@ -188,7 +188,7 @@ void Simulator::OnFileReset() {
 	 // Reset the processor
 	unsigned int i;
 
-	init_pipeline(&pipe,ADD_LATENCY,MUL_LATENCY,DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
 	cpu.reset();
 
 	//UpdateAllViews(NULL);
@@ -199,7 +199,7 @@ void Simulator::OnFullReset() {
 	unsigned i;
 	for (i=0;i<DATASIZE/8;i++) datalines[i]="";
 
-	init_pipeline(&pipe,ADD_LATENCY,MUL_LATENCY,DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
 	cpu.reset(TRUE);
 	clear();
 	//UpdateAllViews(NULL);
@@ -659,7 +659,7 @@ int Simulator::one_cycle(BOOL show) {
 	if (cpu.getStatus() == HALTED) 
 		return HALTED;
 
-	status = clock_tick(&pipe, &cpu, forwarding, delay_slot, branch_target_buffer, &result);
+	status = pipe.clock_tick(&cpu, forwarding, delay_slot, branch_target_buffer, &result);
 
 	cycles++;
 	process_result(&result,show);
@@ -845,7 +845,7 @@ void Simulator::OnFileMemory()
 
 	cpu.initialize(CODESIZE, DATASIZE);
 
-	init_pipeline(&pipe,ADD_LATENCY,MUL_LATENCY,DIV_LATENCY);
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY);
 
 	forwarding = TRUE;
 	delay_slot = FALSE;

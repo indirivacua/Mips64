@@ -106,7 +106,9 @@ typedef struct {
 	BOOL condition;
 } mem_wb_reg;
 
-typedef struct {
+class pipeline {
+
+public:
     BOOL active;
 	BOOL halting;
     BOOL   branch;
@@ -122,9 +124,10 @@ typedef struct {
     id_ex_reg div;
     ex_mem_reg ex_mem;
     mem_wb_reg  mem_wb;
-} pipeline;
 
-void init_pipeline(pipeline *, int, int, int);
-int clock_tick(pipeline *, Processor *, BOOL, BOOL, BOOL, RESULT *);
+    void initialize(int, int, int);
+    int clock_tick(Processor *, BOOL, BOOL, BOOL, RESULT *);
+};
+
 
 #endif

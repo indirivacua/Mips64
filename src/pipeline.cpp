@@ -77,28 +77,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 /* get instruction type */
 
-void init_pipeline(pipeline *pipe,int ADDS, int MULS, int DIVS) {
+void pipeline::initialize(int ADDS, int MULS, int DIVS) {
   int i;
-  pipe->branch = FALSE;
-  pipe->destination = 0;
-  pipe->ADD_LATENCY = ADDS;
-  pipe->MUL_LATENCY = MULS;
-  pipe->DIV_LATENCY = DIVS;
+  this->branch = FALSE;
+  this->destination = 0;
+  this->ADD_LATENCY = ADDS;
+  this->MUL_LATENCY = MULS;
+  this->DIV_LATENCY = DIVS;
 
-  pipe->if_id.active = FALSE;
-  pipe->integer.active = FALSE;
-  pipe->ex_mem.active = FALSE;
-  pipe->mem_wb.active = FALSE;
+  this->if_id.active = FALSE;
+  this->integer.active = FALSE;
+  this->ex_mem.active = FALSE;
+  this->mem_wb.active = FALSE;
   for (i = 0; i < ADDS; i++)
-    pipe->a[i].active = FALSE;
+    this->a[i].active = FALSE;
   for (i = 0; i < MULS; i++)
-    pipe->m[i].active = FALSE;
-  pipe->div.active = FALSE;
-  pipe->div.cycles = 0;
-  pipe->active = TRUE;
-  pipe->halting = FALSE;
-  pipe->mem_wb.condition = TRUE;
-  pipe->ex_mem.condition = TRUE;
+    this->m[i].active = FALSE;
+  this->div.active = FALSE;
+  this->div.cycles = 0;
+  this->active = TRUE;
+  this->halting = FALSE;
+  this->mem_wb.condition = TRUE;
+  this->ex_mem.condition = TRUE;
 }
 
 static int get_type(WORD32 instruct)
@@ -1864,7 +1864,7 @@ static int WB(pipeline *pipe, Processor *cpu,BOOL forwarding)
     return status;
 }
 
-int clock_tick(pipeline *pipe, Processor *mips,BOOL forwarding,BOOL delay_slot,BOOL branch_target_buffer,RESULT *result)
+int pipeline::clock_tick(Processor *mips,BOOL forwarding,BOOL delay_slot,BOOL branch_target_buffer,RESULT *result)
 {
 
     int i,status;
@@ -1872,21 +1872,21 @@ int clock_tick(pipeline *pipe, Processor *mips,BOOL forwarding,BOOL delay_slot,B
 
 /* activate WB first as it activates on leading edge */
 
-    status=WB(pipe,mips,forwarding);
-    if (status==HALTED || pipe->halting) 
+    status=WB(this,mips,forwarding);
+    if (status==HALTED || this->halting) 
 	{ // check that pipeline is empty...
-		pipe->halting=TRUE;
+		this->halting=TRUE;
 		empty=TRUE;
-		for (i=0;i<pipe->MUL_LATENCY;i++) if (pipe->m[i].active) empty=FALSE;
-		for (i=0;i<pipe->ADD_LATENCY;i++) if (pipe->a[i].active) empty=FALSE;
-		if (pipe->div.active && pipe->div.cycles>0) empty=FALSE;
-		if (pipe->ex_mem.active) empty=FALSE;
-		if (pipe->mem_wb.active) empty=FALSE;
+		for (i=0;i<this->MUL_LATENCY;i++) if (this->m[i].active) empty=FALSE;
+		for (i=0;i<this->ADD_LATENCY;i++) if (this->a[i].active) empty=FALSE;
+		if (this->div.active && this->div.cycles>0) empty=FALSE;
+		if (this->ex_mem.active) empty=FALSE;
+		if (this->mem_wb.active) empty=FALSE;
 		if (empty) 	
 		{
 			result->WB=result->MEM=result->DIVIDER=result->EX=result->ID=result->IF=OK;
-			for (i=0;i<pipe->MUL_LATENCY;i++) result->MULTIPLIER[i]=OK;
-			for (i=0;i<pipe->ADD_LATENCY;i++) result->ADDER[i]=OK;
+			for (i=0;i<this->MUL_LATENCY;i++) result->MULTIPLIER[i]=OK;
+			for (i=0;i<this->ADD_LATENCY;i++) result->ADDER[i]=OK;
 
 
 			return HALTED;           /* halted */
@@ -1894,9 +1894,9 @@ int clock_tick(pipeline *pipe, Processor *mips,BOOL forwarding,BOOL delay_slot,B
 	}
 	
 	result->WB=status;
-    result->MEM=MEM(pipe,mips,forwarding,&result->memrr);
+    result->MEM=MEM(this,mips,forwarding,&result->memrr);
 
-//	int extype=pipe->integer.ins.type;
+//	int extype=this->integer.ins.type;
 //	if (extype==STORE || extype==FSTORE)
 //	{ // in this case pull the store instruction through first
 //		result->EX=EX_INT(pipe,mips,forwarding,&result->exrr);	
@@ -1906,13 +1906,13 @@ int clock_tick(pipeline *pipe, Processor *mips,BOOL forwarding,BOOL delay_slot,B
 //	}
 //	else
 //	{
-		EX_MUL(pipe,mips,forwarding,&result->mulrr,result->MULTIPLIER);
-		EX_ADD(pipe,mips,forwarding,&result->addrr,result->ADDER);
-		result->DIVIDER=EX_DIV(pipe,mips,forwarding,&result->divrr);
-		result->EX=EX_INT(pipe,mips,forwarding,&result->exrr);	
+		EX_MUL(this,mips,forwarding,&result->mulrr,result->MULTIPLIER);
+		EX_ADD(this,mips,forwarding,&result->addrr,result->ADDER);
+		result->DIVIDER=EX_DIV(this,mips,forwarding,&result->divrr);
+		result->EX=EX_INT(this,mips,forwarding,&result->exrr);	
 //	}
-    result->ID=ID(pipe,mips,forwarding,branch_target_buffer,&result->idrr);
-    result->IF=IF(pipe,mips,delay_slot,branch_target_buffer);
+    result->ID=ID(this,mips,forwarding,branch_target_buffer,&result->idrr);
+    result->IF=IF(this,mips,delay_slot,branch_target_buffer);
 
 /* Copy Write to Read registers */
  
