@@ -24,15 +24,84 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Memory.h"
 #include "CodeMemory.h"
 
-CodeMemory::CodeMemory(WORD32 size) : Memory(size) {
+#include <iostream>
+
+
+CodeMemory::CodeMemory(WORD32 size) {
+        this->size = size;
+	line = new std::string[size/4];
+	assembly = new std::string[size/4];
+	mnemonic = new std::string[size/4];
+        code = new WORD32[size/4];
+        status = new BYTE[size/4];
+	for (int i =0; i < size/4; ++i)
+		status[i] = CODE_VALID;
 }
 
 CodeMemory::~CodeMemory() {
+        delete [] code;
+        delete [] status;
+	delete [] line;
+	delete [] assembly;
+	delete [] mnemonic;
 }
 
-WORD64 CodeMemory::readInstruction(WORD32 addr) {
+WORD32 CodeMemory::readInstruction(WORD32 addr) const {
+	return code[addr/4];
 }
 
-BOOL CodeMemory::writeInstruction(WORD32 addr, WORD64) {
+BOOL CodeMemory::writeInstruction(WORD32 addr,
+                                  WORD32 instr, 
+				  const std::string &line,
+                                  const std::string &assembly,
+                                  const std::string &mnemonic) {
+  WORD32 pos = addr / 4;
+  
+  this->code[pos] = instr;
+  this->line[pos] = line;
+  this->assembly[pos] = assembly;
+  this->mnemonic[pos] = mnemonic;
+
+  return TRUE;
+}
+
+BOOL CodeMemory::invalidateInstruction(WORD32 addr) {
+  this->status[addr/4] |= CODE_INVALID;
+  return TRUE;
+}
+
+BOOL CodeMemory::isValidAddress(WORD32 addr) {
+	return (addr <= size);
+}
+
+BOOL CodeMemory::reset() {
+  for (int i = 0; i < size; i++)
+    this->status[i] = CODE_VALID;
+  return TRUE;
+}
+
+BOOL CodeMemory::hasBreakpoint(WORD32 addr) const { 
+	return (status[addr] & CODE_BREAKPOINT) == CODE_BREAKPOINT;
+}
+
+BOOL CodeMemory::setBreakpoint(WORD32 addr, BOOL state) {
+  if (state)
+  	status[addr] |= CODE_BREAKPOINT;
+  else
+  	status[addr] &= (0xff - CODE_BREAKPOINT);
+  return TRUE;
+}
+
+BOOL CodeMemory::branchPredicted(WORD32 addr) const {
+	return (status[addr] & CODE_BRANCHPRED) == CODE_BRANCHPRED;
+}
+
+BOOL CodeMemory::predictBranch(WORD32 addr, BOOL state) {
+  if (state)
+  	status[addr] |= CODE_BRANCHPRED;
+  else
+  	status[addr] &= (0xff - CODE_BRANCHPRED);
+	
+  return TRUE;
 }
 

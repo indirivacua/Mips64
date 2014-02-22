@@ -115,9 +115,6 @@ Simulator::Simulator() : pipe(&cpu) {
 	cpu.initialize(CODESIZE, DATASIZE);
 
 	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
-	codelines = new std::string[CODESIZE/4];
-	assembly = new std::string[CODESIZE/4];
-	mnemonic = new std::string[CODESIZE/4];
 	datalines = new std::string[DATASIZE/8];
 
 	simulation_running = FALSE;
@@ -161,9 +158,6 @@ Simulator::~Simulator() {
 		file.Close();
 	}
 */
-	delete [] codelines;
-	delete [] assembly;
-	delete [] mnemonic;
 	delete [] datalines;
 }
 
@@ -730,7 +724,7 @@ void Simulator::OnExecuteRunto()
 		status = one_cycle(FALSE);
 		if (status) 
 			break;
-	} while (stalls || ((cpu.cstat[cpu.getPC()] & 1) == 0 && cpu.getStatus() != HALTED && simulation_running));
+	} while (stalls || ((!cpu.code->hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
 	simulation_running = FALSE;
 	if (status == WAITING_FOR_INPUT) {
 		sprintf(buf, "Simulacion Detenida luego de %d ciclos - Esperando Entrada", lapsed);
@@ -758,18 +752,14 @@ int Simulator::openfile(const std::string &fname) {
         cpu.drawit = FALSE; 
         cpu.keyboard = 0;
 	
-	for (i = 0; i < CODESIZE/4; i++) {
-		codelines[i] = "";
-		assembly[i] = "";
-		mnemonic[i] = "";
-	}
 	for (i = 0; i < DATASIZE/STEP; i++) 
           datalines[i] = "";
 
 	if (fname == "")
           return 1;
+        std::cout << "openfile : " << fname << std::endl;
 
-        Assembler *assembler = new Assembler(CODESIZE, DATASIZE, &cpu, codelines, datalines, assembly, mnemonic);
+        Assembler *assembler = new Assembler(DATASIZE, &cpu, datalines);
 	res = assembler->openit(fname);
         delete assembler;
 
@@ -828,17 +818,13 @@ void Simulator::OnFileMemory()
 	codesize=(1<<dlg.m_code);
 	datasize=(1<<dlg.m_data);
 						// full system reset
-	CODESIZE=codesize;
 	DATASIZE=datasize;
 	ADD_LATENCY=dlg.m_fpal;
 	MUL_LATENCY=dlg.m_fpml;
 	DIV_LATENCY=dlg.m_fpdl;
 */
 
-	delete [] codelines;
 	delete [] datalines;
-	delete [] assembly;
-	delete [] mnemonic;
 
 	cpu.initialize(CODESIZE, DATASIZE);
 
@@ -848,9 +834,6 @@ void Simulator::OnFileMemory()
 	delay_slot = FALSE;
 	branch_target_buffer = FALSE;
 
-	codelines = new std::string[CODESIZE/4];
-	assembly = new std::string[CODESIZE/4];
-	mnemonic = new std::string[CODESIZE/4];
 	datalines = new std::string[DATASIZE/STEP];
 	
 	clear();
@@ -967,16 +950,6 @@ void Simulator::OnUpdateBtb() {
 
 
 /** Metodos para verificar el funcionamiento del Simulador */ 
-void Simulator::dump_mem() {
-	BYTE *mem = cpu.code;
-	std::cout << "Code Size: " << cpu.getCodeMemorySize() << std::endl;
-	std::cout << "Data Size: " << cpu.getDataMemorySize() << std::endl;
-
-	for (int i = 0; i < cpu.getCodeMemorySize(); ++i) {
-		std::cout << " " << (int) mem[i];
-	}
-	std::cout << std::endl;
-}
 
 void Simulator::dump_reg() {
   printf("----------------------------------\n");

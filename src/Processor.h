@@ -55,9 +55,7 @@ public:
   int getStatus() const { return this->status; }
   BOOL setStatus(int state) { this->status = state; return TRUE;}
 
-  BYTE   *code;
-  BYTE   *cstat;
-  //CodeMemory *code;
+  CodeMemory *code;
 
   BYTE   *data;
   BYTE   *dstat;

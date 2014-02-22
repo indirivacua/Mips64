@@ -300,15 +300,12 @@ BOOL getsym(symbol_table *table, int size, const char *&ptr, WORD32 *n) {
 }
 
 
-Assembler::Assembler(int CODESIZE, int DATASIZE, Processor *cpu, std::string *codelines, std::string *datalines, std::string *assembly, std::string *mnemonic) {
- this->CODESIZE = CODESIZE;
+Assembler::Assembler(int DATASIZE, Processor *cpu, std::string *datalines) {
  this->DATASIZE = DATASIZE; 
  this->cpu = cpu;
 
- this->codelines = codelines;
  this->datalines = datalines;
- this->assembly = assembly;
- this->mnemonic = mnemonic;
+ this->code = cpu->code;
 }
 
 int Assembler::openit(const std::string &fname)
@@ -326,9 +323,10 @@ int Assembler::openit(const std::string &fname)
 	code_symptr=0;
 	data_symptr=0;
 
+	std::cout << "Abriendo archivo: " << fname << std::endl;
 	if ((asmfile = fopen(fname.c_str(),"rb")) == NULL)
 		return 1;
-//	if (!asmfile.Open(fname,CFile::modeRead)) return 1;
+
 	for (lineptr=1;;lineptr++)
 	{
 //		if (!asmfile.ReadString(line,80)) break; // ***
@@ -462,8 +460,7 @@ int Assembler::first_pass(const char *line,int lineptr)
         }
 		codeptr=alignment(codeptr,4);
         codeptr+=4;
-        if (codeptr>CODESIZE)
-        {
+        if (!code->isValidAddress(codeptr)) {
             sprintf(txt,"Pasada 1 - Error en linea %d\nNo existe esa ubicacion de memoria",lineptr);
             std::cout << txt << "\n";
             //AfxMessageBox(txt);
@@ -733,47 +730,47 @@ int Assembler::second_pass(const char *line,int /* lineptr */)
 		break;
     }
 
-	codeptr=alignment(codeptr,4);
+	codeptr = alignment(codeptr, 4);
 
+        std::string assembly;
+        std::string mnemonic;
 	int ret_val=0;
     if (error) {
-       // printf("%08x ???????? %s",codeptr, line);
-       // for (i=0;i<4;i++) cpu->code[codeptr++]=0x00;
 	code_word = 0;
-	cpu->cstat[codeptr] = 4;
         ret_val=1;     
     }
 
-	if (ptr==NULL)
-	{ // its crap...
-		assembly[codeptr/4]="";
-		mnemonic[codeptr/4]="";
-	}
-	else
-	{
-		end=ptr;
+	if (ptr!=NULL) { // its crap...
+		end = ptr;
 
-		int len=end-start;
-		if (len>25) len=25;
+		int len = end - start;
+		if (len > 25) 
+                  len = 25;
 
 		std::string str(start,len);
-		assembly[codeptr/4]=str;
+		assembly = str;
 	
-		len=fin-start;
+		len = fin - start;
 
-		if (len>7) len=7;
+		if (len > 7) 
+                  len = 7;
 
 		std::string str1(start,len);
-		// ARRGLAR, poner en minusculas
+		// ARREGLAR, poner en minusculas
 		//str1.MakeLower();
 
-		mnemonic[codeptr/4]=str1;
+		mnemonic = str1;
 	}
 
-	codelines[codeptr/4]=(std::string)line;
-    // printf("%08x %08x %s",codeptr,code_word,line);
-    unpack32(code_word,b);
-    for (i=0;i<4;i++) cpu->code[codeptr++]=b[i];
+     code->writeInstruction(codeptr, code_word, line, assembly, mnemonic);
+     if (error)
+        code->invalidateInstruction(codeptr);
+
+     //printf("--%08x %08x %s\n",codeptr,code_word,line);
+    codeptr += 4;
+
+    //unpack32(code_word,b);
+    //for (i=0;i<4;i++) cpu->code[codeptr++]=b[i];
 
     return ret_val;    
 }
@@ -1174,10 +1171,9 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
       //          printf("%08x          %s",dataptr,line);
             return TRUE;
         }
-        if (CODEORDATA==CODE)
-        {
+        if (CODEORDATA==CODE) {
             if (!getnum(ptr,&num)) return FALSE;
-            if (num<codeptr || num>CODESIZE) return FALSE;
+            if (num<codeptr || code->isValidAddress(num)) return FALSE;
             codeptr=alignment(num,4);
        //     if (pass==2)
        //         printf("%08x          %s",codeptr,line);

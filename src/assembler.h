@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __ASSEMBLER_H
 #define __ASSEMBLER_H
 
+#include "CodeMemory.h"
+
 #define SYMTABSIZE 1000
 
 #define ENDLINE 1
@@ -50,7 +52,7 @@ BOOL getdouble(const char *&ptr,double *);
 class Assembler {
 
   public:
-    Assembler(int CODESIZE, int DATASIZE, Processor *cpu, std::string *codelines, std::string *datalines, std::string *assembly, std::string *mnemonic);
+    Assembler(int DATASIZE, Processor *cpu, std::string *datalines);
     int openit(const std::string &fname);
 
   protected:
@@ -73,14 +75,12 @@ class Assembler {
   unsigned int dataptr;
 
   // To be deleted
-  int CODESIZE;
   int DATASIZE;
   Processor *cpu;
+  
+  CodeMemory *code;
 
-  std::string *codelines;
   std::string *datalines;
-  std::string *assembly;
-  std::string *mnemonic;
 };
 
 #endif

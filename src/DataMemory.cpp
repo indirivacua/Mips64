@@ -20,28 +20,52 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef __DATAMEMORY_H
-#define __DATAMEMORY_H
+#include "DataMemory.h"
 
-#include "Memory.h"
+DataMemory::DataMemory(int) : Memory(size) {
+}
 
-class DataMemory : public Memory {
-public:
-  DataMemory(int);
-  virtual ~DataMemory();
+DataMemory::~DataMemory() {
+}
 
-  BYTE readByte(WORD32 addr);
-  WORD16 readHalf(WORD32 addr);
-  WORD32 readWord32(WORD32 addr);
-  WORD64 readWord64(WORD32 addr);
-  double readFloat(WORD32 addr);
 
-  BOOL writeByte(WORD32 addr, BYTE);
-  BOOL writeHalf(WORD32 addr, WORD16);
-  BOOL writeWord32(WORD32 addr, WORD32);
-  BOOL writeWord64(WORD32 addr, WORD64);
-  double writeFloat(WORD32 addr, double);
+BYTE DataMemory::readByte(WORD32 addr) {
+  return 0;
+}
 
-};
+WORD16 DataMemory::readHalf(WORD32 addr) {
+  return 0;
+}
 
-#endif
+WORD32 DataMemory::readWord32(WORD32 addr) {
+  return 0;
+}
+
+WORD64 DataMemory::readWord64(WORD32 addr) {
+  return 0;
+}
+
+double DataMemory::readFloat(WORD32 addr) {
+  return 0;
+}
+
+BOOL DataMemory::writeByte(WORD32 addr, BYTE) {
+  return TRUE;
+}
+
+BOOL DataMemory::writeHalf(WORD32 addr, WORD16) {
+  return TRUE;
+}
+
+BOOL DataMemory::writeWord32(WORD32 addr, WORD32) {
+  return TRUE;
+}
+
+BOOL DataMemory::writeWord64(WORD32 addr, WORD64) {
+  return TRUE;
+}
+
+double DataMemory::writeFloat(WORD32 addr, double) {
+  return TRUE;
+}
+

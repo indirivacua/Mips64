@@ -27,15 +27,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 Processor::Processor() {
     code = NULL;
-    cstat = NULL;
     data = NULL;
     dstat = NULL;
     screen = NULL;
 }
 
 Processor::~Processor() {
-	delete[] code;
-	delete[] cstat;
+	delete code;
 
 	delete[] data;
 	delete[] dstat;
@@ -46,14 +44,12 @@ void Processor::initialize(int codesize, int datasize) {
     this->codesize = codesize;
     this->datasize = datasize;
 
-    delete[] code;
-    delete[] cstat;
+    delete code;
     delete[] data;
     delete[] dstat;
     delete[] screen;
 
-	this->code = new BYTE[codesize];
-	this->cstat = new BYTE[codesize];
+	this->code = new CodeMemory(codesize);
 
 	this->data = new BYTE[datasize];
 	this->dstat = new BYTE[datasize];
@@ -76,9 +72,7 @@ void Processor::reset(BOOL full) {
       rreg[i].source = wreg[i].source = FROM_REGISTER;
   }
 
-
-  for (i = 0; i < codesize; i++)
-    this->cstat[i] = 0;
+  code->reset();
 
   if (full) {
 	for (i = 0; i < datasize; i++) 

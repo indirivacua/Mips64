@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Memory.h"
 
-
 Memory::Memory(WORD32 size) {
   this->size = size;
 
@@ -38,4 +37,5 @@ Memory::~Memory() {
 }
  
 BOOL Memory::isValidMemoryAddress(WORD32 addr) {
+	return (addr <= size);
 }

@@ -439,7 +439,7 @@ int pipeline::IF() {
     if (this->active)
     {
         this->if_id.IR=cpu->getPC();
-        codeword=*(WORD32 *)&cpu->code[cpu->getPC()];
+        codeword = cpu->code->readInstruction(cpu->getPC());  // *(WORD32 *)&cpu->code[cpu->getPC()];
         /*type=*/parse(codeword,&ins);
     }
     else
@@ -467,7 +467,7 @@ int pipeline::IF() {
 	this->if_id.NPC=cpu->getPC()+4;
 	this->if_id.predicted=FALSE;
 
-	if (!this->branch && branch_target_buffer && (cpu->cstat[cpu->getPC()]&2))
+	if (!this->branch && branch_target_buffer && (cpu->code->branchPredicted(cpu->getPC())))
 	{ // predict branch taken
 		this->if_id.NPC = cpu->getPC()+4+4*ins.Imm;
 		this->if_id.predicted=TRUE;
@@ -857,9 +857,9 @@ int pipeline::ID(int *rawreg) {
 		if (branch_status==BRANCH_TAKEN)
 		{
 			status=BRANCH_TAKEN_STALL;
-			if ((cpu->cstat[this->if_id.IR]&2)==0) 
+			if (!cpu->code->branchPredicted(this->if_id.IR))
 			{ // throw in an extra stall...
-				cpu->cstat[this->if_id.IR]|=2;
+				cpu->code->predictBranch(this->if_id.IR, TRUE);
 				this->if_id.active=TRUE;
 				return status;
 			}
@@ -874,9 +874,9 @@ int pipeline::ID(int *rawreg) {
 			if (this->if_id.predicted)
 			{ // its was predicted, but it didn't happen!
 				status=BRANCH_MISPREDICTED_STALL;
-				if (cpu->cstat[this->if_id.IR]&2)
+				if (cpu->code->branchPredicted(this->if_id.IR))
 				{
-					cpu->cstat[this->if_id.IR]&=0xfd;
+					cpu->code->predictBranch(this->if_id.IR, FALSE);
 					this->if_id.active=TRUE;
 					return status;
 				}

@@ -31,7 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "pipeline.h"
 #include "assembler.h"
 
-
 #define MIN_CODEBITS 8
 #define MAX_CODEBITS 13
 #define MIN_DATABITS 4
@@ -73,10 +72,7 @@ class Simulator {
  protected:
   char AppDir[MAX_PATH+1];
   char LasDir[MAX_PATH+1];
-  std::string *codelines;
   std::string *datalines;
-  std::string *assembly;
-  std::string *mnemonic;
   std::string lastfile;
   
   unsigned int CODESIZE;
