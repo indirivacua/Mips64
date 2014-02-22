@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include <iostream>
 
@@ -381,12 +382,12 @@ int Simulator::update_io() {
 
 	switch (func) {
 	case (WORD32)1:
-		sprintf(txt,"%llu\n",fp.u);
+		sprintf(txt,"%" PRIu64 "\n",fp.u);
 		cpu.writeTerminal(txt);
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)2:
-		sprintf(txt,"%lld\n",fp.s);
+		sprintf(txt,"%" PRIi64 "\n",fp.s);
 		cpu.writeTerminal(txt);
 		//UpdateAllViews(NULL,2);
 		break;
