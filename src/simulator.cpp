@@ -340,21 +340,21 @@ void Simulator::process_result(BOOL show)
 		}
 	}
 	if (result.IF == NO_SUCH_CODE_MEMORY) {
-		strcat(txt,"  No existe esa dirección de código!");
+		strcat(txt,"  No existe esa direccion de codigo!");
 		cpu.setStatus(HALTED);
 	}
 	if (result.EX == INTEGER_OVERFLOW) {
-		strcat(txt,"  Desbordamiento de número entero!");
+		strcat(txt,"  Desbordamiento de numero entero!");
 	}
 	if (result.DIVIDER == DIVIDE_BY_ZERO) {
-		strcat(txt,"  División por Cero en DIV!");
+		strcat(txt,"  Division por Cero en DIV!");
 	}
 
 	if (result.MEM == DATA_ERR) {
 		strcat(txt,"  Memoria no inicializada en MEM!");
 	}
 	if (result.MEM==NO_SUCH_DATA_MEMORY) {
-		strcat(txt,"  No existe esa dirección de datos!");
+		strcat(txt,"  No existe esa direccion de datos!");
 	}
 	if (result.MEM==DATA_MISALIGNED) {
 		strcat(txt, " Error Fatal - LOAD/StTORE de memoria mal alineado!");
@@ -736,10 +736,10 @@ void Simulator::OnExecuteRunto()
 	} while (stalls || ((cpu.cstat[cpu.getPC()] & 1) == 0 && cpu.getStatus() != HALTED && simulation_running));
 	simulation_running = FALSE;
 	if (status == WAITING_FOR_INPUT) {
-		sprintf(buf, "Simulación Detenida luego de %d ciclos - Esperando Entrada", lapsed);
+		sprintf(buf, "Simulacion Detenida luego de %d ciclos - Esperando Entrada", lapsed);
 		restart = TRUE;
 	} else {
-		sprintf(buf, "Simulación Detenida luego de %d ciclos", lapsed);
+		sprintf(buf, "Simulacion Detenida luego de %d ciclos", lapsed);
 		restart = FALSE;
 	}
 

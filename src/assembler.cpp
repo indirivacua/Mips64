@@ -417,7 +417,7 @@ int Assembler::first_pass(const char *line,int lineptr)
         {
             if (code_symptr>=SYMTABSIZE)
             {
-                sprintf(txt,"Pasada 1 - Error en linea %d\nLa tabla de Simbolos de Código esta llena.",lineptr);
+                sprintf(txt,"Pasada 1 - Error en linea %d\nLa tabla de Simbolos de Codigo esta llena.",lineptr);
                 //AfxMessageBox(txt);
 	        std::cout << txt << "\n";
                 return 1;
@@ -464,7 +464,7 @@ int Assembler::first_pass(const char *line,int lineptr)
         codeptr+=4;
         if (codeptr>CODESIZE)
         {
-            sprintf(txt,"Pasada 1 - Error en linea %d\nNo existe esa ubicación de memoria",lineptr);
+            sprintf(txt,"Pasada 1 - Error en linea %d\nNo existe esa ubicacion de memoria",lineptr);
             std::cout << txt << "\n";
             //AfxMessageBox(txt);
             return 1;
@@ -857,8 +857,7 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
         if (*ptr!='"' && *ptr!='\'') return (-1);        
         sc=*ptr;    // character to indicate end of string
 
-	// OJO, ver que se quiere hacer aca, se esta descartando el resultado
-        *ptr++;
+        ++ptr;
 
         num=0;
 	// ARREGLAR!!! no deberia usar el cast
