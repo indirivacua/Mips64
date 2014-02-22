@@ -381,12 +381,12 @@ int Simulator::update_io() {
 
 	switch (func) {
 	case (WORD32)1:
-		sprintf(txt,"%I64u\n",fp.u);
+		sprintf(txt,"%llu\n",fp.u);
 		cpu.writeTerminal(txt);
 		//UpdateAllViews(NULL,2);
 		break;
 	case (WORD32)2:
-		sprintf(txt,"%I64d\n",fp.s);
+		sprintf(txt,"%lld\n",fp.s);
 		cpu.writeTerminal(txt);
 		//UpdateAllViews(NULL,2);
 		break;
