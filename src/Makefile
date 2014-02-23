@@ -1,7 +1,7 @@
 CXXFLAGS = -Wall -ggdb
 
 OBJS :=  pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.o \
-	CodeMemory.o DataMemory.o Memory.o
+	CodeMemory.o DataMemory.o
 
 all: mips64
 
