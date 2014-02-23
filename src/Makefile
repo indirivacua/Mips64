@@ -1,4 +1,4 @@
-CXXFLAGS = -Wall
+CXXFLAGS = -Wall -ggdb
 
 OBJS :=  pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.o \
 	CodeMemory.o DataMemory.o Memory.o
@@ -6,7 +6,7 @@ OBJS :=  pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.
 all: mips64
 
 mips64: $(OBJS)
-	g++ -o mips64 $(OBJS) -lcurses
+	c++ -o mips64 $(OBJS) -lcurses
 
 pipeline.o: pipeline.cpp utils.h mytypes.h
 
