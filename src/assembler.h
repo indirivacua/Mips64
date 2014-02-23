@@ -52,7 +52,7 @@ BOOL getdouble(const char *&ptr,double *);
 class Assembler {
 
   public:
-    Assembler(int DATASIZE, Processor *cpu, std::string *datalines);
+    Assembler(Processor *cpu);
     int openit(const std::string &fname);
 
   protected:
@@ -74,13 +74,9 @@ class Assembler {
   unsigned int codeptr;
   unsigned int dataptr;
 
-  // To be deleted
-  int DATASIZE;
   Processor *cpu;
   
   CodeMemory *code;
-
-  std::string *datalines;
 };
 
 #endif

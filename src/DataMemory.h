@@ -33,6 +33,8 @@ public:
 
   BOOL reset();
 
+  BOOL setAddressDescription(WORD32 addr, const std::string &description);
+
   int readByte(WORD32 addr, BYTE &);
   int readHalf(WORD32 addr, WORD16 &);
   int readWord32(WORD32 addr, WORD32 &);
@@ -44,6 +46,8 @@ public:
   BOOL writeWord64(WORD32 addr, WORD64);
 
   BOOL getAsciiz(WORD32 addr, BYTE *dst, int size);
+
+  BOOL isValidAddress(WORD32 addr);
 
 protected: 
   WORD32 size;

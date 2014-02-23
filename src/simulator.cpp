@@ -115,7 +115,6 @@ Simulator::Simulator() : pipe(&cpu) {
 	cpu.initialize(CODESIZE, DATASIZE);
 
 	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
-	datalines = new std::string[DATASIZE/8];
 
 	simulation_running = FALSE;
 	restart = FALSE;
@@ -158,7 +157,6 @@ Simulator::~Simulator() {
 		file.Close();
 	}
 */
-	delete [] datalines;
 }
 
 void Simulator::clear() {
@@ -188,9 +186,6 @@ void Simulator::OnFileReset() {
 
 void Simulator::OnFullReset() {
 	 // Reset Data Memory as well
-	unsigned i;
-	for (i=0;i<DATASIZE/8;i++) datalines[i]="";
-
 	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 	cpu.reset(TRUE);
 	clear();
@@ -755,7 +750,7 @@ int Simulator::openfile(const std::string &fname) {
           return 1;
         std::cout << "openfile : " << fname << std::endl;
 
-        Assembler *assembler = new Assembler(DATASIZE, &cpu, datalines);
+        Assembler *assembler = new Assembler(&cpu);
 	res = assembler->openit(fname);
         delete assembler;
 
@@ -820,18 +815,13 @@ void Simulator::OnFileMemory()
 	DIV_LATENCY=dlg.m_fpdl;
 */
 
-	delete [] datalines;
-
 	cpu.initialize(CODESIZE, DATASIZE);
-
 	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 
 	forwarding = TRUE;
 	delay_slot = FALSE;
 	branch_target_buffer = FALSE;
 
-	datalines = new std::string[DATASIZE/STEP];
-	
 	clear();
 	//UpdateAllViews(NULL);
 

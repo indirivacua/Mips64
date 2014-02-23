@@ -901,7 +901,7 @@ int pipeline::ID(int *rawreg) {
 /* If branch instruction has completed - deactivate it so as 
    not to cause problems further down the pipe.               */
 	
-/*	if (branch_complete)	pipe->integer.active=FALSE;
+/*	if (branch_complete)	this->integer.active=FALSE;
 	else		*/
 	this->integer.active=TRUE;
     this->if_id.active=FALSE;

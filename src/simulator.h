@@ -72,7 +72,6 @@ class Simulator {
  protected:
   char AppDir[MAX_PATH+1];
   char LasDir[MAX_PATH+1];
-  std::string *datalines;
   std::string lastfile;
   
   unsigned int CODESIZE;

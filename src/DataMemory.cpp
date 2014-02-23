@@ -140,3 +140,12 @@ BOOL DataMemory::getAsciiz(WORD32 addr, BYTE *dst, int size) {
   return TRUE;
 }
 
+BOOL DataMemory::isValidAddress(WORD32 addr) {
+	return (addr <= size);
+}
+
+BOOL DataMemory::setAddressDescription(WORD32 addr, const std::string &description) {
+
+  line[addr/STEP] = description; 
+  return TRUE;
+}
