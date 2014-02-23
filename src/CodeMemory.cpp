@@ -75,7 +75,7 @@ BOOL CodeMemory::isValidAddress(WORD32 addr) {
 }
 
 BOOL CodeMemory::reset() {
-  for (int i = 0; i < size; i++)
+  for (int i = 0; i < size/4; i++)
     this->status[i] = CODE_VALID;
   return TRUE;
 }
