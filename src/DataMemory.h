@@ -25,22 +25,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Memory.h"
 
-class DataMemory : public Memory {
+class DataMemory {
+
 public:
   DataMemory(int);
   virtual ~DataMemory();
 
-  BYTE readByte(WORD32 addr);
-  WORD16 readHalf(WORD32 addr);
-  WORD32 readWord32(WORD32 addr);
-  WORD64 readWord64(WORD32 addr);
-  double readFloat(WORD32 addr);
+  BOOL reset();
+
+  int readByte(WORD32 addr, BYTE &);
+  int readHalf(WORD32 addr, WORD16 &);
+  int readWord32(WORD32 addr, WORD32 &);
+  int readWord64(WORD32 addr, WORD64 &);
 
   BOOL writeByte(WORD32 addr, BYTE);
   BOOL writeHalf(WORD32 addr, WORD16);
   BOOL writeWord32(WORD32 addr, WORD32);
   BOOL writeWord64(WORD32 addr, WORD64);
-  double writeFloat(WORD32 addr, double);
+
+  BOOL getAsciiz(WORD32 addr, BYTE *dst, int size);
+
+protected: 
+  WORD32 size;
+  BYTE *data;
+  BYTE *status;
+  std::string *line;
 
 };
 

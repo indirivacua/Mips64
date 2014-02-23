@@ -28,15 +28,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 Processor::Processor() {
     code = NULL;
     data = NULL;
-    dstat = NULL;
     screen = NULL;
 }
 
 Processor::~Processor() {
 	delete code;
+	delete data;
 
-	delete[] data;
-	delete[] dstat;
 	delete[] screen;
 }
 
@@ -45,18 +43,15 @@ void Processor::initialize(int codesize, int datasize) {
     this->datasize = datasize;
 
     delete code;
-    delete[] data;
-    delete[] dstat;
+    delete data;
     delete[] screen;
 
-	this->code = new CodeMemory(codesize);
+    this->code = new CodeMemory(codesize);
+    this->data = new DataMemory(datasize);
 
-	this->data = new BYTE[datasize];
-	this->dstat = new BYTE[datasize];
+    this->screen = new WORD32[GSXY*GSXY];
 
-	this->screen = new WORD32[GSXY*GSXY];
-
-	this->reset(TRUE);
+    this->reset(TRUE);
 }
 
 void Processor::reset(BOOL full) {
@@ -75,8 +70,7 @@ void Processor::reset(BOOL full) {
   code->reset();
 
   if (full) {
-	for (i = 0; i < datasize; i++) 
-		this->data[i] = this->dstat[i] = 0;
+	data->reset();
   }
 
   this->terminal=""; this->drawit=FALSE; this->keyboard=0;
@@ -103,7 +97,6 @@ BOOL Processor::clearScreen() {
     this->screen[i] = WHITE;
   return TRUE;
 }
-
 
 const BOOL Processor::isValidDataMemoryAddress(WORD32 ptr) { 
 	return (ptr <= datasize) || (ptr >= MMIO && ptr <= MMIO+16);

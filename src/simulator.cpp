@@ -362,7 +362,8 @@ int Simulator::update_io() {
 	WORD32 func = *(WORD32 *)&cpu.mm[0];
 	int x, y, status = 0;
 
-	BYTE *az;
+
+	BYTE az[256];
 	if (!func) 
 		return status;
 
@@ -388,9 +389,7 @@ int Simulator::update_io() {
 		break;
 	case (WORD32)4:
 		// need to test here if fp.u is a legal address!
-
-		// ARREGLAR!! Feo, feo!!!
-		az = &cpu.data[fp.u];
+		cpu.data->getAsciiz(fp.u, az, 255);
 
 		if (fp.u<cpu.getDataMemorySize()) 
 			cpu.writeTerminal(std::string((const char *)az));
@@ -743,18 +742,15 @@ int Simulator::openfile(const std::string &fname) {
 	unsigned int i;
 	int res;
 	OnFileReset();
-	for (i = 0; i < DATASIZE; i++) 
-          cpu.data[i] = cpu.dstat[i]  = 0; // reset memory
+        cpu.data->reset(); // reset data memory
 	for (i = 0; i < 16; i++) 
           cpu.mm[i] = 0;
+
 	cpu.clearScreen();
 	cpu.clearTerminal(); 
         cpu.drawit = FALSE; 
         cpu.keyboard = 0;
 	
-	for (i = 0; i < DATASIZE/STEP; i++) 
-          datalines[i] = "";
-
 	if (fname == "")
           return 1;
         std::cout << "openfile : " << fname << std::endl;
@@ -996,7 +992,7 @@ void Simulator::show_screen() {
 	std::cout << "----- Pantalla -----" << std::endl;
 	const WORD32 *pantalla = cpu.getScreen();	
 
-	for (int y = 0; y < GSXY; ++y) {
+	for (int y = GSXY - 1; y > 0; --y) {
 	  for (int x = 0; x < GSXY; ++x) {
 		char car = '-';
 		int pixel = pantalla[x+y*GSXY];

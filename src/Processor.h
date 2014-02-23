@@ -56,10 +56,7 @@ public:
   BOOL setStatus(int state) { this->status = state; return TRUE;}
 
   CodeMemory *code;
-
-  BYTE   *data;
-  BYTE   *dstat;
-  //DataMemory *data;
+  DataMemory *data;
 
   BYTE   mm[16];
 

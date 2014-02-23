@@ -1486,7 +1486,7 @@ int pipeline::EX_INT(int *rawreg) {
 }
 
 int pipeline::MEM(int *rawreg) {
-    int i,opcode,function,status,type,rB;
+    int opcode,function,status,type,rB;
     instruction ins; 
     BYTE   b;
     WORD16 h;
@@ -1530,10 +1530,8 @@ int pipeline::MEM(int *rawreg) {
 		case I_LB:
 				if (mmio)
 					b=*(BYTE *)(&cpu->mm[ptr-MMIO]);
-				else
-				{
-					if (cpu->dstat[ptr]==VACANT) status=DATA_ERR;
-					b=*(BYTE *)(&cpu->data[ptr]);
+				else {
+			 	  status = cpu->data->readByte(ptr,b);
 				}
 				s=b;
 				this->mem_wb.LMD=(s<<56)>>56;
@@ -1541,10 +1539,8 @@ int pipeline::MEM(int *rawreg) {
         case I_LBU:
 				if (mmio)
 					b=*(BYTE *)(&cpu->mm[ptr-MMIO]);
-				else
-				{
-					if (cpu->dstat[ptr]==VACANT) status=DATA_ERR;
-					b=*(BYTE *)(&cpu->data[ptr]);
+				else {
+			 	  status = cpu->data->readByte(ptr,b);
 				}
 				u=b;
 				this->mem_wb.LMD=(u<<56)>>56;
@@ -1560,9 +1556,7 @@ int pipeline::MEM(int *rawreg) {
 					h=*(WORD16 *)(&cpu->mm[ptr-MMIO]);
 				else
 				{
-					for (i=0;i<2;i++) 
-						if (cpu->dstat[ptr+i]==VACANT) status=DATA_ERR;
-					h=*(WORD16 *)(&cpu->data[ptr]);
+					status = cpu->data->readHalf(ptr, h);
 				}
 				s=h;
 				this->mem_wb.LMD=(s<<48)>>48;
@@ -1576,11 +1570,8 @@ int pipeline::MEM(int *rawreg) {
 				}
 				if (mmio)
 					h=*(WORD16 *)(&cpu->mm[ptr-MMIO]);
-				else
-				{
-					for (i=0;i<2;i++) 
-						if (cpu->dstat[ptr+i]==VACANT) status=DATA_ERR;
-					h=*(WORD16 *)(&cpu->data[ptr]);
+				else {
+			  	  status = cpu->data->readHalf(ptr, h);
 				}
 				u=h;
 				this->mem_wb.LMD=(u<<48)>>48;
@@ -1594,31 +1585,23 @@ int pipeline::MEM(int *rawreg) {
 				}
 				if (mmio)
 					w=*(WORD32 *)(&cpu->mm[ptr-MMIO]);
-				else
-				{
-					for (i=0;i<4;i++) 
-						if (cpu->dstat[ptr+i]==VACANT) status=DATA_ERR;
-					w=*(WORD32 *)(&cpu->data[ptr]);
+				else {
+					status = cpu->data->readWord32(ptr, w);	
 				}
 				s=w;
 				this->mem_wb.LMD=(s<<32)>>32;
 				break;
         case I_LWU:
-				if (ptr%4!=0)
-				{
+				if (ptr%4!=0) {
 					status=DATA_MISALIGNED;
 					this->mem_wb.LMD=0;
 					break;
 				}
 				if (mmio)
 					w=*(WORD32 *)(&cpu->mm[ptr-MMIO]);
-				else
-				{
-					for (i=0;i<4;i++) 
-						if (cpu->dstat[ptr+i]==VACANT) status=DATA_ERR;
-					w=*(WORD32 *)(&cpu->data[ptr]);
+				else {
+					status = cpu->data->readWord32(ptr, w);	
 				}
-//AfxMessageBox("Hello");
 				u=w;
 				this->mem_wb.LMD=(u<<32)>>32;
 				break;
@@ -1632,11 +1615,8 @@ int pipeline::MEM(int *rawreg) {
 				}
 				if (mmio)
 					this->mem_wb.LMD=*(WORD64 *)(&cpu->mm[ptr-MMIO]);
-				else
-				{
-					for (i=0;i<8;i++) 
-						if (cpu->dstat[ptr+i]==VACANT) status=DATA_ERR;
-					this->mem_wb.LMD=*(WORD64 *)(&cpu->data[ptr]);
+				else {
+					status = cpu->data->readWord64(ptr, this->mem_wb.LMD);	
 				}
 				break;
 			default:
@@ -1667,10 +1647,12 @@ int pipeline::MEM(int *rawreg) {
 			switch (opcode)
 			{
 			case I_SB:
-				if (!mmio) cpu->dstat[ptr]=WRITTEN;
+				//if (!mmio) cpu->dstat[ptr]=WRITTEN;
 				b=(BYTE)cpu->rreg[rB].val;
-				if (!mmio) *(BYTE *)(&cpu->data[ptr])=b;
-				else *(BYTE *)(&cpu->mm[ptr-MMIO])=b;
+				if (!mmio) 
+				  cpu->data->writeByte(ptr, b);
+				else 
+				  *(BYTE *)(&cpu->mm[ptr-MMIO])=b;
 				break;
 			case I_SH:
 				if (ptr%2!=0)
@@ -1679,10 +1661,12 @@ int pipeline::MEM(int *rawreg) {
 					break;
 				}
  
-				if (!mmio) for (i=0;i<2;i++) cpu->dstat[ptr+i]=WRITTEN;
+				//if (!mmio) for (i=0;i<2;i++) cpu->dstat[ptr+i]=WRITTEN;
 				h=(WORD16)cpu->rreg[rB].val;
-				if (!mmio) *(WORD16 *)(&cpu->data[ptr])=h;
-				else *(WORD16 *)(&cpu->mm[ptr-MMIO])=h;
+				if (!mmio) 
+				  cpu->data->writeHalf(ptr, h);
+				else 
+				  *(WORD16 *)(&cpu->mm[ptr-MMIO])=h;
 				break;
 			case I_SW:
 				if (ptr%4!=0)
@@ -1690,10 +1674,12 @@ int pipeline::MEM(int *rawreg) {
 					status=DATA_MISALIGNED;
 					break;
 				}
-				if (!mmio) for (i=0;i<4;i++) cpu->dstat[ptr+i]=WRITTEN;
+				//if (!mmio) for (i=0;i<4;i++) cpu->dstat[ptr+i]=WRITTEN;
 				w=(WORD32)cpu->rreg[rB].val;
-				if (!mmio) *(WORD32 *)(&cpu->data[ptr])=w;
-				else *(WORD32 *)(&cpu->mm[ptr-MMIO])=w;
+				if (!mmio) 
+                                  cpu->data->writeWord32(ptr, w); 
+				else 
+ 				  *(WORD32 *)(&cpu->mm[ptr-MMIO])=w;
 				break;
 			case I_SD:
 			case I_S_D:
@@ -1702,8 +1688,9 @@ int pipeline::MEM(int *rawreg) {
 					status=DATA_MISALIGNED;
 					break;
 				}
-				if (!mmio) for (i=0;i<8;i++) cpu->dstat[ptr+i]=WRITTEN;
-				if (!mmio) *(WORD64 *)(&cpu->data[ptr])=cpu->rreg[rB].val;
+				//if (!mmio) for (i=0;i<8;i++) cpu->dstat[ptr+i]=WRITTEN;
+				if (!mmio) 
+                                  cpu->data->writeWord64(ptr, cpu->rreg[rB].val); 
 				else *(WORD64 *)(&cpu->mm[ptr-MMIO])=cpu->rreg[rB].val;
 				break;
 			default:

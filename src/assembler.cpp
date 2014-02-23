@@ -480,17 +480,15 @@ int Assembler::second_pass(const char *line,int /* lineptr */)
 {
     WORD32 w,byte;
     WORD32 op,code_word=0;
-	WORD32 flags=0;
-    BYTE b[4];
-    int i,instruct;
-	const char *start,*end,*fin;
+    WORD32 flags=0;
+    int instruct;
+    const char *start,*end,*fin;
     int rs,rt,rd,sub,type;
     BOOL sign,error=TRUE;
     
     const char *ptr=line;
     ptr=eatwhite(ptr);
-    if (ptr==NULL) 
-    {
+    if (ptr == NULL) {
     //    printf("                  %s",line);
         return 0;  /* blank line */
     }
@@ -896,31 +894,29 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
 				dataptr+=num;
 				if (dataptr>DATASIZE) return FALSE;
 			}
-			if (pass==2)
-			{
+			if (pass==2) {
 				datalines[dataptr/STEP]=(std::string)line;
                       
 				if (zero) *iptr=0;     // stuff in a zero
 				m=0;
 				bs=FALSE;
-				while (m<num)
-				{              
+				while (m<num) {              
 					m++; 
-                    if (bs)
-                    {
-                        if (*ptr=='n') ch='\n';
-                        else ch=*ptr;
-						cpu->dstat[dataptr]=WRITTEN;
-						cpu->data[dataptr++]= (BYTE) ch;
+                    if (bs) {
+                        if (*ptr=='n')
+                          ch='\n';
+                        else 
+                          ch=*ptr;
+			cpu->data->writeByte(dataptr, ch);
+ 			++dataptr;
                         bs=FALSE;
                     }
                     else
                     {
                         if (*ptr=='\\') bs=TRUE;
-                        else
-                        {
-							cpu->dstat[dataptr]=WRITTEN;
-							cpu->data[dataptr++]= *ptr;
+                        else {
+			  cpu->data->writeByte(dataptr, *ptr);
+			  ++dataptr;
                         }
                     } 
   
@@ -961,26 +957,22 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
         if (pass==2)
         {
             if (!getfullnum(ptr,&fw)) return FALSE;
-			if (CODEORDATA==DATA)
-			{
+			if (CODEORDATA==DATA) {
 				datalines[dataptr/STEP]=(std::string)line;
 
 			//    printf("%08x %08x %s",dataptr,num,line);
 				unpack(fw,b);
-				for (i=0;i<STEP;i++) 
-				{
-					cpu->dstat[dataptr]=WRITTEN;
-					cpu->data[dataptr++]=b[i];
+				for (i = 0; i < STEP; i++) {
+					cpu->data->writeByte(dataptr, b[i]);
+					++dataptr;
 				}
-				while ((ptr=skip(ptr,','))!=NULL)
-				{
+				while ((ptr=skip(ptr,','))!=NULL) {
 					if (!getfullnum(ptr,&fw)) return FALSE;
             //   printf("         %08x\n",num);
 					unpack(fw,b);
-					for (i=0;i<STEP;i++) 
-					{
-						cpu->dstat[dataptr]=WRITTEN;
-						cpu->data[dataptr++]=b[i];
+					for (i=0;i<STEP;i++) {
+					  cpu->data->writeByte(dataptr, b[i]);
+					  ++dataptr;
 					}
 				}
 			}
@@ -989,9 +981,9 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
         return TRUE;
 
     case 10:            // .word32
-        if (CODEORDATA==CODE) return FALSE;
-        if (pass==1)
-        {
+        if (CODEORDATA==CODE)
+          return FALSE;
+        if (pass==1) {
 			if (CODEORDATA==DATA)
 			{
 				do {
@@ -1008,19 +1000,17 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
 			{
 				datalines[dataptr/STEP]=(std::string)line;
 				unpack32(num,b);
-				for (i=0;i<4;i++) 
-				{
-					cpu->dstat[dataptr]=WRITTEN;
-					cpu->data[dataptr++]=b[i];
+				for (i=0;i<4;i++) {
+					  cpu->data->writeByte(dataptr, b[i]);
+					  ++dataptr;
 				}
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
 					if (!getdatasym(ptr,&num)) return FALSE;
 					unpack32(num,b);
-					for (i=0;i<4;i++) 
-					{
-						cpu->dstat[dataptr]=WRITTEN;
-						cpu->data[dataptr++]=b[i];
+					for (i=0;i<4;i++) {
+					  cpu->data->writeByte(dataptr, b[i]);
+					  ++dataptr;
 					}
 				}
 			}
@@ -1047,20 +1037,18 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
 			{
 				datalines[dataptr/STEP]=(std::string)line;
 				unpack16((WORD16)num,b);
-				for (i=0;i<2;i++) 
-				{
-					cpu->dstat[dataptr]=WRITTEN;
-					cpu->data[dataptr++]=b[i];
+				for (i=0;i<2;i++) {
+					  cpu->data->writeByte(dataptr, b[i]);
+					  ++dataptr;
 				}
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
 					if (!getnum(ptr,&num)) return FALSE;
 					if (!in_range(num,0xffff)) return FALSE;
 					unpack16((WORD16)num,b);
-					for (i=0;i<2;i++) 
-					{
-						cpu->dstat[dataptr]=WRITTEN;
-						cpu->data[dataptr++]=b[i];
+					for (i=0;i<2;i++) {
+					  cpu->data->writeByte(dataptr, b[i]);
+					  ++dataptr;
 					}
 				}
 			}
@@ -1087,14 +1075,13 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
 			if (CODEORDATA==DATA)
 			{
 				datalines[dataptr/STEP]=(std::string)line;
-				cpu->dstat[dataptr]=WRITTEN;
-				cpu->data[dataptr++]=(unsigned char)num;
-				while ((ptr=skip(ptr,','))!=NULL)
-				{
+				cpu->data->writeByte(dataptr, (unsigned char) num);
+				++dataptr;
+				while ((ptr=skip(ptr,',')) != NULL) {
 					if (!getnum(ptr,&num)) return FALSE;
 					if (!in_range(num,0xff)) return FALSE;
-					cpu->dstat[dataptr]=WRITTEN;
-					cpu->data[dataptr++]=(unsigned char)num;
+					cpu->data->writeByte(dataptr, (unsigned char) num);
+					++dataptr;
 				}
 			}
         }
@@ -1132,18 +1119,17 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line)
 				unpack(db.u,b);
 				for (i=0;i<STEP;i++) 
 				{
-					cpu->dstat[dataptr]=WRITTEN;
-					cpu->data[dataptr++]=b[i];
+					  cpu->data->writeByte(dataptr, b[i]);
+					  ++dataptr;
 				}
 				while ((ptr=skip(ptr,','))!=NULL)
 				{
 					if (!getdouble(ptr,&db.d)) return FALSE;
             //   printf("         %08x\n",num);
 					unpack(db.u,b);
-					for (i=0;i<STEP;i++) 
-					{
-						cpu->dstat[dataptr]=WRITTEN;
-						cpu->data[dataptr++]=b[i];
+					for (i=0;i<STEP;i++) {
+					  cpu->data->writeByte(dataptr, b[i]);
+					  ++dataptr;
 					}
 				}
 			}

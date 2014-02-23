@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <iostream>
 #include <string.h>
-#include <stdlib.h>
 
 #include "simulator.h"
 
@@ -36,7 +35,8 @@ void ClearScreen() {
     if (result <= 0) return;
   }
   
-  putp( tigetstr( "clear" ) );
+  char str[] = "clear";
+  putp( tigetstr( str ) );
 }
 
 int main(int argc, char **argv) {
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
   int res = x->openfile(programa);
   //std::cout << "Res de apertura de archivo: " << res << "\n";
   if (res != 0) {
-    std::cout << "Error al cargar, deteniendo." << std::endl; 
+    std::cout << "Error al cargar " << programa << ", deteniendo." << std::endl; 
     return -1;
   }
   std::cout << "Archivo " << programa << " abierto con exito\n";
