@@ -29,50 +29,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mytypes.h"
 #include "utils.h"
 
-/* Architectural globals */
-
-int bits(int num) {
-  int r = 0;
-  while (num >>= 1) 
-    r++;
-  return r;
-}
-
-// print out nbits, rounded up to nearest byte
-
-int sprintnbits(char *txt,WORD32 addr,int n) {
-  int i,nbytes = n/8;
-  if (n%8 != 0)
-    nbytes++;
-  BYTE a[4];
-  unpack32(addr,a);
-  for (i=0; i<nbytes; i++) 
-    sprintf(&txt[2*i], "%02x", a[nbytes-i-1]);
-  return nbytes;
-}
-
-
-SIGNED16 pack16(BYTE *b) {
-  /* pack bytes into 16-bit half-word */
-  SIGNED16 res = (SIGNED16) b[0];
-  res |= (SIGNED16) (b[1] << 8);
-  return res;
-}
-
 void unpack16(SIGNED16 a, BYTE *b) {
   /* unpack bytes from a half-word */
   b[0] = (BYTE) a;
   b[1] = (BYTE) (a>>8);
-}
-
-
-WORD32 pack32(BYTE *b) {
-  /* pack bytes into a 32-bit Word */
-  return 
-    ((WORD32)b[3]<<24) | 
-    ((WORD32)b[2]<<16) | 
-    ((WORD32)b[1]<<8) | 
-    (WORD32)b[0];
 }
 
 void unpack32(WORD32 a,BYTE *b) {
@@ -83,39 +43,12 @@ void unpack32(WORD32 a,BYTE *b) {
     b[3] = (BYTE) (a>>24);
 }
 
-WORD64 pack(BYTE *b) {
-  int i;
-  WORD64 r = 0;
-  for (i = STEP-1; i >= 0; i--) {
-    r <<= 8;
-    r |= b[i];
-  }
-  return r;
-}
-
 void unpack(WORD64 a, BYTE *b) {
   int i;
   for (i = 0; i < STEP; i++) {
     b[i] = (BYTE) a;
     a >>= 8;
   }
-}
-
-void sprintword32(char *txt, WORD32 addr) {
-  sprintf(txt, "%08x", addr);
-}
-
-void sprintword(char *txt, WORD64 val) {
-  int i;
-  BYTE a[8];
-  val &= MASK;
-  unpack(val, a);
-  for (i = 0; i < STEP; i++)
-    sprintf(&txt[2*i], "%02x", a[STEP - i - 1]);
-}
-
-void sprintdouble(char *txt, double db) {
-  sprintf(txt, "%016.8lf", db);
 }
 
 BOOL in_range(WORD32 num, WORD32 mask) {

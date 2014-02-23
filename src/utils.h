@@ -23,22 +23,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __UTILS_H
 #define __UTILS_H
 
-int bits(int);
-int sprintnbits(char *,WORD32,int);
-WORD32 pack32(BYTE*);
+// Used in class Assembler
 void unpack32(WORD32,BYTE *);
-SIGNED16 pack16(BYTE*);
 void unpack16(SIGNED16,BYTE *);
-WORD64 pack(BYTE*);
-void unpack(WORD64,BYTE *);
-void sprintword32(char *,WORD32);
-void sprintdouble(char *,double);
-void sprintword(char *,WORD64);
+void unpack(WORD64, BYTE *);
+BOOL in_range(WORD32, WORD32);
+int compare(const char*, const char *);
+int alignment(int, int);
 WORD64 strtoint64(const char *ptr, const char **end, int b);
 
-BOOL in_range(WORD32,WORD32);
-int compare(const char*,const char *);
-int alignment(int,int);
+// Deberiamos tener estas macros?? 
+// En principio me parecio que guardaba bigendian, pero no esta conviertiendo nada
 
 #define swap16(_val) \
 	((WORD16)(((((WORD16)_val) & 0xff00) >> 8) | \
