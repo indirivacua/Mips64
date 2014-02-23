@@ -67,8 +67,11 @@ typedef struct {
 class Simulator {
  public: // create from serialization only
   Simulator();
+  virtual ~Simulator();
 
-  // Attributes
+  int openfile(const std::string &);
+  int isRunning() const { return cpu.getStatus() != HALTED; }
+
  protected:
   char AppDir[MAX_PATH+1];
   char LasDir[MAX_PATH+1];
@@ -113,12 +116,6 @@ class Simulator {
   
   RESULT result;
   
-  // Implementation
- public:
-  virtual ~Simulator();
-
-  int openfile(const std::string &);
-  
  protected:
   void clear();
   int one_cycle(BOOL);
@@ -129,7 +126,6 @@ class Simulator {
 
   
   // Generated message map functions
- protected:
  public:
   void OnFileReset();
   void OnFileOpen();
@@ -167,7 +163,6 @@ class Simulator {
   void show_stats();
   void show_screen();
   
-  int isRunning() const { return !(cpu.getStatus() == HALTED); }
 
 };
 

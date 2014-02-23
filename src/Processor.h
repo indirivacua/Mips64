@@ -55,18 +55,6 @@ public:
   int getStatus() const { return this->status; }
   BOOL setStatus(int state) { this->status = state; return TRUE;}
 
-  CodeMemory *code;
-  DataMemory *data;
-
-  BYTE   mm[16];
-
-  reg    rreg[64];
-  reg    wreg[64];
-  BOOL fp_cc;
-
-  BOOL drawit;
-  WORD32 keyboard;
-
   WORD32 *getScreen() const { return screen; }
   BOOL setScreenPixel(int x, int y, WORD32 color);
   BOOL clearScreen();
@@ -80,6 +68,21 @@ public:
   const BOOL isValidCodeMemoryAddress(WORD32 addr);
   const WORD32 getCodeMemorySize() { return codesize; }
   const WORD32 getDataMemorySize() { return datasize; }
+
+  // Esto deberia ir o protegido o eliminado (otra clase o algo)
+  CodeMemory *code;
+  DataMemory *data;
+
+  BYTE   mm[16];
+
+  reg    rreg[64];
+  reg    wreg[64];
+  BOOL fp_cc;
+
+  BOOL drawit;
+  WORD32 keyboard;
+
+ 
 
 protected:
   WORD32 PC;

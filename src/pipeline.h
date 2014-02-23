@@ -112,14 +112,11 @@ public:
 
     pipeline(Processor *);
 
-    BOOL active;
-	BOOL halting;
-    BOOL   branch;
-    WORD32 destination;
-	int ADD_LATENCY;
-	int MUL_LATENCY;
-	int DIV_LATENCY;
+   
+    void initialize(int ADDS, int MULS, int DIVS, BOOL, BOOL, BOOL);
+    int clock_tick(RESULT *);
 
+    // Deberia ir protegido ...
     if_id_reg  if_id;
     id_ex_reg integer;
     id_ex_reg m[10];
@@ -127,11 +124,10 @@ public:
     id_ex_reg div;
     ex_mem_reg ex_mem;
     mem_wb_reg  mem_wb;
-
-    Processor *cpu;
-    
-    void initialize(int ADDS, int MULS, int DIVS, BOOL, BOOL, BOOL);
-    int clock_tick(RESULT *);
+    int ADD_LATENCY;
+    int MUL_LATENCY;
+    int DIV_LATENCY;
+    BOOL active;
 
 protected:
 
@@ -157,6 +153,12 @@ protected:
     BOOL branch_target_buffer;
     BOOL forwarding;
 
+    BOOL halting;
+    BOOL  branch;
+    WORD32 destination;
+
+    Processor *cpu;
+ 
 };
 
 
