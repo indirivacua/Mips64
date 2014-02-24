@@ -23,8 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __CODEMEMORY_H
 #define __CODEMEMORY_H
 
-#include "Memory.h"
-
 #define CODE_VALID        0
 #define CODE_BREAKPOINT   1
 #define CODE_BRANCHPRED   2

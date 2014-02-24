@@ -21,7 +21,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 #include "mytypes.h"
-#include "Memory.h"
 #include "CodeMemory.h"
 
 #include <iostream>
