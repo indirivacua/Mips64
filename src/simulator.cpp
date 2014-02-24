@@ -178,8 +178,8 @@ void Simulator::clear() {
 
 void Simulator::OnFileReset() {
 	 // Reset the processor
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 	cpu.reset();
+	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
 
 	//UpdateAllViews(NULL);
 }
@@ -211,8 +211,7 @@ void Simulator::OnFileOpen() {
 
 	int res=openfile(path);
 
-	if (res==0)
-	{
+	if (res==0) {
 
 // AfxMessageBox(fname,MB_OK);
 		if (last.Open(fname,CFile::modeCreate | CFile::modeWrite))
@@ -745,40 +744,14 @@ int Simulator::openfile(const std::string &fname) {
 	cpu.clearTerminal(); 
         cpu.drawit = FALSE; 
         cpu.keyboard = 0;
-	
-	if (fname == "")
-          return 1;
-        std::cout << "openfile : " << fname << std::endl;
-
-        Assembler *assembler = new Assembler(cpu.code, cpu.data);
-	res = assembler->openit(fname);
-        delete assembler;
-
+/*	
 	if (res > 0) {
 		remove("winmips64.ini");
 		remove("winmips64.las"); 
 		//AfxGetMainWnd()->SetWindowText("WinMIPS64 - Simulador de Procesador MIPS64");
 		lastfile = "";
 	}
-	if (res == 1) {
-		char txt[512];
-		sprintf(txt, "No se pudo abrir el archivo %s", fname.c_str());
-		//AfxMessageBox(txt,MB_OK|MB_ICONEXCLAMATION);
-		std::cout << txt << std::endl;
-		return res;
-	}
-	if (res == 2) {
-		//AfxMessageBox("Errores detectados en 1ra Pasada");
-		std::cout << "Errores detectados en 1ra Pasada" << std::endl;
-		return res;
-	}
-	if (res == 3) {
-		//AfxMessageBox("Errores detectados en 2da Pasada");
-		std::cout << "Errores detectados en 2da Pasada" << std::endl;
-		return res;
-	}
-	//AfxGetMainWnd()->SetWindowText("WinMIPS64 - Simulador de Procesador MIPS64 - " + fname);
-
+*/
 	return res;
 }
 

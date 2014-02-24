@@ -72,6 +72,9 @@ class Simulator {
   int openfile(const std::string &);
   int isRunning() const { return cpu.getStatus() != HALTED; }
 
+  CodeMemory *getCodeMemory() const { return cpu.code; }
+  DataMemory *getDataMemory() const { return cpu.data; }
+
  protected:
   char AppDir[MAX_PATH+1];
   char LasDir[MAX_PATH+1];
