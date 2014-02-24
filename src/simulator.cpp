@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 #include <iostream>
@@ -752,7 +754,7 @@ int Simulator::openfile(const std::string &fname) {
 		lastfile = "";
 	}
 */
-	return res;
+	return 0;
 }
 
 

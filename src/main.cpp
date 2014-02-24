@@ -25,6 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "simulator.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <term.h>
 
