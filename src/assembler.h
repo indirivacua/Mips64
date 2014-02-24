@@ -52,7 +52,7 @@ BOOL getdouble(const char *&ptr,double *);
 class Assembler {
 
   public:
-    Assembler(Processor *cpu);
+    Assembler(CodeMemory *code, DataMemory *data);
     int openit(const std::string &fname);
 
   protected:
@@ -74,9 +74,8 @@ class Assembler {
   unsigned int codeptr;
   unsigned int dataptr;
 
-  Processor *cpu;
-  
   CodeMemory *code;
+  DataMemory *data;
 };
 
 #endif

@@ -750,7 +750,7 @@ int Simulator::openfile(const std::string &fname) {
           return 1;
         std::cout << "openfile : " << fname << std::endl;
 
-        Assembler *assembler = new Assembler(&cpu);
+        Assembler *assembler = new Assembler(cpu.code, cpu.data);
 	res = assembler->openit(fname);
         delete assembler;
 
