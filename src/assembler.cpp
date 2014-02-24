@@ -32,9 +32,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 int delimiter(int c) {
     if (c == ';' || c == '#') 
       return COMMENT;
-    if (c == 0 || c=='\n' || c=='\r')
+    if (c == 0 || c == '\n' || c == '\r')
       return ENDLINE;
-    if (c==' ' || c==9)
+    if (c == ' ' || c == 9)
       return SPACE;
     return 0;
 }
@@ -44,7 +44,7 @@ const char *skipover(const char *ptr, char c) {
 
   int res;
   while (*ptr != c) {
-    res=delimiter(*ptr);
+    res = delimiter(*ptr);
     if (res == ENDLINE || res == COMMENT)
       return NULL;
     if (c == ',' && *ptr == '(')
@@ -77,11 +77,11 @@ const char *eatwhite(const char *ptr) {
   while (*ptr == ' ' || *ptr == 9)
     ptr++;  
 
-  if (*ptr==0 || 
-      *ptr==';' || 
-      *ptr=='#' || 
-      *ptr=='\n' || 
-      *ptr=='\r') 
+  if (*ptr == 0    || 
+      *ptr == ';'  || 
+      *ptr == '#'  || 
+      *ptr == '\n' || 
+      *ptr == '\r') 
     return NULL;
 
   return ptr; 
@@ -98,7 +98,7 @@ BOOL getdouble(const char *&ptr, double *num) {
     return FALSE;
   
   char *ptr_2;
-  m=strtod(ptr, &ptr_2);
+  m = strtod(ptr, &ptr_2);
   ptr = ptr_2;
   
   *num = m;
@@ -138,23 +138,61 @@ int getreg(const char *&ptr) {
 
   /* check for register pseudo-name */
   type=0;
-  if (strncmp(ptr,"zero",4) == 0) {n=0; ptr+=4; return n;}
-  if (strncmp(ptr,"at",2)==0) {n=1; ptr+=2; return n;}
-  if (strncmp(ptr,"gp",2)==0) {n=28; ptr+=2; return n;}
-  if (strncmp(ptr,"sp",2)==0) {n=29; ptr+=2; return n;}
-  if (strncmp(ptr,"fp",2)==0) {n=30; ptr+=2; return n;}      
-  if (strncmp(ptr,"ra",2)==0) {n=31; ptr+=2; return n;} 
-  if (strncmp(ptr,"v",1)==0) {type=1; ptr++;}
-  if (strncmp(ptr,"a",1)==0) {type=2; ptr++;}
-  if (strncmp(ptr,"t",1)==0) {type=3; ptr++;}
-  if (strncmp(ptr,"s",1)==0) {type=4; ptr++;}
-  if (strncmp(ptr,"k",1)==0) {type=5; ptr++;}
+  if (strncmp(ptr,"zero", 4) == 0) {
+    n = 0; 
+    ptr += 4; 
+    return n;
+  }
+  if (strncmp(ptr,"at", 2) == 0) { 
+    n = 1; 
+    ptr += 2; 
+    return n;
+  }
+  if (strncmp(ptr,"gp", 2) == 0) {
+    n = 28; 
+    ptr += 2;
+    return n;
+  }
+  if (strncmp(ptr,"sp", 2) == 0) {
+    n = 29; 
+    ptr += 2;
+    return n;
+  }
+  if (strncmp(ptr,"fp", 2) == 0) {
+    n = 30; 
+    ptr += 2; 
+    return n;
+  }      
+  if (strncmp(ptr,"ra", 2) == 0) {
+    n = 31; 
+    ptr += 2;
+    return n;
+  } 
+  if (strncmp(ptr,"v", 1) == 0) {
+    type=1; 
+    ptr++;
+  }
+  if (strncmp(ptr,"a", 1) == 0) { 
+    type = 2; ptr++;
+  }
+  if (strncmp(ptr,"t", 1) == 0) { 
+    type = 3;
+    ptr++;
+  }
+  if (strncmp(ptr,"s", 1) == 0) { 
+    type = 4; 
+    ptr++;
+  }
+  if (strncmp(ptr,"k", 1) == 0) {
+    type = 5;
+    ptr++;
+  }
   
   n= (int) atoi(ptr);
   ptr++;
   while (isdigit(*ptr))
     ptr++;
-
+  
   switch (type) {
   case 1:
     if (n < 0 || n > 1) 
@@ -197,7 +235,7 @@ int getreg(const char *&ptr) {
 
 int fgetreg(const char *&ptr) {
   int n;
-  ptr=eatwhite(ptr);
+  ptr = eatwhite(ptr);
   if (ptr == NULL) 
     return -1;
 
@@ -278,7 +316,7 @@ BOOL getsym(symbol_table *table, int size, const char *&ptr, WORD32 *n) {
   }
 
   for (k = 0; k < size; k++) {
-    sptr=table[k].symb;
+    sptr = table[k].symb;
     incr = compare(ptr, sptr);
 
     if (incr) {
