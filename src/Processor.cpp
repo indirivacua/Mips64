@@ -34,13 +34,12 @@ Processor::Processor() {
 Processor::~Processor() {
 	delete code;
 	delete data;
-
 	delete[] screen;
 }
 
-void Processor::initialize(int codesize, int datasize) {
-    this->codesize = codesize;
-    this->datasize = datasize;
+void Processor::initialize(CPUConfig *config) {
+    this->codesize = config->codesize;
+    this->datasize = config->datasize;
 
     delete code;
     delete data;
@@ -48,7 +47,6 @@ void Processor::initialize(int codesize, int datasize) {
 
     this->code = new CodeMemory(codesize);
     this->data = new DataMemory(datasize);
-
     this->screen = new WORD32[GSXY*GSXY];
 
     this->reset(TRUE);

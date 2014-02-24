@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <string.h>
 
 #include "simulator.h"
+#include "CPUConfig.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +56,9 @@ int main(int argc, char **argv) {
   if (argc >= 3) {
     grafico = atoi(argv[2]);
   }
-  Simulator *x = new Simulator();
+
+  CPUConfig config;
+  Simulator *x = new Simulator(&config);
   x->openfile(programa);
   Assembler *assembler = new Assembler(x->getCodeMemory(), x->getDataMemory());
   int res = assembler->openit(programa);

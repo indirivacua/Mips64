@@ -40,125 +40,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
 
-Simulator::Simulator() : pipe(&cpu) {
-	unsigned int codebits, databits;
-	std::string fname;
-	//CStdioFile file;
-	codebits = 10;
-	databits = 10;
-	CODESIZE = 0x400; // defaults
-	DATASIZE = 0x400;
-	ADD_LATENCY = 4;
-	MUL_LATENCY = 7;
-	DIV_LATENCY = 24;
-	forwarding = TRUE;
-	delay_slot = FALSE;
-	entries = 1;
-	offset = 0;
-	history[0].IR = 0;
-	history[0].start_cycle = 0;
-	history[0].status[0].stage = IFETCH;
-/*
-	GetCurrentDirectory(MAX_PATH,AppDir); // where I am running from?
+Simulator::Simulator(CPUConfig *config) : pipe(&cpu) {
 
- 	fname=(std::string)AppDir+'\\'+"winmips64.pth";
-	if (file.Open(fname,CFile::modeRead))
-	{
-		file.ReadString(AppDir,MAX_PATH);
-		file.Close();
-	}
-	strcpy(LasDir,AppDir); 	
+  this->config = config;
 
- 	fname=(std::string)AppDir+'\\'+"winmips64.ini";
+  cpu.initialize(config);
+  pipe.initialize(config);
 
-	txt[0]=txt[11]=0;
-	if (file.Open(fname,CFile::modeRead))
-	{
-		file.ReadString(txt,10);
-		val=atoi(txt);
-		if (val<=MAX_CODEBITS && val>=MIN_CODEBITS) codebits=val;
-		file.ReadString(txt,10);
-		val=atoi(txt);
-		if (val<=MAX_DATABITS && val>=MIN_DATABITS) databits=val;
-		file.ReadString(txt,10);
-		val=atoi(txt);
-		if (val<=MAX_ADD_LATENCY && val>=MIN_ADD_LATENCY)	ADD_LATENCY=val;
-		file.ReadString(txt,10);
-		val=atoi(txt);
-		if (val<=MAX_MUL_LATENCY && val>=MIN_MUL_LATENCY) MUL_LATENCY=val;
-		file.ReadString(txt,10);
-		val=atoi(txt);
-		if (val<=MAX_DIV_LATENCY && val>=MIN_DIV_LATENCY) DIV_LATENCY=val;
-		file.ReadString(txt,10);
-		if (atoi(txt)==1)	delay_slot=TRUE;
-		else				delay_slot=FALSE;
-		file.ReadString(txt,10);
-		if (atoi(txt)==1)	forwarding=TRUE;
-		else				forwarding=FALSE;
-		file.ReadString(txt,10);
-		if (atoi(txt)==1 && !delay_slot)	branch_target_buffer=TRUE;
-		else				                branch_target_buffer=FALSE;
-		
-
-		file.Close();
-		CODESIZE=(1<<codebits);
-		DATASIZE=(1<<databits);
-	}
-
-	lastfile="";
-	fname=(std::string)AppDir+'\\'+"winmips64.las";
-
-	if (file.Open(fname,CFile::modeRead))
-	{
-		file.ReadString(lastfile);
-		file.Close();
-	}
-*/
-	cpu.initialize(CODESIZE, DATASIZE);
-
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
-
-	simulation_running = FALSE;
-	restart = FALSE;
-
-	clear();
-	OnReload();
-
+  simulation_running = FALSE;
+  restart = FALSE;
+  clear();
 }
 
 Simulator::~Simulator() {
-/*
-	CStdioFile file;
-	std::string fname;
-	char txt[10];
-	fname=(std::string)AppDir+'\\'+"winmips64.ini";
-
-	if (file.Open(fname,CFile::modeCreate | CFile::modeWrite))
-	{
-		sprintf(txt,"%d\n",bits(CODESIZE));
-		file.WriteString(txt);
-		sprintf(txt,"%d\n",bits(DATASIZE));
-		file.WriteString(txt);
-		sprintf(txt,"%d\n",ADD_LATENCY);
-		file.WriteString(txt);
-		sprintf(txt,"%d\n",MUL_LATENCY);
-		file.WriteString(txt);
-		sprintf(txt,"%d\n",DIV_LATENCY);
-		file.WriteString(txt);
-		if (delay_slot) sprintf(txt,"1\n");
-		else			sprintf(txt,"0\n");
-		file.WriteString(txt);
-		if (forwarding) sprintf(txt,"1\n");
-		else			sprintf(txt,"0\n");
-		file.WriteString(txt);
-		if (branch_target_buffer) sprintf(txt,"1\n");
-		else			          sprintf(txt,"0\n");
-		file.WriteString(txt);
-
-	
-		file.Close();
-	}
-*/
 }
 
 void Simulator::clear() {
@@ -181,69 +75,16 @@ void Simulator::clear() {
 void Simulator::OnFileReset() {
 	 // Reset the processor
 	cpu.reset();
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
-
-	//UpdateAllViews(NULL);
+	pipe.initialize(config);
 }
 
 void Simulator::OnFullReset() {
 	 // Reset Data Memory as well
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
+
+	pipe.initialize(config);
+
 	cpu.reset(TRUE);
 	clear();
-	//UpdateAllViews(NULL);
-}
-
-void Simulator::OnFileOpen() {	
-/*
-	CStdioFile last;
-	std::string fname,path;
-
-	fname=(std::string)LasDir+'\\'+"winmips64.las";
-
-	if (last.Open(fname,CFile::modeRead))
-	{
-		last.ReadString(path);
-		dlg.m_ofn.lpstrInitialDir=path.Left(path.ReverseFind('\\'));
-		last.Close();
-	}
-
-	if (dlg.DoModal()!=IDOK) return;
-	path=dlg.GetPathName();
-
-	int res=openfile(path);
-
-	if (res==0) {
-
-// AfxMessageBox(fname,MB_OK);
-		if (last.Open(fname,CFile::modeCreate | CFile::modeWrite))
-		{
-// create .las file in directory from which application was run
-			lastfile=path;
-			last.WriteString(lastfile);
-			last.Close();
-		}
-		else
-		{
-// if unable to write it there -  write it here instead
-			int pathstart=path.ReverseFind('\\');
-			if (pathstart>=0 && pathstart<MAX_PATH)
-				strcpy(LasDir,path.Left(pathstart));
-			else
-				LasDir[0]=0;
-			fname=(std::string)LasDir+'\\'+"winmips64.las";
-			if (last.Open(fname,CFile::modeCreate | CFile::modeWrite))
-			{
-// create .las file in user directory
-				lastfile=path;
-				last.WriteString(lastfile);
-				last.Close();
-			}
-		}
-	}
-
-	UpdateAllViews(NULL,1L);
-*/
 }
 
 void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt) {
@@ -285,7 +126,7 @@ void Simulator::process_result(BOOL show)
 	if (result.WB == OK || result.WB == HALTED)
   	instructions++;
 	txt[0]=0;
-	if (!delay_slot && result.ID == BRANCH_TAKEN_STALL) {
+	if (!config->delay_slot && result.ID == BRANCH_TAKEN_STALL) {
 		something = TRUE;
 		branch_taken_stalls++;
 		strcat(txt,"  Atasco Branch Taken");
@@ -317,11 +158,11 @@ void Simulator::process_result(BOOL show)
 			structural_stalls++;
 			strcat(txt,"  Atasco Estructural en FP-DIV");
 		}
-		if (result.MULTIPLIER[MUL_LATENCY-1] == STALLED) {
+		if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) {
 			structural_stalls++;
 			strcat(txt,"  Atasco Estructural en FP-MUL");
 		}
-		if (result.ADDER[ADD_LATENCY-1] == STALLED) {
+		if (result.ADDER[config->ADD_LATENCY-1] == STALLED) {
 			structural_stalls++;
 			strcat(txt,"  Atasco Estructural en FP-ADD");
 		}
@@ -475,10 +316,10 @@ void Simulator::update_history() {
 			result.EX = STRUCTURAL;
 		if (result.DIVIDER == STALLED) 
 			result.DIVIDER = STRUCTURAL;
-		if (result.MULTIPLIER[MUL_LATENCY-1] == STALLED) 
-			result.MULTIPLIER[MUL_LATENCY-1] = STRUCTURAL;
-		if (result.ADDER[ADD_LATENCY-1] == STALLED) 
-			result.ADDER[ADD_LATENCY-1] = STRUCTURAL;
+		if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) 
+			result.MULTIPLIER[config->MUL_LATENCY-1] = STRUCTURAL;
+		if (result.ADDER[config->ADD_LATENCY-1] == STALLED) 
+			result.ADDER[config->ADD_LATENCY-1] = STRUCTURAL;
 	}	
 
 	for (i = 0; i < entries; i++) {
@@ -553,7 +394,7 @@ void Simulator::update_history() {
 				} else {
 					history[i].status[cc].stage = MULEX;
 					history[i].status[cc].substage = (BYTE) substage;
-					history[i].status[cc].cause = (BYTE) result.MULTIPLIER[MUL_LATENCY - 1];
+					history[i].status[cc].cause = (BYTE) result.MULTIPLIER[config->MUL_LATENCY - 1];
 				}
 			} else {
 				if (pipe.m[substage+1].active && pipe.m[substage+1].IR == previous) {
@@ -576,7 +417,7 @@ void Simulator::update_history() {
 				} else {
 					history[i].status[cc].stage = ADDEX;
 					history[i].status[cc].substage = (BYTE) substage;
-					history[i].status[cc].cause = (BYTE) result.ADDER[ADD_LATENCY-1];
+					history[i].status[cc].cause = (BYTE) result.ADDER[config->ADD_LATENCY-1];
 				}
 			} else {
 				if (pipe.a[substage+1].active && pipe.a[substage+1].IR == previous) {
@@ -736,7 +577,6 @@ void Simulator::OnExecuteRunto()
 
 int Simulator::openfile(const std::string &fname) {
 	unsigned int i;
-	int res;
 	OnFileReset();
         cpu.data->reset(); // reset data memory
 	for (i = 0; i < 16; i++) 
@@ -770,145 +610,42 @@ void Simulator::OnFileMulti() {
 
 void Simulator::OnFileMemory() 
 {
-/*
-	CMemDialog dlg;
-
-	dlg.m_code=bits(CODESIZE);
-	dlg.m_data=bits(DATASIZE);
-	dlg.m_fpal=ADD_LATENCY;
-	dlg.m_fpml=MUL_LATENCY;
-	dlg.m_fpdl=DIV_LATENCY;
-
-	if (dlg.DoModal()!=IDOK) return;
-
-	codesize=(1<<dlg.m_code);
-	datasize=(1<<dlg.m_data);
-						// full system reset
-	DATASIZE=datasize;
-	ADD_LATENCY=dlg.m_fpal;
-	MUL_LATENCY=dlg.m_fpml;
-	DIV_LATENCY=dlg.m_fpdl;
-*/
-
-	cpu.initialize(CODESIZE, DATASIZE);
-	pipe.initialize(ADD_LATENCY, MUL_LATENCY, DIV_LATENCY, delay_slot, branch_target_buffer, forwarding);
-
-	forwarding = TRUE;
-	delay_slot = FALSE;
-	branch_target_buffer = FALSE;
+	cpu.initialize(config);
+	pipe.initialize(config);
 
 	clear();
 	//UpdateAllViews(NULL);
 
-	OnReload();
 }
 
-// Disable everything while simulation is running
-
-void Simulator::OnUpdateExecuteMulticycle() 
-{
-	//pCmdUI->Enable(!simulation_running && !cpu.keyboard);	
-}
-
-void Simulator::OnUpdateExecuteStop() 
-{
-	//pCmdUI->Enable(simulation_running);	
-}
-
-void Simulator::OnUpdateExecuteRunto() 
-{
-	//pCmdUI->Enable(!simulation_running && !cpu.keyboard);
-}
-
-void Simulator::OnUpdateExecuteSingle() 
-{
-	//pCmdUI->Enable(!simulation_running && !cpu.keyboard);
-}
-
-void Simulator::OnUpdateFileMulti() 
-{
-	//pCmdUI->Enable(!simulation_running);	
-}
-
-void Simulator::OnUpdateFileMemory() 
-{
-	//pCmdUI->Enable(!simulation_running);
-}
-
-void Simulator::OnUpdateFileOpen() 
-{
-	//pCmdUI->Enable(!simulation_running);
-}
-
-void Simulator::OnUpdateFileReset() 
-{
-	//pCmdUI->Enable(!simulation_running);	
-}
-
-void Simulator::OnUpdateFullReset() 
-{
-	//pCmdUI->Enable(!simulation_running);	
-}
-
-int Simulator::OnReload() 
-{ // reload last file
-	int res;
-	char txt[512];
-	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
-	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
-	res = openfile(lastfile);
-	if (res == 0) {
-	//	AfxGetMainWnd()->SetWindowText(lastfile);
-		snprintf(txt, 512, "Archivo cargado - %s",lastfile.c_str());
-	//	pStatus->SetPaneText(0,txt);
-	}
-
-	return res;
-}
-
-void Simulator::OnUpdateReload() {
-	//pCmdUI->Enable(!simulation_running);
-	
-}
-
-void Simulator::OnFileDelaySlot() {
-	if (delay_slot) 
-		delay_slot = FALSE;
+void Simulator::toggleDelaySlot() {
+	if (config->delay_slot) 
+		config->delay_slot = FALSE;
 	else
-		delay_slot = TRUE;
+		config->delay_slot = TRUE;
+
+	if (config->delay_slot)
+		config->branch_target_buffer = FALSE;
 	OnFileReset();
 }
 
-void Simulator::OnUpdateFileDelaySlot() {
-	//pCmdUI->SetCheck(delay_slot);
-	//pCmdUI->Enable(!branch_target_buffer);
-}
-
-void Simulator::OnFileForwarding() {
-	if (forwarding) 
-		forwarding=FALSE;
+void Simulator::toggleForwarding() {
+	if (config->forwarding) 
+		config->forwarding = FALSE;
 	else
-		forwarding=TRUE;
+		config->forwarding = TRUE;
 	OnFileReset();
 }
 
-void Simulator::OnUpdateFileForwarding() {
-	//pCmdUI->SetCheck(forwarding);	
-}
-
-void Simulator::OnBtb() {
-	if (branch_target_buffer) 
-		branch_target_buffer=FALSE;
+void Simulator::toggleBtb() {
+	if (config->branch_target_buffer) 
+		config->branch_target_buffer=FALSE;
 	else	
-		branch_target_buffer=TRUE;
+		config->branch_target_buffer=TRUE;
+	if (config->branch_target_buffer)
+		config->delay_slot = FALSE;
 	OnFileReset();
 }
-
-void Simulator::OnUpdateBtb() {
-	//pCmdUI->SetCheck(branch_target_buffer);
-	//pCmdUI->Enable(!delay_slot);
-}
-
 
 /** Metodos para verificar el funcionamiento del Simulador */ 
 

@@ -81,21 +81,21 @@ pipeline::pipeline(Processor *cpu) {
   this->cpu = cpu;
 }
 
-void pipeline::initialize(int ADDS, int MULS, int DIVS, BOOL delay_slot, BOOL branch_target_buffer, BOOL forwarding) {
+void pipeline::initialize(CPUConfig *config) {
   int i;
   this->branch = FALSE;
   this->destination = 0;
-  this->ADD_LATENCY = ADDS;
-  this->MUL_LATENCY = MULS;
-  this->DIV_LATENCY = DIVS;
+  this->ADD_LATENCY = config->ADD_LATENCY;
+  this->MUL_LATENCY = config->MUL_LATENCY;
+  this->DIV_LATENCY = config->DIV_LATENCY;
   
   this->if_id.active = FALSE;
   this->integer.active = FALSE;
   this->ex_mem.active = FALSE;
   this->mem_wb.active = FALSE;
-  for (i = 0; i < ADDS; i++)
+  for (i = 0; i < ADD_LATENCY; i++)
     this->a[i].active = FALSE;
-  for (i = 0; i < MULS; i++)
+  for (i = 0; i < config->MUL_LATENCY; i++)
     this->m[i].active = FALSE;
   this->div.active = FALSE;
   this->div.cycles = 0;
@@ -104,9 +104,9 @@ void pipeline::initialize(int ADDS, int MULS, int DIVS, BOOL delay_slot, BOOL br
   this->mem_wb.condition = TRUE;
   this->ex_mem.condition = TRUE;
   
-  this->forwarding = forwarding;
-  this->branch_target_buffer = branch_target_buffer;
-  this->delay_slot = delay_slot;
+  this->forwarding = config->forwarding;
+  this->branch_target_buffer = config->branch_target_buffer;
+  this->delay_slot = config->delay_slot;
 }
 
 static int get_type(WORD32 instruct) {

@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define __PROCESSOR_H
 
 #include "mytypes.h"
+#include "CPUConfig.h"
+
 
 #include "DataMemory.h"
 #include "CodeMemory.h"
@@ -40,13 +42,14 @@ typedef struct {
     SIGNED32 source;
 } reg;
 
+
 class Processor {
 
 public:
   Processor();
   virtual ~Processor();
 
-  void initialize(int, int);
+  void initialize(CPUConfig *config);
   void reset(BOOL = false);
 
   WORD32 getPC() const { return PC; }

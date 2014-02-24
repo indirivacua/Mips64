@@ -66,30 +66,26 @@ typedef struct {
 
 class Simulator {
  public: // create from serialization only
-  Simulator();
+  Simulator(CPUConfig *config);
   virtual ~Simulator();
 
   int openfile(const std::string &);
   int isRunning() const { return cpu.getStatus() != HALTED; }
 
+  void toggleDelaySlot();
+  void toggleForwarding();
+  void toggleBtb();
+
   CodeMemory *getCodeMemory() const { return cpu.code; }
   DataMemory *getDataMemory() const { return cpu.data; }
 
  protected:
-  char AppDir[MAX_PATH+1];
-  char LasDir[MAX_PATH+1];
-  std::string lastfile;
   
-  unsigned int CODESIZE;
-  unsigned int DATASIZE;
   
   Processor cpu;
   pipeline pipe;
-  
-  BOOL forwarding;
-  BOOL delay_slot;
-  BOOL branch_target_buffer;
-  
+
+  CPUConfig *config;
   
   unsigned int cycles;
   unsigned int instructions;
@@ -103,9 +99,6 @@ class Simulator {
   unsigned int structural_stalls;
   
   int multi;
-  unsigned int ADD_LATENCY;
-  unsigned int MUL_LATENCY;
-  unsigned int DIV_LATENCY;
   
   BOOL simulation_running;
   BOOL restart;
@@ -131,33 +124,13 @@ class Simulator {
   // Generated message map functions
  public:
   void OnFileReset();
-  void OnFileOpen();
   void OnExecuteSingle();
   void OnFileMemory();
   void OnExecuteMulticycle();
   void OnFileMulti();
   void OnExecuteRunto();
   void OnExecuteStop();
-  void OnUpdateExecuteStop();
-  void OnUpdateExecuteRunto();
-  void OnUpdateExecuteSingle();
-  void OnUpdateExecuteMulticycle();
-  void OnUpdateFileMulti();
-  void OnUpdateFileMemory();
-  void OnUpdateFileOpen();
-  void OnUpdateFileReset();
-  void OnUpdateExecuteInterrupt();
   void OnFullReset();
-  void OnUpdateFullReset();
-  int OnReload();
-  void OnUpdateReload();
-  void OnConfigureWordlength();
-  void OnFileDelaySlot();
-  void OnUpdateFileDelaySlot();
-  void OnFileForwarding();
-  void OnUpdateFileForwarding();
-  void OnBtb();
-  void OnUpdateBtb();
   
  public:
   void dump_mem();
@@ -165,7 +138,6 @@ class Simulator {
   void dump_Terminal();
   void show_stats();
   void show_screen();
-  
 
 };
 

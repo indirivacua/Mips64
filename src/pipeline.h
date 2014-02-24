@@ -113,7 +113,7 @@ public:
     pipeline(Processor *);
 
    
-    void initialize(int ADDS, int MULS, int DIVS, BOOL, BOOL, BOOL);
+    void initialize(CPUConfig *);
     int clock_tick(RESULT *);
 
     // Deberia ir protegido ...
