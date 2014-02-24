@@ -75,7 +75,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "assembler.h"
 
-/* get instruction type */
 
 pipeline::pipeline(Processor *cpu) {
   this->cpu = cpu;
@@ -109,6 +108,7 @@ void pipeline::initialize(CPUConfig *config) {
   this->delay_slot = config->delay_slot;
 }
 
+/* get instruction type */
 static int get_type(WORD32 instruct) {
   int type, fmt, function, opcode, op3;
   type = 0;

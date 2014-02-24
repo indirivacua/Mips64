@@ -2,7 +2,6 @@ Por Hacer:
 ----------
 
 - Hay que reorganizar muchooooooooo codigo
-  - Meter el Pipeline en la clase de la CPU
   - Sacar memorias de la clase CPU y darselas al simulador
   - Metodos para configurar el simulador
   - La entrada/salida esta "muy cableada", ver si se puede separar
