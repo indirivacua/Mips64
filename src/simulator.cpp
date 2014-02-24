@@ -86,25 +86,25 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
   if (status == RAW) {
     raw_stalls++;
     if (rawreg < 32)
-      sprintf(mess,"  Atasco RAW en %s (R%d)",str,rawreg);
+      sprintf(mess,"  Atasco RAW en %s (R%d)", str, rawreg);
     else
-      sprintf(mess,"  Atasco RAW en %s (F%d)",str,rawreg-32);
-    strcat(txt,mess);
+      sprintf(mess,"  Atasco RAW en %s (F%d)", str, rawreg - 32);
+    strcat(txt, mess);
   }
   if (status == WAW) {
     waw_stalls++;
     if (rawreg < 32)
-      sprintf(mess,"  Atasco WAW en %s (R%d)",str,rawreg);
+      sprintf(mess,"  Atasco WAW en %s (R%d)", str, rawreg);
     else
-      sprintf(mess,"  Atasco WAW en %s (F%d)",str,rawreg-32);
-    strcat(txt,mess);
+      sprintf(mess,"  Atasco WAW en %s (F%d)", str, rawreg-32);
+    strcat(txt, mess);
   }
   if (status == WAR) {
     war_stalls++;
     if (rawreg < 32)
-      sprintf(mess,"  Atasco WAR en %s (R%d)",str,rawreg);
+      sprintf(mess,"  Atasco WAR en %s (R%d)", str, rawreg);
     else
-      sprintf(mess,"  Atasco WAR en %s (F%d)",str,rawreg-32);
+      sprintf(mess,"  Atasco WAR en %s (F%d)", str, rawreg-32);
     strcat(txt, mess);
   }
   if (strcmp(mess, "") != 0)
@@ -113,24 +113,25 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
 
 void Simulator::process_result(BOOL show) {
   char txt[300];
-  BOOL something = FALSE;
+  //BOOL something = FALSE;
   if (result.WB == OK || result.WB == HALTED)
     instructions++;
   txt[0] = 0;
+
   if (!config->delay_slot && result.ID == BRANCH_TAKEN_STALL) {
-    something = TRUE;
+    //something = TRUE;
     branch_taken_stalls++;
     strcat(txt,"  Atasco Branch Taken");
   }
   if (result.ID == BRANCH_MISPREDICTED_STALL) {
-    something = TRUE;
+    //something = TRUE;
     branch_misprediction_stalls++;
     strcat(txt,"  Atasco Branch Misprediction");
   }
 
-  if (result.MEM == LOADS || result.MEM==DATA_ERR) 
+  if (result.MEM == LOADS || result.MEM == DATA_ERR) 
     loads++;
-  if (result.MEM==STORES)
+  if (result.MEM == STORES)
     stores++;
 
   check_stalls(result.ID, "ID", result.idrr, txt);
@@ -180,9 +181,9 @@ void Simulator::process_result(BOOL show) {
   if (show) {
 /*
     if (txt[0] == 0)
-      pStatus->SetPaneText(0,"Listo");
+      pStatus->SetPaneText(0, "Listo");
    else
-      pStatus->SetPaneText(0,txt);
+      pStatus->SetPaneText(0, txt);
 */
   }
 }
@@ -201,17 +202,17 @@ int Simulator::update_io() {
 
   switch (func) {
   case 1:
-    sprintf(txt,"%" PRIu64 "\n",fp.u);
+    sprintf(txt,"%" PRIu64 "\n", fp.u);
     cpu.writeTerminal(txt);
-    //UpdateAllViews(NULL,2);
+    //UpdateAllViews(NULL, 2);
     break;
   case 2:
-    sprintf(txt,"%" PRIi64 "\n",fp.s);
+    sprintf(txt,"%" PRIi64 "\n", fp.s);
     cpu.writeTerminal(txt);
-    //UpdateAllViews(NULL,2);
+    //UpdateAllViews(NULL, 2);
     break;
   case 3:
-    sprintf(txt,"%lf\n",fp.d);
+    sprintf(txt,"%lf\n", fp.d);
     cpu.writeTerminal(txt);
     //UpdateAllViews(NULL,2);
     break;
@@ -252,9 +253,9 @@ int Simulator::update_io() {
        fgets(line, MAX_PATH, stdin); 
        DOUBLE64 number;
        if (strstr(line,"."))
-         number.d=atof(line);
+         number.d = atof(line);
        else
-         number.s=atoll(line);
+         number.s = atoll(line);
        *(WORD64 *)&(cpu.mm[8]) = number.u; 
     }
     break;
@@ -284,8 +285,8 @@ int Simulator::update_io() {
 }
 
 void Simulator::update_history() {
-	int substage,stage;
-	unsigned int i,cc;
+	int substage, stage;
+	unsigned int i, cc;
 	WORD32 previous;
 	BOOL passed;
 	pipeline *pipe = cpu.getPipeline();
@@ -442,7 +443,7 @@ void Simulator::update_history() {
 	}
 
 // make a new entry
-//	if (cpu->PC!=history[entries-1].IR)
+//	if (cpu->PC != history[entries-1].IR)
 	if ((result.ID == OK || result.ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe->active) {
 		history[entries].IR = cpu.getPC();
 		history[entries].status[0].stage = IFETCH;
@@ -531,7 +532,7 @@ void Simulator::OnExecuteRunto() {
     restart = FALSE;
   }
 
-  //pStatus->SetPaneText(0,buf);
+  //pStatus->SetPaneText(0, buf);
 }
 
 int Simulator::openfile(const std::string &fname) {
@@ -574,9 +575,9 @@ void Simulator::toggleForwarding() {
 
 void Simulator::toggleBtb() {
   if (config->branch_target_buffer) 
-    config->branch_target_buffer=FALSE;
+    config->branch_target_buffer = FALSE;
   else	
-    config->branch_target_buffer=TRUE;
+    config->branch_target_buffer = TRUE;
   if (config->branch_target_buffer)
     config->delay_slot = FALSE;
   OnFileReset();
@@ -587,7 +588,7 @@ void Simulator::toggleBtb() {
 void Simulator::dump_reg() {
   printf("----------------------------------\n");
   for (int i = 0; i < 32; i++) {
-   printf("R%02i = %016llx%s",i,cpu.rreg[i].val, ((i+1)%4)?"\t":"\n");
+   printf("R%02i = %016llx%s", i, cpu.rreg[i].val, ((i + 1) % 4)?"\t":"\n");
   }
   printf("----------------------------------\n");
   DOUBLE64 db;

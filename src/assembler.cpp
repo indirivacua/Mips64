@@ -105,9 +105,6 @@ BOOL getdouble(const char *&ptr, double *num) {
   return TRUE;
 }
 
-
-
-
 int is_symbol(const char *start) {
   int len = 0;
   const char *ptr = start;
@@ -303,7 +300,7 @@ BOOL getfullnum(const char *&ptr, WORD64 *num) {
    This should use a hash table....
 */
 BOOL getsym(symbol_table *table, int size, const char *&ptr, WORD32 *n) {
-  int k,incr;
+  int k, incr;
   WORD32 m;
   char *sptr;
   ptr = eatwhite(ptr);
@@ -337,7 +334,6 @@ BOOL getsym(symbol_table *table, int size, const char *&ptr, WORD32 *n) {
   return FALSE;
 }
 
-
 Assembler::Assembler(CodeMemory *code, DataMemory *data) {
   this->code = code;
   this->data = data;
@@ -358,10 +354,11 @@ int Assembler::openit(const std::string &fname) {
   data_symptr = 0;
   
   std::cout << "Abriendo archivo: " << fname << std::endl;
-  if ((asmfile = fopen(fname.c_str(),"rb")) == NULL)
+  asmfile = fopen(fname.c_str(), "rb");
+  if (asmfile == NULL)
     return 1;
   
-  for (lineptr = 1; ;lineptr++) {
+  for (lineptr = 1; ; lineptr++) {
     gotline = mygets(line, MAX_LINE, asmfile);
     if (gotline == 1)
       break;
@@ -373,44 +370,41 @@ int Assembler::openit(const std::string &fname) {
       break;
     dataptr = alignment(dataptr, STEP);
   }
-  fclose(asmfile);
+  if (errors) {
+    fclose(asmfile);
+    return 2; // errors on pass 1
+  }
+  
   CODEORDATA = 0;
   codeptr = 0;
   dataptr = 0;
-  
-  if (errors) 
-    return 2; // errors on pass 1
-  
-  errors=0;
-  asmfile = fopen(fname.c_str(), "rb");
-  for (lineptr=1; ; lineptr++) {
-      if (mygets(preline, MAX_LINE, asmfile) == 1) // ***
-	break; 
-      preline[strlen(preline) - 1] = 0; // remove CR/LF
+  rewind(asmfile);
+  for (lineptr = 1; ; lineptr++) {
+    if (mygets(preline, MAX_LINE, asmfile) == 1) // ***
+      break; 
+    preline[strlen(preline) - 1] = 0; // remove CR/LF
       
-      for (i = j = 0; ; i++) {
-	// replace Tabs with 2 spaces
-	if (preline[i] == '\t')
-	  for (k = 0; k < 2; k++) 
-	    line[j++]=' ';
-	  else
-	    line[j++] = preline[i];
-	  
-	if (preline[i] == 0) { 
-	    // pad it out with spaces...
-	    line[j - 1] = ' ';
-	    for ( ; j < MAX_LINE; j++) 
-	      line[j] = ' ';
-	    line[MAX_LINE] = 0;
-	    break;
-	}
+    for (i = j = 0; ; i++) {
+      // replace Tabs with 2 spaces
+      if (preline[i] == '\t')
+        for (k = 0; k < 2; k++) 
+          line[j++]=' ';
+        else
+          line[j++] = preline[i];
+      if (preline[i] == 0) { 
+        // pad it out with spaces...
+        line[j - 1] = ' ';
+        for ( ; j < MAX_LINE; j++) 
+          line[j] = ' ';
+        line[MAX_LINE] = 0;
+        break;
       }
-      
-      errors += second_pass(line, lineptr);
-      
-      dataptr = alignment(dataptr, STEP);
+    }
+    errors += second_pass(line, lineptr);
+    dataptr = alignment(dataptr, STEP);
   }
   fclose(asmfile);
+
   if (errors) 
     return 3; // errors on pass 2
   return 0;
@@ -477,14 +471,14 @@ int Assembler::first_pass(const char *line, int lineptr) {
     // increase instruction pointer
  
     if (CODEORDATA != CODE) {
-      sprintf(txt,"Pasada 1 - Error en linea %d\n",lineptr);
+      sprintf(txt,"Pasada 1 - Error en linea %d\n", lineptr);
       std::cout << txt << "\n";
       return 1;
     }
     codeptr = alignment(codeptr,4);
     codeptr += 4;
     if (!code->isValidAddress(codeptr)) {
-      sprintf(txt,"Pasada 1 - Error en linea %d\nNo existe esa ubicacion de memoria",lineptr);
+      sprintf(txt,"Pasada 1 - Error en linea %d\nNo existe esa ubicacion de memoria", lineptr);
       std::cout << txt << "\n";
       return 1;
     }
@@ -499,7 +493,7 @@ int Assembler::first_pass(const char *line, int lineptr) {
   return 1;
 }
 
-int Assembler::second_pass(const char *line,int /* lineptr */) {
+int Assembler::second_pass(const char *line, int /* lineptr */) {
   WORD32 w, byte;
   WORD32 op, code_word = 0;
   WORD32 flags = 0;
@@ -561,7 +555,7 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
     rt = getreg(ptr);    
     if (rt < 0)
       break;
-    ptr = skip(ptr,','); if (eatwhite(ptr) == NULL) break;  /* skip over ,  */
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over ,  */
     ptr = eatwhite(ptr);
     if (*ptr == '(') w = 0;
     else if (!getdatasym(ptr, &w)) break;
@@ -569,7 +563,7 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
     ptr = eatwhite(ptr);
     rs = getreg(ptr);    if (rs < 0) break;
     
-    ptr = skip(ptr,')');                                  /* skip over ) */
+    ptr = skip(ptr, ')');                                  /* skip over ) */
     if (ptr == NULL) break;
     if (eatwhite(ptr) != NULL) break;
     
@@ -579,7 +573,7 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
   case FSTORE:
   case FLOAD:
     rt = fgetreg(ptr);    if (rt < 0) break;
-    ptr = skip(ptr,','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
     ptr = eatwhite(ptr);
     if (*ptr == '(') w = 0;
     else if (!getdatasym(ptr, &w)) break;
@@ -606,7 +600,7 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
     
   case REG1I:
     rt = getreg(ptr); if (rt < 0) break;
-    ptr = skip(ptr,','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
     ptr = eatwhite(ptr);
     if (!getdatasym(ptr, &w)) break;
     if (eatwhite(ptr) != NULL) break;
@@ -632,22 +626,22 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
     break;
     
   case REG3F:
-    rd=fgetreg(ptr); if (rd < 0) break; 
-    ptr=skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over ,  */
-    ptr=eatwhite(ptr);
-    rs=fgetreg(ptr); if (rs < 0) break;
-    ptr=skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over ,  */
-    ptr=eatwhite(ptr);
-    rt=fgetreg(ptr); if (rt < 0) break;
+    rd = fgetreg(ptr); if (rd < 0) break; 
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over ,  */
+    ptr = eatwhite(ptr);
+    rs = fgetreg(ptr); if (rs < 0) break;
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over ,  */
+    ptr = eatwhite(ptr);
+    rt = fgetreg(ptr); if (rt < 0) break;
     if (eatwhite(ptr) != NULL) break;
     error = FALSE;
     break;
     
   case REG2F:
-    rd=fgetreg(ptr); if (rd < 0) break; 
-    ptr=skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
-    ptr=eatwhite(ptr);
-    rs=fgetreg(ptr); if (rs < 0) break;
+    rd = fgetreg(ptr); if (rd < 0) break; 
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
+    ptr = eatwhite(ptr);
+    rs = fgetreg(ptr); if (rs < 0) break;
     if (eatwhite(ptr) != NULL) break;
     error = FALSE;
     break;
@@ -664,7 +658,7 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
   case REGID:
   case REGDI:
     rt = getreg(ptr); if (rt < 0) break;
-    ptr = skip(ptr,','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
     ptr = eatwhite(ptr);
     rd = fgetreg(ptr); if (rd < 0) break;
     if (eatwhite(ptr) != NULL) break;
@@ -672,12 +666,12 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
     break;
     
   case REG2S:
-    rd=getreg(ptr); if (rd < 0) break; 
-    ptr=skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
-    ptr=eatwhite(ptr);
-    rs=getreg(ptr); if (rs < 0) break;
-    ptr=skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
-    ptr=eatwhite(ptr);
+    rd = getreg(ptr); if (rd < 0) break; 
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
+    ptr = eatwhite(ptr);
+    rs = getreg(ptr); if (rs < 0) break;
+    ptr = skip(ptr, ','); if (eatwhite(ptr) == NULL) break;  /* skip over , */
+    ptr = eatwhite(ptr);
     if (!getdatasym(ptr, &flags)) break;
     if (eatwhite(ptr) != NULL) break;
     error = FALSE;
@@ -791,11 +785,11 @@ int Assembler::second_pass(const char *line,int /* lineptr */) {
 }
 
 BOOL Assembler::getcodesym(const char *&ptr, WORD32 *m) {
-  return getsym(code_table,code_symptr,ptr,m);
+  return getsym(code_table, code_symptr, ptr, m);
 }
 
 BOOL Assembler::getdatasym(const char *&ptr, WORD32 *m) {
-  return getsym(data_table,data_symptr,ptr,m);
+  return getsym(data_table, data_symptr, ptr, m);
 }
 
 int Assembler::instruction(const char *start) {
@@ -816,21 +810,21 @@ int Assembler::instruction(const char *start) {
   for (i=0; ; i++) {
     if (codes[i].name == NULL) 
       return -1;
-    if (strcmp(text,codes[i].name) == 0)
+    if (strcmp(text, codes[i].name) == 0)
       break;
   }
   return i;
 }
 
-BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
+BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
   // process assembler directives. return number of bytes consumed
   
-  BOOL zero,bs;
-  WORD32 num,m;
+  BOOL zero, bs;
+  WORD32 num, m;
   WORD64 fw;
   DOUBLE64 db;
   int k;
-  int sc,ch;
+  int sc, ch;
   char *iptr;
   
   if (ptr == NULL || *ptr != '.') 
@@ -862,7 +856,7 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
     break;
 
   case 5:     // .ascii
-    zero=FALSE;
+    zero = FALSE;
   case 1:     // .asciiz
     if (CODEORDATA == CODE) return FALSE;
     ptr = eatwhite(ptr);
@@ -887,135 +881,140 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
     iptr = (char *) ptr;
     bs = FALSE;
     while (*iptr != sc) {
-      if (delimiter(*iptr) == ENDLINE) return FALSE;
+      if (delimiter(*iptr) == ENDLINE) 
+        return FALSE;
       
       if (bs) {
 	num++;
 	bs = FALSE;
+      } else {
+        if (*ptr == '\\') 
+          bs = TRUE;
+        else 
+         num++;
       }
-      else
-	{
-	  if (*ptr == '\\') bs = TRUE;
-	  else num++;
-	}
-      
-      
       iptr++;
     }
-    if (zero) num++;              // trailing 0 needed
+    if (zero)
+      num++; // trailing 0 needed
     if (CODEORDATA == DATA) {
-	if (pass == 1)  {
-	    dataptr += num;
-	    if (!data->isValidAddress(dataptr)) return FALSE;
-	  }
-	if (pass == 2) {
-	  data->setAddressDescription(dataptr, line);
-          
-	  if (zero) *iptr = 0;     // stuff in a zero
-	  m = 0;
-	  bs = FALSE;
-	  while (m < num) {              
-	    m++; 
-	    if (bs) {
-	      if (*ptr == 'n')
-		ch = '\n';
-	      else 
-		ch = *ptr;
-	      data->writeByte(dataptr, ch);
-	      ++dataptr;
-	      bs = FALSE;
-	    }
-	    else
-	      {
-		if (*ptr == '\\') bs = TRUE;
-		else {
-		  data->writeByte(dataptr, *ptr);
-		  ++dataptr;
-		}
-	      } 
-	    
-	    
-	    ptr++;
-	  }
-	}  
+      if (pass == 1)  {
+        dataptr += num;
+        if (!data->isValidAddress(dataptr)) 
+          return FALSE;
       }
+      if (pass == 2) {
+        data->setAddressDescription(dataptr, line);
+          
+        if (zero) *iptr = 0;     // stuff in a zero
+        m = 0;
+        bs = FALSE;
+        while (m < num) {              
+          m++; 
+          if (bs) {
+            if (*ptr == 'n')
+              ch = '\n';
+            else 
+	      ch = *ptr;
+	    data->writeByte(dataptr, ch);
+	    ++dataptr;
+	    bs = FALSE;
+	  } else {
+	    if (*ptr == '\\') 
+              bs = TRUE;
+	    else {
+              data->writeByte(dataptr, *ptr);
+              ++dataptr;
+	    }
+	  } 
+	  ptr++;
+        }
+      }  
+    }
     return TRUE;
 
-  case 2:            // .align
-    if (!getnum(ptr, &num)) return FALSE;
-    if (num < 2 || num > 16) return FALSE;
-    if (CODEORDATA == CODE) return FALSE;
-    if (CODEORDATA == DATA)
-      {
-	dataptr = alignment(dataptr,num);
-	if (pass == 2)
-	  data->setAddressDescription(dataptr, line);
-      }
-    
+  case 2:  // .align
+    if (!getnum(ptr, &num)) 
+      return FALSE;
+    if (num < 2 || num > 16)
+      return FALSE;
+    if (CODEORDATA == CODE) 
+      return FALSE;
+    if (CODEORDATA == DATA) {
+      dataptr = alignment(dataptr, num);
+      if (pass == 2)
+        data->setAddressDescription(dataptr, line);
+    }
     return TRUE;
-  case 3:            // .word
-    if (CODEORDATA == CODE) return FALSE;
+
+  case 3:  // .word
+    if (CODEORDATA == CODE) 
+      return FALSE;
     if (pass == 1) {
-	if (CODEORDATA == DATA) {
-	    do {
-	      dataptr += STEP;
-	    } while ((ptr = skipover(ptr, ',')) != NULL);
-	    
-	    if (!data->isValidAddress(dataptr)) return FALSE;
-	  }
-	
+      if (CODEORDATA == DATA) {
+        do {
+          dataptr += STEP;
+        } while ((ptr = skipover(ptr, ',')) != NULL);
+    
+        if (!data->isValidAddress(dataptr)) 
+          return FALSE;
       }
-    if (pass==2) {
-	if (!getfullnum(ptr, &fw)) return FALSE;
-	if (CODEORDATA == DATA) {
-	  data->setAddressDescription(dataptr, line);
+    }
+    if (pass == 2) {
+      if (!getfullnum(ptr, &fw)) 
+        return FALSE;
+      if (CODEORDATA == DATA) {
+        data->setAddressDescription(dataptr, line);
+        data->writeWord64(dataptr, fw);
+        dataptr += 8;
+	while ((ptr = skip(ptr, ',')) != NULL) {
+          if (!getfullnum(ptr,&fw)) 
+            return FALSE;
+          //printf("         %08x\n", num);
           data->writeWord64(dataptr, fw);
           dataptr += 8;
-	  while ((ptr = skip(ptr,',')) != NULL) {
-	    if (!getfullnum(ptr,&fw)) return FALSE;
-            //   printf("         %08x\n",num);
-            data->writeWord64(dataptr, fw);
-            dataptr += 8;
-	  }
 	}
-	
+      }
     }
     return TRUE;
     
-  case 10:            // .word32
+  case 10: // .word32
     if (CODEORDATA == CODE)
       return FALSE;
     if (pass == 1) {
       if (CODEORDATA == DATA) {
-	  do {
-	    dataptr+=4;
-	  } while ((ptr = skipover(ptr, ',')) != NULL);
-	  if (!data->isValidAddress(dataptr)) return FALSE;
-	}
+        do {
+	  dataptr+=4;
+	} while ((ptr = skipover(ptr, ',')) != NULL);
+	if (!data->isValidAddress(dataptr)) 
+          return FALSE;
+      }
     }
     if (pass == 2) {
-	if (!getdatasym(ptr, &num)) return FALSE;
-	if (CODEORDATA == DATA) {
-	    data->setAddressDescription(dataptr, line);
-            data->writeWord32(dataptr, num);
-            dataptr += 4;
-	    while ((ptr = skip(ptr, ',')) != NULL) {
-		if (!getdatasym(ptr, &num)) return FALSE;
-                data->writeWord32(dataptr, num);
-                dataptr += 4;
-	    }
-	  }
+      if (!getdatasym(ptr, &num)) 
+        return FALSE;
+      if (CODEORDATA == DATA) {
+        data->setAddressDescription(dataptr, line);
+        data->writeWord32(dataptr, num);
+        dataptr += 4;
+        while ((ptr = skip(ptr, ',')) != NULL) {
+          if (!getdatasym(ptr, &num))
+            return FALSE;
+          data->writeWord32(dataptr, num);
+          dataptr += 4;
+	}
       }
+    }
     return TRUE;
 
   case 11: // .word16
     if (CODEORDATA == CODE) 
       return FALSE;
     if (pass == 1) {
-      if (CODEORDATA==DATA) {
+      if (CODEORDATA == DATA) {
         do {
 	  dataptr+=2;
-	} while ((ptr = skipover(ptr,',')) != NULL);
+	} while ((ptr = skipover(ptr, ',')) != NULL);
 	if (!data->isValidAddress(dataptr))
           return FALSE;
       }
@@ -1029,7 +1028,7 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
         data->setAddressDescription(dataptr, line);
         data->writeHalf(dataptr, num);
         dataptr += 2;
-        while ((ptr = skip(ptr,',')) != NULL) {
+        while ((ptr = skip(ptr, ',')) != NULL) {
           if (!getnum(ptr, &num)) 
             return FALSE;
           if (!in_range(num, 0xffff)) 
@@ -1062,7 +1061,7 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
         data->setAddressDescription(dataptr, line);
         data->writeByte(dataptr, (unsigned char) num);
         ++dataptr;
-        while ((ptr=skip(ptr,',')) != NULL) {
+        while ((ptr = skip(ptr, ',')) != NULL) {
           if (!getnum(ptr,&num)) 
             return FALSE;
           if (!in_range(num,0xff)) 
@@ -1090,7 +1089,7 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
       if (CODEORDATA == DATA) {
         do {
           dataptr += STEP;
-        } while ((ptr = skipover(ptr,',')) != NULL);
+        } while ((ptr = skipover(ptr, ',')) != NULL);
 	if (!data->isValidAddress(dataptr)) 
           return FALSE;
       }
@@ -1100,12 +1099,12 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
         return FALSE;
       if (CODEORDATA == DATA) {
         data->setAddressDescription(dataptr, line);
-        //    printf("%08x %08x %s",dataptr,num,line);
+        //    printf("%08x %08x %s", dataptr, num, line);
         data->writeWord64(dataptr, db.u);
         dataptr += 8;
-	    while ((ptr=skip(ptr,','))!=NULL) {
+	    while ((ptr = skip(ptr, ',')) != NULL) {
 		if (!getdouble(ptr,&db.d)) return FALSE;
-		//   printf("         %08x\n",num);
+		//   printf("         %08x\n", num);
                 data->writeWord64(dataptr, db.u);
                 dataptr += 8;
 	      }
@@ -1116,7 +1115,7 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
     
   case 13:
   case 8:      // .text
-    CODEORDATA=CODE;
+    CODEORDATA = CODE;
     if (pass == 1) {
 	if (eatwhite(ptr) != NULL)
            return FALSE;
@@ -1132,7 +1131,7 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
         
 	dataptr = alignment(num, STEP);
 	//if (pass == 2)
-	//  printf("%08x          %s",dataptr,line);
+	//  printf("%08x          %s", dataptr, line);
 	return TRUE;
     }
     if (CODEORDATA == CODE) {
