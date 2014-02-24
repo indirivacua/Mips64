@@ -44,11 +44,12 @@ DataMemory::~DataMemory() {
 #define DATA_WRITTEN    1 // see mytpes.h
 
 BOOL DataMemory::reset() {
-  for (int i = 0; i < size; i++) {
+  unsigned int i;
+  for (i = 0; i < size; i++) {
     this->status[i] = DATA_VACANT;
     this->data[i] = 0;
   }
-  for (int i = 0; i < size/8; i++) {
+  for (i = 0; i < size/8; i++) {
     this->line[i] = "";
   }
   return TRUE;

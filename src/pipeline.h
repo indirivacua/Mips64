@@ -84,7 +84,7 @@ typedef struct {
 	WORD64 ALUOutput;
     SIGNED32 Imm;
     BOOL active;
-    int cycles;
+    unsigned int cycles;
 } id_ex_reg;
 
 typedef struct {
@@ -126,9 +126,9 @@ public:
     id_ex_reg div;
     ex_mem_reg ex_mem;
     mem_wb_reg  mem_wb;
-    int ADD_LATENCY;
-    int MUL_LATENCY;
-    int DIV_LATENCY;
+    unsigned int ADD_LATENCY;
+    unsigned int MUL_LATENCY;
+    unsigned int DIV_LATENCY;
     BOOL active;
 
 protected:

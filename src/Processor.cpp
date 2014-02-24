@@ -98,7 +98,8 @@ BOOL Processor::clearScreen() {
 }
 
 const BOOL Processor::isValidDataMemoryAddress(WORD32 ptr) { 
-  return (ptr <= config->datasize) || (ptr >= MMIO && ptr <= MMIO+16);
+  return (ptr <= config->datasize) 
+	|| (ptr >= MMIO && ptr <= MMIO+16);
 }
 
 const BOOL Processor::isValidCodeMemoryAddress(WORD32 ptr) { 

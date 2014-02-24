@@ -31,8 +31,8 @@ class CPUConfig {
 public:
   CPUConfig();
 
-  int codesize;
-  int datasize;
+  WORD32 codesize;
+  WORD32 datasize;
   unsigned int ADD_LATENCY;
   unsigned int MUL_LATENCY;
   unsigned int DIV_LATENCY;

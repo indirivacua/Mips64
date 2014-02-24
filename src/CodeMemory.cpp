@@ -33,8 +33,7 @@ CodeMemory::CodeMemory(WORD32 size) {
 	mnemonic = new std::string[size/4];
         code = new WORD32[size/4];
         status = new BYTE[size/4];
-	for (int i =0; i < size/4; ++i)
-		status[i] = CODE_VALID;
+        reset();
 }
 
 CodeMemory::~CodeMemory() {
@@ -74,7 +73,7 @@ BOOL CodeMemory::isValidAddress(WORD32 addr) {
 }
 
 BOOL CodeMemory::reset() {
-  for (int i = 0; i < size/4; i++)
+  for (unsigned int i = 0; i < size/4; i++)
     this->status[i] = CODE_VALID;
   return TRUE;
 }

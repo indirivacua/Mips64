@@ -112,200 +112,183 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
 }
 
 void Simulator::process_result(BOOL show) {
-	char txt[300];
-	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
-	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
-	BOOL something=FALSE;
+  char txt[300];
+  BOOL something = FALSE;
+  if (result.WB == OK || result.WB == HALTED)
+    instructions++;
+  txt[0] = 0;
+  if (!config->delay_slot && result.ID == BRANCH_TAKEN_STALL) {
+    something = TRUE;
+    branch_taken_stalls++;
+    strcat(txt,"  Atasco Branch Taken");
+  }
+  if (result.ID == BRANCH_MISPREDICTED_STALL) {
+    something = TRUE;
+    branch_misprediction_stalls++;
+    strcat(txt,"  Atasco Branch Misprediction");
+  }
 
+  if (result.MEM == LOADS || result.MEM==DATA_ERR) 
+    loads++;
+  if (result.MEM==STORES)
+    stores++;
 
-	if (result.WB == OK || result.WB == HALTED)
-  	instructions++;
-	txt[0]=0;
-	if (!config->delay_slot && result.ID == BRANCH_TAKEN_STALL) {
-		something = TRUE;
-		branch_taken_stalls++;
-		strcat(txt,"  Atasco Branch Taken");
-	}
-	if (result.ID == BRANCH_MISPREDICTED_STALL) {
-		something = TRUE;
-		branch_misprediction_stalls++;
-		strcat(txt,"  Atasco Branch Misprediction");
-	}
+  check_stalls(result.ID, "ID", result.idrr, txt);
+  check_stalls(result.EX, "EX", result.exrr, txt);
+  check_stalls(result.ADDER[0], "ADD", result.addrr, txt);
+  check_stalls(result.MULTIPLIER[0], "MUL", result.mulrr, txt);
+  check_stalls(result.DIVIDER, "DIV", result.divrr, txt);
+  check_stalls(result.MEM, "MEM", result.memrr, txt);
 
-	if (result.MEM == LOADS || result.MEM==DATA_ERR) 
-		loads++;
-	if (result.MEM==STORES)
-		stores++;
-
-	check_stalls(result.ID, "ID", result.idrr, txt);
-	check_stalls(result.EX, "EX", result.exrr, txt);
-	check_stalls(result.ADDER[0], "ADD", result.addrr, txt);
-	check_stalls(result.MULTIPLIER[0], "MUL", result.mulrr, txt);
-	check_stalls(result.DIVIDER, "DIV", result.divrr, txt);
-	check_stalls(result.MEM, "MEM", result.memrr, txt);
-
-	if (result.MEM!=RAW) {
-		if (result.EX == STALLED) {
-			structural_stalls++;
-			strcat(txt,"  Atasco Estructural en EX");
-		}
-		if (result.DIVIDER == STALLED) {
-			structural_stalls++;
-			strcat(txt,"  Atasco Estructural en FP-DIV");
-		}
-		if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) {
-			structural_stalls++;
-			strcat(txt,"  Atasco Estructural en FP-MUL");
-		}
-		if (result.ADDER[config->ADD_LATENCY-1] == STALLED) {
-			structural_stalls++;
-			strcat(txt,"  Atasco Estructural en FP-ADD");
-		}
-	}
-	if (result.IF == NO_SUCH_CODE_MEMORY) {
-		strcat(txt,"  No existe esa direccion de codigo!");
-		cpu.setStatus(HALTED);
-	}
-	if (result.EX == INTEGER_OVERFLOW) {
-		strcat(txt,"  Desbordamiento de numero entero!");
-	}
-	if (result.DIVIDER == DIVIDE_BY_ZERO) {
-		strcat(txt,"  Division por Cero en DIV!");
-	}
-
-	if (result.MEM == DATA_ERR) {
-		strcat(txt,"  Memoria no inicializada en MEM!");
-	}
-	if (result.MEM==NO_SUCH_DATA_MEMORY) {
-		strcat(txt,"  No existe esa direccion de datos!");
-	}
-	if (result.MEM==DATA_MISALIGNED) {
-		strcat(txt, " Error Fatal - LOAD/StTORE de memoria mal alineado!");
-	}
-	if (show) {
+  if (result.MEM != RAW) {
+    if (result.EX == STALLED) {
+      structural_stalls++;
+      strcat(txt,"  Atasco Estructural en EX");
+    }
+    if (result.DIVIDER == STALLED) {
+      structural_stalls++;
+      strcat(txt,"  Atasco Estructural en FP-DIV");
+    }
+    if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) {
+      structural_stalls++;
+      strcat(txt,"  Atasco Estructural en FP-MUL");
+    }
+    if (result.ADDER[config->ADD_LATENCY-1] == STALLED) {
+      structural_stalls++;
+      strcat(txt,"  Atasco Estructural en FP-ADD");
+    }
+  }
+  if (result.IF == NO_SUCH_CODE_MEMORY) {
+    strcat(txt,"  No existe esa direccion de codigo!");
+    cpu.setStatus(HALTED);
+  }
+  if (result.EX == INTEGER_OVERFLOW) {
+    strcat(txt,"  Desbordamiento de numero entero!");
+  }
+  if (result.DIVIDER == DIVIDE_BY_ZERO) {
+    strcat(txt,"  Division por Cero en DIV!");
+  }
+  if (result.MEM == DATA_ERR) {
+    strcat(txt,"  Memoria no inicializada en MEM!");
+  }
+  if (result.MEM == NO_SUCH_DATA_MEMORY) {
+    strcat(txt,"  No existe esa direccion de datos!");
+  }
+  if (result.MEM == DATA_MISALIGNED) {
+    strcat(txt, " Error Fatal - LOAD/StTORE de memoria mal alineado!");
+  }
+  if (show) {
 /*
-		if (txt[0]==0) pStatus->SetPaneText(0,"Listo");
-		else pStatus->SetPaneText(0,txt);
+    if (txt[0] == 0)
+      pStatus->SetPaneText(0,"Listo");
+   else
+      pStatus->SetPaneText(0,txt);
 */
-	}
+  }
 }
 
 int Simulator::update_io() {
-	WORD32 func = *(WORD32 *)&cpu.mm[0];
-	int x, y, status = 0;
+  WORD32 func = *(WORD32 *)&cpu.mm[0];
+  int x, y, status = 0;
 
+  BYTE az[256];
+  if (!func) 
+    return status;
 
-	BYTE az[256];
-	if (!func) 
-		return status;
+  char txt[30];
+  DOUBLE64 fp;
+  fp.u = *(WORD64 *)&cpu.mm[8]; 
 
-	char txt[30];
-	DOUBLE64 fp;
-	fp.u = *(WORD64 *)&cpu.mm[8]; 
+  switch (func) {
+  case 1:
+    sprintf(txt,"%" PRIu64 "\n",fp.u);
+    cpu.writeTerminal(txt);
+    //UpdateAllViews(NULL,2);
+    break;
+  case 2:
+    sprintf(txt,"%" PRIi64 "\n",fp.s);
+    cpu.writeTerminal(txt);
+    //UpdateAllViews(NULL,2);
+    break;
+  case 3:
+    sprintf(txt,"%lf\n",fp.d);
+    cpu.writeTerminal(txt);
+    //UpdateAllViews(NULL,2);
+    break;
+  case 4:
+    // need to test here if fp.u is a legal address!
+    cpu.data->getAsciiz(fp.u, az, 255);
 
-	switch (func) {
-	case (WORD32)1:
-		sprintf(txt,"%" PRIu64 "\n",fp.u);
-		cpu.writeTerminal(txt);
-		//UpdateAllViews(NULL,2);
-		break;
-	case (WORD32)2:
-		sprintf(txt,"%" PRIi64 "\n",fp.s);
-		cpu.writeTerminal(txt);
-		//UpdateAllViews(NULL,2);
-		break;
-	case (WORD32)3:
-		sprintf(txt,"%lf\n",fp.d);
-		cpu.writeTerminal(txt);
-		//UpdateAllViews(NULL,2);
-		break;
-	case (WORD32)4:
-		// need to test here if fp.u is a legal address!
-		cpu.data->getAsciiz(fp.u, az, 255);
+    if (fp.u<cpu.getDataMemorySize()) 
+      cpu.writeTerminal(std::string((const char *)az));
+    //UpdateAllViews(NULL,2);
+    break;
 
-		if (fp.u<cpu.getDataMemorySize()) 
-			cpu.writeTerminal(std::string((const char *)az));
-
-		//UpdateAllViews(NULL,2);
-		break;
-
-	case (WORD32)5:
-
-		y=(WORD32)((fp.u>>32)&255);
-		x=(WORD32)((fp.u>>40)&255);
-		cpu.drawit=TRUE;
-//			char txt[80];
-//			sprintf(txt,"%d %d",x,y);
-//			AfxMessageBox(txt);
-
-		if (x<GSXY && y<GSXY) {
-			cpu.setScreenPixel(x,y, (WORD32)fp.u);
-		}
-		//UpdateAllViews(NULL,2);
-		break;
-	case (WORD32)6:
-		cpu.clearTerminal();
-		//UpdateAllViews(NULL,2);
-		break;
-	case (WORD32)7:
-		cpu.clearScreen();
-		cpu.drawit=FALSE;
-		//UpdateAllViews(NULL,2);
-		break;
-	case (WORD32)8:
+  case 5:
+    y = (WORD32) ((fp.u >> 32) & 255);
+    x = (WORD32) ((fp.u >> 40) & 255);
+    cpu.drawit = TRUE;
+    if (x < GSXY && y < GSXY) {
+      cpu.setScreenPixel(x, y, (WORD32) fp.u);
+    }
+    //UpdateAllViews(NULL,2);
+    break;
+  case 6:
+    cpu.clearTerminal();
+    //UpdateAllViews(NULL,2);
+    break;
+  case 7:
+   cpu.clearScreen();
+   cpu.drawit = FALSE;
+   //UpdateAllViews(NULL,2);
+   break;
+  case 8:
 /*
-		cpu.keyboard=1;
-		status=1;
+    cpu.keyboard=1;
+    status=1;
 */
-		{
-		  char line[MAX_PATH+1];
-		  fgets(line, MAX_PATH, stdin); 
-		  DOUBLE64 number;
-		  if (strstr(line,"."))
-				number.d=atof(line);
-			else
-				number.s=atoll(line);
-	  	*(WORD64 *)&(cpu.mm[8]) = number.u; 
-		}
-		break;
-	case (WORD32)9:
+    {
+       char line[MAX_PATH+1];
+       fgets(line, MAX_PATH, stdin); 
+       DOUBLE64 number;
+       if (strstr(line,"."))
+         number.d=atof(line);
+       else
+         number.s=atoll(line);
+       *(WORD64 *)&(cpu.mm[8]) = number.u; 
+    }
+    break;
+  case 9:
 /*
-		cpu.keyboard=2;
-		status=1;
+    cpu.keyboard=2;
+    status=1;
 */
-{
-		
-	  	(cpu.mm[8]) = getchar(); 
-}
-		break;
-	default:
-		break;
-	}
+    {
+      (cpu.mm[8]) = getchar(); 
+    }
+    break;
+  default:
+    break;
+  }
 
 /*
-	for (i=0;i<cpu->Terminal.GetLength();i++)
-	{
-		if (cpu->Terminal[i]=='\n')
-		{
-			ncols=0;
-		}
-		else
-			ncols++;
-	}
+  for (i = 0; i < cpu->Terminal.GetLength(); i++) {
+    if (cpu->Terminal[i]=='\n') {
+      ncols=0;
+    } else
+      ncols++;
+  }
 */
-	
-//	UpdateAllViews(NULL,1L);
-
-	*(WORD32 *)&cpu.mm[0]=0;
-	return status;
+  *(WORD32 *)&cpu.mm[0]=0;
+  return status;
 }
 
 void Simulator::update_history() {
-       /* 
 	int substage,stage;
 	unsigned int i,cc;
 	WORD32 previous;
 	BOOL passed;
+	pipeline *pipe = cpu.getPipeline();
 
 	if (result.MEM != RAW) {
 		if (result.EX == STALLED) 
@@ -327,8 +310,8 @@ void Simulator::update_history() {
 		switch (stage) {
 
 		case IFETCH:
-			if (pipe.if_id.active)	{
-				if (pipe.if_id.IR == previous) {
+			if (pipe->if_id.active)	{
+				if (pipe->if_id.IR == previous) {
 
 					history[i].status[cc].stage = IDECODE;
 					history[i].status[cc].cause = 0;
@@ -344,24 +327,24 @@ void Simulator::update_history() {
 		case IDECODE:
 			passed = FALSE;
 			
-			if (pipe.integer.active && pipe.integer.IR == previous && result.ID != STALLED) {
+			if (pipe->integer.active && pipe->integer.IR == previous && result.ID != STALLED) {
 				passed = TRUE;
 				history[i].status[cc].stage = INTEX;
 				history[i].status[cc].cause = 0;
 			}
-			if (pipe.m[0].active && pipe.m[0].IR == previous && result.ID != STALLED) {
+			if (pipe->m[0].active && pipe->m[0].IR == previous && result.ID != STALLED) {
 				passed = TRUE;
 				history[i].status[cc].stage = MULEX;
 				history[i].status[cc].substage = 0;
 				history[i].status[cc].cause = 0;
 			}
-			if (pipe.a[0].active && pipe.a[0].IR == previous && result.ID != STALLED) {
+			if (pipe->a[0].active && pipe->a[0].IR == previous && result.ID != STALLED) {
 				passed = TRUE;
 				history[i].status[cc].stage = ADDEX;
 				history[i].status[cc].substage = 0;
 				history[i].status[cc].cause = 0;
 			}
-			if (pipe.div.active && pipe.div.IR == previous && result.ID != STALLED) {
+			if (pipe->div.active && pipe->div.IR == previous && result.ID != STALLED) {
 				passed = TRUE;
 				history[i].status[cc].stage = DIVEX;
 				history[i].status[cc].cause = 0;
@@ -373,7 +356,7 @@ void Simulator::update_history() {
 			}
 			break;
 		case INTEX:
-			if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+			if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
 				history[i].status[cc].stage = MEMORY;
 				history[i].status[cc].cause = 0;
 			} else {
@@ -383,8 +366,8 @@ void Simulator::update_history() {
 			break;
 
 		case MULEX:
-			if (substage == pipe.MUL_LATENCY - 1) {
-				if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+			if (substage == pipe->MUL_LATENCY - 1) {
+				if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
 					history[i].status[cc].stage = MEMORY;
 					history[i].status[cc].cause = 0;
 				} else {
@@ -393,7 +376,7 @@ void Simulator::update_history() {
 					history[i].status[cc].cause = (BYTE) result.MULTIPLIER[config->MUL_LATENCY - 1];
 				}
 			} else {
-				if (pipe.m[substage+1].active && pipe.m[substage+1].IR == previous) {
+				if (pipe->m[substage+1].active && pipe->m[substage+1].IR == previous) {
 					history[i].status[cc].stage = MULEX;
 					history[i].status[cc].substage = (BYTE) (substage + 1);
 					history[i].status[cc].cause = 0;
@@ -406,8 +389,8 @@ void Simulator::update_history() {
 			break;
 
 		case ADDEX:
-			if (substage == pipe.ADD_LATENCY - 1) {
-				if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+			if (substage == pipe->ADD_LATENCY - 1) {
+				if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
 					history[i].status[cc].stage = MEMORY;
 					history[i].status[cc].cause = 0;
 				} else {
@@ -416,7 +399,7 @@ void Simulator::update_history() {
 					history[i].status[cc].cause = (BYTE) result.ADDER[config->ADD_LATENCY-1];
 				}
 			} else {
-				if (pipe.a[substage+1].active && pipe.a[substage+1].IR == previous) {
+				if (pipe->a[substage+1].active && pipe->a[substage+1].IR == previous) {
 					history[i].status[cc].stage = ADDEX;
 					history[i].status[cc].substage = (BYTE) (substage + 1);
 					history[i].status[cc].cause = 0;
@@ -428,7 +411,7 @@ void Simulator::update_history() {
 			}
 			break;
 		case DIVEX:
-			if (pipe.ex_mem.active && pipe.ex_mem.IR == previous) {
+			if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
 				history[i].status[cc].stage = MEMORY;
 				history[i].status[cc].cause = 0;
 			} else {
@@ -438,7 +421,7 @@ void Simulator::update_history() {
 			break;
 
 		case MEMORY:
-			if (pipe.mem_wb.active && pipe.mem_wb.IR == previous) {
+			if (pipe->mem_wb.active && pipe->mem_wb.IR == previous) {
 				history[i].status[cc].stage = WRITEB;
 				history[i].status[cc].cause = 0;
 			} else {
@@ -460,7 +443,7 @@ void Simulator::update_history() {
 
 // make a new entry
 //	if (cpu->PC!=history[entries-1].IR)
-	if ((result.ID == OK || result.ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe.active) {
+	if ((result.ID == OK || result.ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe->active) {
 		history[entries].IR = cpu.getPC();
 		history[entries].status[0].stage = IFETCH;
 		history[entries].status[0].cause = 0;
@@ -473,7 +456,6 @@ void Simulator::update_history() {
 			history[i] = history[i + 1];
 		}
 	}
-*/
 }
 
 int Simulator::one_cycle(BOOL show) {

@@ -61,6 +61,8 @@ public:
   int getStatus() const { return this->status; }
   BOOL setStatus(int state) { this->status = state; return TRUE;}
 
+  pipeline *getPipeline() { return &pipe; }
+
   WORD32 *getScreen() const { return screen; }
   BOOL setScreenPixel(int x, int y, WORD32 color);
   BOOL clearScreen();

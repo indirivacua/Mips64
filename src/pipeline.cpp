@@ -82,7 +82,7 @@ pipeline::pipeline(Processor *cpu) {
 }
 
 void pipeline::initialize(CPUConfig *config) {
-  int i;
+  unsigned int i;
   this->branch = FALSE;
   this->destination = 0;
   this->ADD_LATENCY = config->ADD_LATENCY;
@@ -377,7 +377,7 @@ void pipeline::make_available(int r,WORD64 lmd) {
 */
 
 BOOL pipeline::waw(int type, int function, int r) {
-  int i;
+  unsigned int i;
   switch (type) {
     // any instruction which writes to a register...
   case REGID:
@@ -1297,12 +1297,12 @@ int pipeline::EX_INT(int *rawreg) {
 	  this->ex_mem.ALUOutput = fpA.u ^ (ins.Imm & 0xffff);
 	  break;
         case I_SLTI:
-	  if (fpA.s < ins.Imm) this->ex_mem.ALUOutput=1;
-	  else                 this->ex_mem.ALUOutput=0;
+	  if (fpA.s < ins.Imm) this->ex_mem.ALUOutput = 1;
+	  else                 this->ex_mem.ALUOutput = 0;
 	  break;
         case I_SLTIU:
-	  if (fpA.u < ins.Imm) this->ex_mem.ALUOutput=1;
-	  else                 this->ex_mem.ALUOutput=0;
+	  if (fpA.u < ins.Imm) this->ex_mem.ALUOutput = 1;
+	  else                 this->ex_mem.ALUOutput = 0;
 	  break;
         }
       if (forwarding && ins.rt!=0) 
@@ -1881,7 +1881,8 @@ int pipeline::WB() {
 }
 
 int pipeline::clock_tick(RESULT *result) {
-  int i,status;
+  unsigned int i;
+  int status;
   BOOL empty;
   
   /* activate WB first as it activates on leading edge */
