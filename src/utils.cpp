@@ -29,28 +29,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mytypes.h"
 #include "utils.h"
 
-void unpack16(SIGNED16 a, BYTE *b) {
-  /* unpack bytes from a half-word */
-  b[0] = (BYTE) a;
-  b[1] = (BYTE) (a>>8);
-}
-
-void unpack32(WORD32 a,BYTE *b) {
-  /* unpack bytes from a word */
-    b[0] = (BYTE) a;
-    b[1] = (BYTE) (a>>8);
-    b[2] = (BYTE) (a>>16);
-    b[3] = (BYTE) (a>>24);
-}
-
-void unpack(WORD64 a, BYTE *b) {
-  int i;
-  for (i = 0; i < STEP; i++) {
-    b[i] = (BYTE) a;
-    a >>= 8;
-  }
-}
-
 BOOL in_range(WORD32 num, WORD32 mask) {
   // check that num will fit into the number of bits in mask
   int n = num;

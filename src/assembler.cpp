@@ -829,9 +829,8 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
   WORD32 num,m;
   WORD64 fw;
   DOUBLE64 db;
-  int k,i;
+  int k;
   int sc,ch;
-  BYTE b[10];
   char *iptr;
   
   if (ptr == NULL || *ptr != '.') 
@@ -970,25 +969,17 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
 	if (!getfullnum(ptr, &fw)) return FALSE;
 	if (CODEORDATA == DATA) {
 	  data->setAddressDescription(dataptr, line);
-	  
-	  //    printf("%08x %08x %s",dataptr,num,line);
-	  unpack(fw, b);
-	  for (i = 0; i < STEP; i++) {
-	    data->writeByte(dataptr, b[i]);
-	    ++dataptr;
-	  }
+          data->writeWord64(dataptr, fw);
+          dataptr += 8;
 	  while ((ptr = skip(ptr,',')) != NULL) {
 	    if (!getfullnum(ptr,&fw)) return FALSE;
             //   printf("         %08x\n",num);
-	    unpack(fw, b);
-	    for (i = 0; i < STEP; i++) {
-	      data->writeByte(dataptr, b[i]);
-	      ++dataptr;
-	    }
+            data->writeWord64(dataptr, fw);
+            dataptr += 8;
 	  }
 	}
 	
-      }
+    }
     return TRUE;
     
   case 10:            // .word32
@@ -1006,19 +997,13 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
 	if (!getdatasym(ptr, &num)) return FALSE;
 	if (CODEORDATA == DATA) {
 	    data->setAddressDescription(dataptr, line);
-	    unpack32(num, b);
-	    for (i = 0; i < 4; i++) {
-	      data->writeByte(dataptr, b[i]);
-	      ++dataptr;
-	    }
+            data->writeWord32(dataptr, num);
+            dataptr += 4;
 	    while ((ptr = skip(ptr, ',')) != NULL) {
 		if (!getdatasym(ptr, &num)) return FALSE;
-		unpack32(num, b);
-		for (i = 0; i < 4; i++) {
-		  data->writeByte(dataptr, b[i]);
-		  ++dataptr;
-		}
-	      }
+                data->writeWord32(dataptr, num);
+                dataptr += 4;
+	    }
 	  }
       }
     return TRUE;
@@ -1042,21 +1027,15 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
         return FALSE;
       if (CODEORDATA == DATA) {
         data->setAddressDescription(dataptr, line);
-        unpack16((WORD16)num, b);
-        for (i = 0; i < 2; i++) {
-          data->writeByte(dataptr, b[i]);
-	  ++dataptr;
-	}
+        data->writeHalf(dataptr, num);
+        dataptr += 2;
         while ((ptr = skip(ptr,',')) != NULL) {
           if (!getnum(ptr, &num)) 
             return FALSE;
           if (!in_range(num, 0xffff)) 
             return FALSE;
-          unpack16((WORD16) num, b);
-          for (i = 0; i < 2; i++) {
-            data->writeByte(dataptr, b[i]);
-            ++dataptr;
-          }
+          data->writeHalf(dataptr, num);
+          dataptr += 2;
         }
       }
     }
@@ -1121,21 +1100,14 @@ BOOL Assembler::directive(int pass,const char *ptr,const char *line) {
         return FALSE;
       if (CODEORDATA == DATA) {
         data->setAddressDescription(dataptr, line);
-	    
-	    //    printf("%08x %08x %s",dataptr,num,line);
-	    unpack(db.u,b);
-	    for (i = 0;i < STEP; i++) {
-		data->writeByte(dataptr, b[i]);
-		++dataptr;
-	      }
+        //    printf("%08x %08x %s",dataptr,num,line);
+        data->writeWord64(dataptr, db.u);
+        dataptr += 8;
 	    while ((ptr=skip(ptr,','))!=NULL) {
 		if (!getdouble(ptr,&db.d)) return FALSE;
 		//   printf("         %08x\n",num);
-		unpack(db.u,b);
-		for (i=0;i<STEP;i++) {
-		  data->writeByte(dataptr, b[i]);
-		  ++dataptr;
-		}
+                data->writeWord64(dataptr, db.u);
+                dataptr += 8;
 	      }
 	  }
 	
