@@ -1,11 +1,12 @@
-Es el codigo del winmips64, cortado para que compile sin la interfaz
+Por Hacer:
+----------
 
 - Hay que reorganizar muchooooooooo codigo
+  - Meter el Pipeline en la clase de la CPU
+  - Sacar memorias de la clase CPU y darselas al simulador
+  - Metodos para configurar el simulador
+  - La entrada/salida esta "muy cableada", ver si se puede separar
+  - Emprolijar las clases, eliminar de la visibilidad publica todo
+    lo que no se deberia ver desde fuera de la clase
 
-- Muchos warnings de compilacion, algunos no tan triviales de corregir
-
-- No funciona bien con archivos en modo DOS (\r\n) como fin de linea, eliminar los \r al final para arreglarlo
-
-- La entrada salida de la terminal alfanumerica es bastante precaria
-    - La entrada esta metida de manera muy fea, pero aparentemente funciona
-
+- Interfaz Grafica?? 
