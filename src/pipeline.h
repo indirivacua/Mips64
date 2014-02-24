@@ -106,12 +106,14 @@ typedef struct {
 	BOOL condition;
 } mem_wb_reg;
 
+
+class Processor;
+
 class pipeline {
 
 public:
 
     pipeline(Processor *);
-
    
     void initialize(CPUConfig *);
     int clock_tick(RESULT *);

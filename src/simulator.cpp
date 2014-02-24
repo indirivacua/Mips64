@@ -32,7 +32,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mytypes.h"
 #include "utils.h"
 #include "Processor.h"
-#include "pipeline.h"
 #include "simulator.h"
 
 #include "assembler.h"
@@ -40,12 +39,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
 
-Simulator::Simulator(CPUConfig *config) : pipe(&cpu) {
+Simulator::Simulator(CPUConfig *config) {
 
   this->config = config;
 
   cpu.initialize(config);
-  pipe.initialize(config);
 
   simulation_running = FALSE;
   restart = FALSE;
@@ -75,48 +73,45 @@ void Simulator::clear() {
 void Simulator::OnFileReset() {
 	 // Reset the processor
 	cpu.reset();
-	pipe.initialize(config);
 }
 
 void Simulator::OnFullReset() {
 	 // Reset Data Memory as well
-
-	pipe.initialize(config);
-
 	cpu.reset(TRUE);
 	clear();
 }
 
 void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt) {
-	char mess[100];
-	if (status == RAW) {
-		raw_stalls++;
-		if (rawreg < 32)
-			sprintf(mess,"  Atasco RAW en %s (R%d)",str,rawreg);
-		else
-			sprintf(mess,"  Atasco RAW en %s (F%d)",str,rawreg-32);
-		strcat(txt,mess);
-	}
-	if (status == WAW) {
-		waw_stalls++;
-		if (rawreg < 32)
-			sprintf(mess,"  Atasco WAW en %s (R%d)",str,rawreg);
-		else
-			sprintf(mess,"  Atasco WAW en %s (F%d)",str,rawreg-32);
-		strcat(txt,mess);
-	}
-	if (status == WAR) {
-		war_stalls++;
-		if (rawreg < 32)
-			sprintf(mess,"  Atasco WAR en %s (R%d)",str,rawreg);
-		else
-			sprintf(mess,"  Atasco WAR en %s (F%d)",str,rawreg-32);
-		strcat(txt, mess);
-	}
+  char mess[100] = "";
+  if (status == RAW) {
+    raw_stalls++;
+    if (rawreg < 32)
+      sprintf(mess,"  Atasco RAW en %s (R%d)",str,rawreg);
+    else
+      sprintf(mess,"  Atasco RAW en %s (F%d)",str,rawreg-32);
+    strcat(txt,mess);
+  }
+  if (status == WAW) {
+    waw_stalls++;
+    if (rawreg < 32)
+      sprintf(mess,"  Atasco WAW en %s (R%d)",str,rawreg);
+    else
+      sprintf(mess,"  Atasco WAW en %s (F%d)",str,rawreg-32);
+    strcat(txt,mess);
+  }
+  if (status == WAR) {
+    war_stalls++;
+    if (rawreg < 32)
+      sprintf(mess,"  Atasco WAR en %s (R%d)",str,rawreg);
+    else
+      sprintf(mess,"  Atasco WAR en %s (F%d)",str,rawreg-32);
+    strcat(txt, mess);
+  }
+  if (strcmp(mess, "") != 0)
+    std::cout << "Stall Msg: " << mess << std::endl;
 }
 
-void Simulator::process_result(BOOL show)
-{
+void Simulator::process_result(BOOL show) {
 	char txt[300];
 	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
 	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
@@ -306,6 +301,7 @@ int Simulator::update_io() {
 }
 
 void Simulator::update_history() {
+       /* 
 	int substage,stage;
 	unsigned int i,cc;
 	WORD32 previous;
@@ -477,7 +473,7 @@ void Simulator::update_history() {
 			history[i] = history[i + 1];
 		}
 	}
-
+*/
 }
 
 int Simulator::one_cycle(BOOL show) {
@@ -486,69 +482,52 @@ int Simulator::one_cycle(BOOL show) {
 	if (cpu.getStatus() == HALTED) 
 		return HALTED;
 
-	status = pipe.clock_tick(&result);
+	status = cpu.clock_tick(&result);
 	++cycles;
 	process_result(show);
 	update_history();
 	if (update_io()) 
 		return WAITING_FOR_INPUT;
 
-	if (status == HALTED) {
-		cpu.setStatus(HALTED);
-		return HALTED;
-	}
-
 	return status;
 }
 
 void Simulator::OnExecuteSingle() {
-	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
-	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
 	int status = one_cycle(TRUE);
 	if (status == WAITING_FOR_INPUT) {
 	//	pStatus->SetPaneText(0,"Esperando Entrada");
 	}
-	//UpdateAllViews(NULL,1L);	// send hint that								
-					// code window should be scrolled
 }
 
 void Simulator::OnExecuteMulticycle() {
-	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
-	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
-	int i,status;
-	simulation_running=TRUE;
-	for (i = 0; i < multi - 1; i++) {
-		status = one_cycle(FALSE);
-		if (status)
-			 break;
-	}
-	if (status == 0)
-		 status = one_cycle(TRUE); // show status after last one.
+  int i, status;
+  simulation_running = TRUE;
+  for (i = 0; i < multi - 1; i++) {
+    status = one_cycle(FALSE);
+    if (status)
+      break;
+  }
+  if (status == 0)
+    status = one_cycle(TRUE); // show status after last one.
 
-	if (status == WAITING_FOR_INPUT) {
-		//pStatus->SetPaneText(0,"Esperando Entrada");
-	}
+  if (status == WAITING_FOR_INPUT) {
+    //pStatus->SetPaneText(0,"Esperando Entrada");
+  }
 
-	simulation_running = FALSE;
-	//UpdateAllViews(NULL,1L);	// send hint that	
-					// code window should be scrolled
+  simulation_running = FALSE;
 }
 
-void Simulator::OnExecuteStop() 
-{
-	simulation_running = FALSE;
+void Simulator::OnExecuteStop() {
+  simulation_running = FALSE;
 }
 
-void Simulator::OnExecuteRunto() 
-{
-	//MSG message;
-	char buf[80];
-	int status, lapsed = 0;
-	simulation_running = TRUE;
-	//CMainFrame* pFrame=(CMainFrame*) AfxGetApp()->m_pMainWnd;
-	//CStatusBar* pStatus=&pFrame->m_wndStatusBar;
-	//pStatus->SetPaneText(0,"Ejecutando Simulación");
-	do {
+void Simulator::OnExecuteRunto() {
+  //MSG message;
+  char buf[80];
+  int status, lapsed = 0;
+  simulation_running = TRUE;
+  //pStatus->SetPaneText(0,"Ejecutando Simulación");
+  do {
 /*
 		if (::PeekMessage(&message,NULL,0,0,PM_REMOVE))
 		{
@@ -556,95 +535,69 @@ void Simulator::OnExecuteRunto()
 			::DispatchMessage(&message);
 		}
 */
-		lapsed++;
-		status = one_cycle(FALSE);
-		if (status) 
-			break;
-	} while (stalls || ((!cpu.code->hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
-	simulation_running = FALSE;
-	if (status == WAITING_FOR_INPUT) {
-		sprintf(buf, "Simulacion Detenida luego de %d ciclos - Esperando Entrada", lapsed);
-		restart = TRUE;
-	} else {
-		sprintf(buf, "Simulacion Detenida luego de %d ciclos", lapsed);
-		restart = FALSE;
-	}
+    lapsed++;
+    status = one_cycle(FALSE);
+    if (status) 
+      break;
+  } while (stalls || ((!cpu.code->hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
+  simulation_running = FALSE;
+  if (status == WAITING_FOR_INPUT) {
+    sprintf(buf, "Simulacion Detenida luego de %d ciclos - Esperando Entrada", lapsed);
+    restart = TRUE;
+  } else {
+    sprintf(buf, "Simulacion Detenida luego de %d ciclos", lapsed);
+    restart = FALSE;
+  }
 
-	//pStatus->SetPaneText(0,buf);
-	//UpdateAllViews(NULL,1L);	// send hint that		
-								// code window should be scrolled
+  //pStatus->SetPaneText(0,buf);
 }
 
 int Simulator::openfile(const std::string &fname) {
-	unsigned int i;
-	OnFileReset();
-        cpu.data->reset(); // reset data memory
-	for (i = 0; i < 16; i++) 
-          cpu.mm[i] = 0;
+  unsigned int i;
+  OnFileReset();
+  cpu.data->reset(); // reset data memory
+  for (i = 0; i < 16; i++) 
+    cpu.mm[i] = 0;
 
-	cpu.clearScreen();
-	cpu.clearTerminal(); 
-        cpu.drawit = FALSE; 
-        cpu.keyboard = 0;
-/*	
-	if (res > 0) {
-		remove("winmips64.ini");
-		remove("winmips64.las"); 
-		//AfxGetMainWnd()->SetWindowText("WinMIPS64 - Simulador de Procesador MIPS64");
-		lastfile = "";
-	}
-*/
-	return 0;
-}
-
-
-void Simulator::OnFileMulti() {
-/*
-	CMultiDialog dlg;
-
-	dlg.m_cycles=multi;
-	dlg.DoModal();
-    multi=dlg.m_cycles;	
-*/
+  cpu.clearScreen();
+  cpu.clearTerminal(); 
+  cpu.drawit = FALSE; 
+  cpu.keyboard = 0;
+  return 0;
 }
 
 void Simulator::OnFileMemory() 
 {
-	cpu.initialize(config);
-	pipe.initialize(config);
-
-	clear();
-	//UpdateAllViews(NULL);
-
+  cpu.initialize(config);
+  clear();
 }
 
 void Simulator::toggleDelaySlot() {
-	if (config->delay_slot) 
-		config->delay_slot = FALSE;
-	else
-		config->delay_slot = TRUE;
-
-	if (config->delay_slot)
-		config->branch_target_buffer = FALSE;
-	OnFileReset();
+  if (config->delay_slot) 
+    config->delay_slot = FALSE;
+  else
+    config->delay_slot = TRUE;
+  if (config->delay_slot)
+    config->branch_target_buffer = FALSE;
+  OnFileReset();
 }
 
 void Simulator::toggleForwarding() {
-	if (config->forwarding) 
-		config->forwarding = FALSE;
-	else
-		config->forwarding = TRUE;
-	OnFileReset();
+  if (config->forwarding) 
+    config->forwarding = FALSE;
+  else
+    config->forwarding = TRUE;
+  OnFileReset();
 }
 
 void Simulator::toggleBtb() {
-	if (config->branch_target_buffer) 
-		config->branch_target_buffer=FALSE;
-	else	
-		config->branch_target_buffer=TRUE;
-	if (config->branch_target_buffer)
-		config->delay_slot = FALSE;
-	OnFileReset();
+  if (config->branch_target_buffer) 
+    config->branch_target_buffer=FALSE;
+  else	
+    config->branch_target_buffer=TRUE;
+  if (config->branch_target_buffer)
+    config->delay_slot = FALSE;
+  OnFileReset();
 }
 
 /** Metodos para verificar el funcionamiento del Simulador */ 

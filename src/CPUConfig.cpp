@@ -22,6 +22,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "CPUConfig.h"
 
+#define MIN_CODEBITS 8
+#define MAX_CODEBITS 13
+#define MIN_DATABITS 4
+#define MAX_DATABITS 11
+#define MIN_ADD_LATENCY 2
+#define MAX_ADD_LATENCY 8
+#define MIN_MUL_LATENCY 2
+#define MAX_MUL_LATENCY 8
+#define MIN_DIV_LATENCY 10
+#define MAX_DIV_LATENCY 30
+
 CPUConfig::CPUConfig() {
 	unsigned int codebits, databits;
 

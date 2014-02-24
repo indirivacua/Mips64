@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mytypes.h"
 #include "CPUConfig.h"
 
+#include "pipeline.h"
 
 #include "DataMemory.h"
 #include "CodeMemory.h"
@@ -52,6 +53,8 @@ public:
   void initialize(CPUConfig *config);
   void reset(BOOL = false);
 
+  int clock_tick(RESULT *);
+
   WORD32 getPC() const { return PC; }
   BOOL setPC(WORD32);
 
@@ -69,8 +72,8 @@ public:
 
   const BOOL isValidDataMemoryAddress(WORD32 addr);
   const BOOL isValidCodeMemoryAddress(WORD32 addr);
-  const WORD32 getCodeMemorySize() { return codesize; }
-  const WORD32 getDataMemorySize() { return datasize; }
+  const WORD32 getCodeMemorySize() { return config->codesize; }
+  const WORD32 getDataMemorySize() { return config->datasize; }
 
   // Esto deberia ir o protegido o eliminado (otra clase o algo)
   CodeMemory *code;
@@ -85,15 +88,12 @@ public:
   BOOL drawit;
   WORD32 keyboard;
 
- 
-
 protected:
   WORD32 PC;
   int    status;
 
-  // A una clase de memoria
-  WORD32 codesize;
-  WORD32 datasize;
+  pipeline pipe;
+  CPUConfig *config;
 
   // A una clase Screen
   WORD32 *screen;
