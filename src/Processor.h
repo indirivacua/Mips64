@@ -80,18 +80,20 @@ public:
   reg    rreg[64];
   reg    wreg[64];
 
+  void dump();
 
 protected:
   WORD32 PC;
   int    status;
+
+  // Flag FP 
+  BOOL fp_cc;
 
   CodeMemory *code;
   DataMemory *data;
   CPUConfig *config;
   pipeline pipe;
 
-  // Flag FP 
-  BOOL fp_cc;
 };
 
 #endif

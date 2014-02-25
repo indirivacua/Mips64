@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "mytypes.h"
 #include "Processor.h"
@@ -74,8 +77,25 @@ BOOL Processor::isValidCodeMemoryAddress(WORD32 ptr) const {
 
 int Processor::clock_tick(RESULT *r) {
   int status = pipe.clock_tick(r);
+
   if (status == HALTED) 
-	setStatus(HALTED);
+    setStatus(HALTED);
 
   return status;
 }
+
+void Processor::dump() {
+  printf("----------------------------------\n");
+  for (int i = 0; i < 32; i++) {
+   printf("R%02i = %016llx%s", i, rreg[i].val, ((i + 1) % 4)?"\t":"\n");
+  }
+  printf("----------------------------------\n");
+  DOUBLE64 db;
+
+  for (int i = 0; i < 32; i++) {
+   db.s = rreg[i+32].val;
+   printf("F%02i = %016.8f%s", i, db.d, ((i+1)%4)?"\t":"\n");
+  }
+
+}
+

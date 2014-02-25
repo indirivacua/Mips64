@@ -559,17 +559,7 @@ void Simulator::toggleBtb() {
 /** Metodos para verificar el funcionamiento del Simulador */ 
 
 void Simulator::dump_reg() {
-  printf("----------------------------------\n");
-  for (int i = 0; i < 32; i++) {
-   printf("R%02i = %016llx%s", i, cpu.rreg[i].val, ((i + 1) % 4)?"\t":"\n");
-  }
-  printf("----------------------------------\n");
-  DOUBLE64 db;
-
-  for (int i = 0; i < 32; i++) {
-   db.s = cpu.rreg[i+32].val;
-   printf("F%02i = %016.8f%s", i, db.d, ((i+1)%4)?"\t":"\n");
-  }
+  cpu.dump();
 }
 
 void Simulator::dump_Terminal() {
