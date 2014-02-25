@@ -52,14 +52,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define REG3X  17
 #define REGDI  18
 #define REG2C  19
-#define BC	   20
+#define BC     20
 
 #define I_SPECIAL       0x00
 #define I_COP1          0x11
 #define I_DOUBLE        0x11
 #define I_MTC1          0x04
 #define I_MFC1          0x00
-#define I_BC		0x08
+#define I_BC            0x08
 #define I_HALT          0x01
 
 #define I_J             0x02
@@ -126,7 +126,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define F_DIV_D         0x03
 #define F_MOV_D         0x06
 #define F_CVT_D_L       0x21
-#define F_CVT_L_D	0x25
+#define F_CVT_L_D       0x25
 #define F_C_LT_D        0x3C
 #define F_C_LE_D        0x3E
 #define F_C_EQ_D        0x32

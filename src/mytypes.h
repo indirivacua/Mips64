@@ -63,9 +63,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define DCYAN    RGB(0,128,128)
 #define DYELLOW  RGB(128,128,0)
 
-#define DBLUE	 RGB(0,0,128)
+#define DBLUE   RGB(0,0,128)
 #define DMAGENTA RGB(128,0,128)
-#define DRED	 RGB(128,0,0)
+#define DRED   RGB(128,0,0)
 #define LGREY    RGB(192,192,192)
 
 typedef uint8_t  BYTE;
@@ -80,42 +80,39 @@ typedef int64_t SIGNED64;
 typedef int BOOL;
 
 typedef union {
-	WORD64 u;
-	SIGNED64 s;
-	double d;
+  WORD64 u;
+  SIGNED64 s;
+  double d;
 } DOUBLE64;
 
-#define OK			0
+#define OK      0
 
-#define CODE 1
-#define DATA 2
 
 #define STEP 8
 #define MASK -1
 
 typedef struct {
-	int IF;
-	int ID;
-	int EX;
-	int MEM;
-	int WB;
-	int DIVIDER;
-	int ADDER[10];
-	int MULTIPLIER[10];
-	int idrr;
-	int exrr;
-	int memrr;
-	int addrr;
-	int mulrr;
-	int divrr;
-
+  int IF;
+  int ID;
+  int EX;
+  int MEM;
+  int WB;
+  int DIVIDER;
+  int ADDER[10];
+  int MULTIPLIER[10];
+  int idrr;
+  int exrr;
+  int memrr;
+  int addrr;
+  int mulrr;
+  int divrr;
 } RESULT;
 
 typedef struct {
-    int type,function,opcode,tf,target;
-    int rs,rt,rd;
-	int src1,src2;
-    SIGNED32 Imm;
+  int type,function,opcode,tf,target;
+  int rs,rt,rd;
+  int src1,src2;
+  SIGNED32 Imm;
 } instruction;
 
 #endif

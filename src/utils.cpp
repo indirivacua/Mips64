@@ -86,37 +86,37 @@ WORD64 strtoint64(const char *ptr, const char **end, int b) {
       base=b;
     else {
       if (*ptr == '0') {
-	ptr++;
-	if (*ptr == 'x' || *ptr == 'X') {
-	  base = 16;
-	  ptr++;
-	} else
-	  base = 8;
+        ptr++;
+        if (*ptr == 'x' || *ptr == 'X') {
+          base = 16;
+          ptr++;
+        } else
+          base = 8;
       }
     }
     for (;;) {
       ch=*ptr;
       if (base == 8) {
-	if (ch<'0' || ch>'7')
-	  break;
-	n = n * base+(ch - '0'); 
+        if (ch<'0' || ch>'7')
+          break;
+        n = n * base+(ch - '0'); 
       }
       if (base == 10) {
-	if (ch < '0' || ch > '9')
-	  break;
-	n = n * base+(ch - '0');
+        if (ch < '0' || ch > '9')
+          break;
+        n = n * base+(ch - '0');
       }
       if (base == 16) {
-	if ((ch<'0' || ch>'9') && 
-	    (ch < 'A' || ch > 'F') &&
-	    (ch < 'a' || ch > 'f'))
-	  break;
-	if (ch >= '0' && ch <= '9') 
-	  n = n * base+(ch - '0');
-	if (ch >= 'A' && ch <= 'F') 
-	  n = n * base + 10 + (ch - 'A');
-	if (ch >= 'a' && ch <= 'f') 
-	  n = n * base + 10 +(ch - 'a');
+        if ((ch<'0' || ch>'9') && 
+            (ch < 'A' || ch > 'F') &&
+            (ch < 'a' || ch > 'f'))
+          break;
+        if (ch >= '0' && ch <= '9') 
+          n = n * base+(ch - '0');
+        if (ch >= 'A' && ch <= 'F') 
+          n = n * base + 10 + (ch - 'A');
+        if (ch >= 'a' && ch <= 'f') 
+          n = n * base + 10 +(ch - 'a');
       }
       ptr++;
     }

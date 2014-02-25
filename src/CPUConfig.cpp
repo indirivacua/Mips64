@@ -34,17 +34,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define MAX_DIV_LATENCY 30
 
 CPUConfig::CPUConfig() {
-	unsigned int codebits, databits;
+  unsigned int codebits, databits;
 
-	codebits = 10;
-	databits = 10;
-	codesize = 1 << codebits; 
-	datasize = 1 << databits; 
-	ADD_LATENCY = 4;
-	MUL_LATENCY = 7;
-	DIV_LATENCY = 24;
-	forwarding = TRUE;
-	delay_slot = FALSE;
-	branch_target_buffer = FALSE;
+  codebits = 10;
+  databits = 10;
+  codesize = 1 << codebits; 
+  datasize = 1 << databits; 
+  ADD_LATENCY = 4;
+  MUL_LATENCY = 7;
+  DIV_LATENCY = 24;
+  forwarding = TRUE;
+  delay_slot = FALSE;
+  branch_target_buffer = FALSE;
 }
 

@@ -55,7 +55,7 @@ BOOL DataMemory::reset() {
   return TRUE;
 }
 
-#define DATA_ERR	 9  // see pipeline.h
+#define DATA_ERR   9  // see pipeline.h
 #define DATA_MISALIGNED 17  // see pipeline.h
 
 int DataMemory::readByte(WORD32 addr, BYTE &data) {
@@ -110,7 +110,7 @@ BOOL DataMemory::writeHalf(WORD32 addr, WORD16 h) {
   //h = swap16(h);
   *(WORD16 *)(&this->data[addr]) = h;
   for (int i = 0; i < 2; ++i)
-  	status[addr + i] = DATA_WRITTEN;
+    status[addr + i] = DATA_WRITTEN;
   return TRUE;
 }
 
@@ -118,7 +118,7 @@ BOOL DataMemory::writeWord32(WORD32 addr, WORD32 w) {
   //w = swap32(w);
   *(WORD32 *)(&data[addr]) = w;
   for (int i = 0; i < 4; ++i)
-  	status[addr + i] = DATA_WRITTEN;
+    status[addr + i] = DATA_WRITTEN;
   return TRUE;
 }
 
@@ -126,7 +126,7 @@ BOOL DataMemory::writeWord64(WORD32 addr, WORD64 d) {
   //d = swap64(d);
   *(WORD64 *)(&data[addr]) = d;
   for (int i = 0; i < 8; ++i)
-  	status[addr + i] = DATA_WRITTEN;
+    status[addr + i] = DATA_WRITTEN;
   return TRUE;
 }
 
@@ -142,7 +142,7 @@ BOOL DataMemory::getAsciiz(WORD32 addr, BYTE *dst, int size) {
 }
 
 BOOL DataMemory::isValidAddress(WORD32 addr) {
-	return (addr <= size);
+  return (addr <= size);
 }
 
 BOOL DataMemory::setAddressDescription(WORD32 addr, const std::string &description) {

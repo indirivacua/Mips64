@@ -35,25 +35,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // stalls...
 
-#define RAW			1
-#define WAW			2 
-#define STALLED		3
-#define HALTED		4
-#define STRUCTURAL	5
+#define RAW  		1
+#define WAW  		2 
+#define STALLED  	3
+#define HALTED  	4
+#define STRUCTURAL  5
 #define WAR         6
 #define BRANCH_TAKEN_STALL 7
 #define BRANCH_MISPREDICTED_STALL 8
 
 // advisories....
 
-#define DATA_ERR	9
-#define EMPTY		10
+#define DATA_ERR  9
+#define EMPTY  	10
 #define DIVIDE_BY_ZERO   11
 #define INTEGER_OVERFLOW 12
 #define NO_SUCH_DATA_MEMORY   13
-#define LOADS		14
-#define STORES		15
-#define NO_SUCH_CODE_MEMORY		16
+#define LOADS  	14
+#define STORES  	15
+#define NO_SUCH_CODE_MEMORY  	16
 #define DATA_MISALIGNED 17
 #define WAITING_FOR_INPUT 18
 
@@ -69,41 +69,41 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define FROM_DIV       7
 
 typedef struct {
-    WORD32 IR;  /* pointer to instruction in memory */
-    instruction ins;
-    WORD32 NPC;
-    BOOL active;
-	BOOL predicted;
+  WORD32 IR;  /* pointer to instruction in memory */
+  instruction ins;
+  WORD32 NPC;
+  BOOL active;
+  BOOL predicted;
 } if_id_reg;
 
 typedef struct {
-    WORD32 IR;
-    instruction ins;
-    int rA,rB;
-    WORD32 NPC;
-	WORD64 ALUOutput;
-    SIGNED32 Imm;
-    BOOL active;
-    unsigned int cycles;
+  WORD32 IR;
+  instruction ins;
+  int rA,rB;
+  WORD32 NPC;
+  WORD64 ALUOutput;
+  SIGNED32 Imm;
+  BOOL active;
+  unsigned int cycles;
 } id_ex_reg;
 
 typedef struct {
-    WORD32 IR;
-    instruction ins;
-    int rB;
-    WORD64 ALUOutput;
-    WORD32 NPC;
-    BOOL active;
-	BOOL condition;
+  WORD32 IR;
+  instruction ins;
+  int rB;
+  WORD64 ALUOutput;
+  WORD32 NPC;
+  BOOL active;
+  BOOL condition;
 } ex_mem_reg;
 
 typedef struct {
-    WORD32 IR;
-    instruction ins;
-    WORD64 ALUOutput,LMD;
-    WORD32 NPC;
-    BOOL active;
-	BOOL condition;
+  WORD32 IR;
+  instruction ins;
+  WORD64 ALUOutput,LMD;
+  WORD32 NPC;
+  BOOL active;
+  BOOL condition;
 } mem_wb_reg;
 
 

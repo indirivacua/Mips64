@@ -63,21 +63,21 @@ int main(int argc, char **argv) {
   Assembler *assembler = new Assembler(x->getCodeMemory(), x->getDataMemory());
   int res = assembler->openit(programa);
   if (res == 1) {
-	char txt[512];
-	sprintf(txt, "No se pudo abrir el archivo %s", programa);
-	//AfxMessageBox(txt,MB_OK|MB_ICONEXCLAMATION);
-	std::cout << txt << std::endl;
-	return res;
+  char txt[512];
+  sprintf(txt, "No se pudo abrir el archivo %s", programa);
+  //AfxMessageBox(txt,MB_OK|MB_ICONEXCLAMATION);
+  std::cout << txt << std::endl;
+  return res;
   }
   if (res == 2) {
-	//AfxMessageBox("Errores detectados en 1ra Pasada");
-	std::cout << "Errores detectados en 1ra Pasada" << std::endl;
-	return res;
+  //AfxMessageBox("Errores detectados en 1ra Pasada");
+  std::cout << "Errores detectados en 1ra Pasada" << std::endl;
+  return res;
   }
   if (res == 3) {
-	//AfxMessageBox("Errores detectados en 2da Pasada");
-	std::cout << "Errores detectados en 2da Pasada" << std::endl;
-	return res;
+  //AfxMessageBox("Errores detectados en 2da Pasada");
+  std::cout << "Errores detectados en 2da Pasada" << std::endl;
+  return res;
   }
   //AfxGetMainWnd()->SetWindowText("WinMIPS64 - Simulador de Procesador MIPS64 - " + fname);
 
@@ -95,9 +95,9 @@ int main(int argc, char **argv) {
     x->OnExecuteSingle();
     if (grafico) {
       if (i % 32 == 0) {
-	//system("/bin/bash -c clear");
-	ClearScreen();
-	x->show_screen();
+  //system("/bin/bash -c clear");
+  ClearScreen();
+  x->show_screen();
       }
     } else {
       x->dump_Terminal();

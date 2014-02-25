@@ -234,12 +234,15 @@ int Simulator::update_io() {
     x = (WORD32) ((fp.u >> 40) & 255);
     screen.setPixel(x, y, (WORD32) fp.u);
     break;
+
   case 6:
     terminal.clear();
     break;
+
   case 7:
    screen.clear();
    break;
+
   case 8:
     terminal.readNumber((WORD64 *) &cpu.mm[8]);
     break;

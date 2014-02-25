@@ -68,7 +68,7 @@ BOOL Processor::setPC(WORD32 newPC) {
 
 BOOL Processor::isValidDataMemoryAddress(WORD32 ptr) const { 
   return (data->isValidAddress(ptr)) 
-	|| (ptr >= MMIO && ptr <= MMIO + 16);
+             || (ptr >= MMIO && ptr <= MMIO + 16);
 }
 
 BOOL Processor::isValidCodeMemoryAddress(WORD32 ptr) const { 
