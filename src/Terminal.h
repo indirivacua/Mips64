@@ -33,7 +33,7 @@ class Terminal {
 public:
   Terminal();
   BOOL write(const std::string &msg) { this->terminal += msg; return TRUE; }
-  BOOL clear() { this->terminal = ""; return TRUE; }  
+  BOOL clear() { this->terminal = ""; return TRUE; }
   BOOL empty() { return this->terminal == ""; }
   const std::string &getContents() const { return this->terminal; }
 

@@ -51,14 +51,14 @@ class Simulator {
   DataMemory *getDataMemory() { return &data; }
 
  protected:
-  
+
   Processor cpu;
 
   DataMemory data;
   CodeMemory code;
 
   CPUConfig *config;
-  
+
   unsigned int cycles;
   unsigned int instructions;
   unsigned int loads;
@@ -69,15 +69,15 @@ class Simulator {
   unsigned int waw_stalls;
   unsigned int war_stalls;
   unsigned int structural_stalls;
-  
+
   int multi;
-  
+
   BOOL simulation_running;
   BOOL restart;
   int stall_type;
   int stalls;
   int amount;
-  
+
   Terminal terminal;
   Screen screen;
   PipelineHistory history;
@@ -98,7 +98,7 @@ class Simulator {
   void OnExecuteRunto();
   void OnExecuteStop();
   void OnFullReset();
-  
+
  public:
   void dump_mem();
   void dump_reg();

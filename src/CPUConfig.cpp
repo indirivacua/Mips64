@@ -38,8 +38,8 @@ CPUConfig::CPUConfig() {
 
   codebits = 10;
   databits = 10;
-  codesize = 1 << codebits; 
-  datasize = 1 << databits; 
+  codesize = 1 << codebits;
+  datasize = 1 << databits;
   ADD_LATENCY = 4;
   MUL_LATENCY = 7;
   DIV_LATENCY = 24;

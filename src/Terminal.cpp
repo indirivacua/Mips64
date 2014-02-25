@@ -31,7 +31,7 @@ Terminal::Terminal() {
 }
 
 void Terminal::dump() {
-  if (empty()) 
+  if (empty())
     return;
   std::cout << "Terminal: ";
   std::cout << getContents() << std::endl;
@@ -40,17 +40,17 @@ void Terminal::dump() {
 
 BOOL Terminal::readNumber(WORD64 *result) {
   char line[MAX_PATH+1];
-  fgets(line, MAX_PATH, stdin); 
+  fgets(line, MAX_PATH, stdin);
   DOUBLE64 number;
   if (strstr(line,"."))
     number.d = atof(line);
   else
     number.s = atoll(line);
-  *result = number.u; 
+  *result = number.u;
   return TRUE;
 }
 
 BOOL Terminal::readChar(BYTE *result) {
-  *result= getchar(); 
+  *result= getchar();
   return TRUE;
 }

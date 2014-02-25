@@ -55,7 +55,7 @@ void PipelineHistory::update_history(unsigned int cycles, const RESULT &result, 
     cc = cycles - history[i].start_cycle;
     stage = history[i].status[cc-1].stage; // previous stage
     substage = history[i].status[cc-1].substage;
-  
+
     switch (stage) {
 
     case IFETCH:
@@ -75,7 +75,7 @@ void PipelineHistory::update_history(unsigned int cycles, const RESULT &result, 
       break;
     case IDECODE:
       passed = FALSE;
-      
+
       if (pipe->integer.active && pipe->integer.IR == previous && result.ID != STALLED) {
         passed = TRUE;
         history[i].status[cc].stage = INTEX;
@@ -98,7 +98,7 @@ void PipelineHistory::update_history(unsigned int cycles, const RESULT &result, 
         history[i].status[cc].stage = DIVEX;
         history[i].status[cc].cause = 0;
       }
-      
+
       if (!passed) {
         history[i].status[cc].stage = IDECODE;
         history[i].status[cc].cause = (BYTE) result.ID;

@@ -137,7 +137,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define SMTC1 (I_COP1 << 26 | I_MTC1 << 21)
 #define SMFC1 (I_COP1 << 26 | I_MFC1 << 21)
 #define SBC1F (I_COP1 << 26 | I_BC << 21)
-#define SBC1T (I_COP1 << 26 | I_BC << 21 | 1 << 16)  
+#define SBC1T (I_COP1 << 26 | I_BC << 21 | 1 << 16)
 
 typedef struct {
     const char *name;

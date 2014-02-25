@@ -48,11 +48,11 @@ public:
   BOOL isValidAddress(WORD32 addr);
   WORD32 getSize() const { return size; };
 
-  BOOL setBreakpoint(WORD32 addr, BOOL); 
-  BOOL hasBreakpoint(WORD32 addr) const; 
+  BOOL setBreakpoint(WORD32 addr, BOOL);
+  BOOL hasBreakpoint(WORD32 addr) const;
 
-  BOOL branchPredicted(WORD32 addr) const; 
-  BOOL predictBranch(WORD32 addr, BOOL); 
+  BOOL branchPredicted(WORD32 addr) const;
+  BOOL predictBranch(WORD32 addr, BOOL);
 
 protected:
   WORD32 size;

@@ -55,16 +55,16 @@ int compare(const char *ptr1, const char *ptr2) {
     return 0;
 
   while (*ptr2 == *ptr1) {
-    if (*ptr2 == 0) 
+    if (*ptr2 == 0)
       break;
-    ptr1++; 
-    ptr2++; 
+    ptr1++;
+    ptr2++;
     incr++;
-  }    
+  }
   if (*ptr2 == 0 && !isalnum(*ptr1))
     return incr;
 
-  return 0;      
+  return 0;
 }
 
 WORD64 strtoint64(const char *ptr, const char **end, int b) {
@@ -75,9 +75,9 @@ WORD64 strtoint64(const char *ptr, const char **end, int b) {
     while (*ptr == ' ' || *ptr == 9)
       ptr++;
     if (*ptr == '-') {
-      s=1; 
+      s=1;
       ptr++;
-    } else if (*ptr=='+') 
+    } else if (*ptr=='+')
       ptr++;
     while (*ptr == ' ' || *ptr == 9)
       ptr++;
@@ -99,7 +99,7 @@ WORD64 strtoint64(const char *ptr, const char **end, int b) {
       if (base == 8) {
         if (ch<'0' || ch>'7')
           break;
-        n = n * base+(ch - '0'); 
+        n = n * base+(ch - '0');
       }
       if (base == 10) {
         if (ch < '0' || ch > '9')
@@ -107,26 +107,26 @@ WORD64 strtoint64(const char *ptr, const char **end, int b) {
         n = n * base+(ch - '0');
       }
       if (base == 16) {
-        if ((ch<'0' || ch>'9') && 
+        if ((ch<'0' || ch>'9') &&
             (ch < 'A' || ch > 'F') &&
             (ch < 'a' || ch > 'f'))
           break;
-        if (ch >= '0' && ch <= '9') 
+        if (ch >= '0' && ch <= '9')
           n = n * base+(ch - '0');
-        if (ch >= 'A' && ch <= 'F') 
+        if (ch >= 'A' && ch <= 'F')
           n = n * base + 10 + (ch - 'A');
-        if (ch >= 'a' && ch <= 'f') 
+        if (ch >= 'a' && ch <= 'f')
           n = n * base + 10 +(ch - 'a');
       }
       ptr++;
     }
-    
+
     if (end != NULL)
       *end=ptr;
-    
+
     if (s == 1)
       return (~n) + 1;
-    
+
     return n;
 }
 

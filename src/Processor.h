@@ -71,9 +71,9 @@ public:
   CodeMemory *getCodeMemory() { return code; }
   DataMemory *getDataMemory() { return data; }
 
-  BOOL hasFPFlagOn() const { return fp_cc; } 
-  BOOL hasFPFlagOff() const { return !fp_cc; } 
-  BOOL setFPFlag(BOOL state) { fp_cc = state; return TRUE; } 
+  BOOL hasFPFlagOn() const { return fp_cc; }
+  BOOL hasFPFlagOff() const { return !fp_cc; }
+  BOOL setFPFlag(BOOL state) { fp_cc = state; return TRUE; }
 
   BYTE   mm[16];
 
@@ -86,7 +86,7 @@ protected:
   WORD32 PC;
   int    status;
 
-  // Flag FP 
+  // Flag FP
   BOOL fp_cc;
 
   CodeMemory *code;

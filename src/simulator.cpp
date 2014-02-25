@@ -41,7 +41,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
 
-Simulator::Simulator(CPUConfig *config) 
+Simulator::Simulator(CPUConfig *config)
   : cpu(&code, &data),
     data(config->datasize),
     code(config->codesize),
@@ -137,7 +137,7 @@ void Simulator::process_result(RESULT result, BOOL show) {
     strcat(txt,"  Atasco Branch Misprediction");
   }
 
-  if (result.MEM == LOADS || result.MEM == DATA_ERR) 
+  if (result.MEM == LOADS || result.MEM == DATA_ERR)
     loads++;
   if (result.MEM == STORES)
     stores++;
@@ -201,12 +201,12 @@ int Simulator::update_io() {
   int x, y, status = 0;
 
   BYTE az[256];
-  if (!func) 
+  if (!func)
     return status;
 
   char txt[30];
   DOUBLE64 fp;
-  fp.u = *(WORD64 *)&cpu.mm[8]; 
+  fp.u = *(WORD64 *)&cpu.mm[8];
 
   switch (func) {
   case 1:
@@ -225,7 +225,7 @@ int Simulator::update_io() {
     // need to test here if fp.u is a legal address!
     data.getAsciiz(fp.u, az, 255);
 
-    if (fp.u<data.getSize()) 
+    if (fp.u<data.getSize())
       terminal.write(std::string((const char *)az));
     break;
 
@@ -263,29 +263,29 @@ int Simulator::one_cycle(BOOL show) {
   int status = 0;
   RESULT result;
 
-  if (cpu.getStatus() == HALTED) 
+  if (cpu.getStatus() == HALTED)
     return HALTED;
 
   status = cpu.clock_tick(&result);
   ++cycles;
   process_result(result, show);
 
-  // used to be in update_history but it is not part 
-  // Move to process_result ?? 
+  // used to be in update_history but it is not part
+  // Move to process_result ??
   if (result.MEM != RAW) {
-    if (result.EX == STALLED) 
+    if (result.EX == STALLED)
       result.EX = STRUCTURAL;
-    if (result.DIVIDER == STALLED) 
+    if (result.DIVIDER == STALLED)
       result.DIVIDER = STRUCTURAL;
-    if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) 
+    if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED)
       result.MULTIPLIER[config->MUL_LATENCY-1] = STRUCTURAL;
-    if (result.ADDER[config->ADD_LATENCY-1] == STALLED) 
+    if (result.ADDER[config->ADD_LATENCY-1] == STALLED)
       result.ADDER[config->ADD_LATENCY-1] = STRUCTURAL;
-  }  
+  }
 
   history.update_history(cycles, result, cpu);
 
-  if (update_io()) 
+  if (update_io())
     return WAITING_FOR_INPUT;
 
   return status;
@@ -336,7 +336,7 @@ void Simulator::OnExecuteRunto() {
 */
     lapsed++;
     status = one_cycle(FALSE);
-    if (status) 
+    if (status)
       break;
   } while (stalls || ((!code.hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
   simulation_running = FALSE;
@@ -355,11 +355,11 @@ int Simulator::openfile(const std::string &fname) {
   unsigned int i;
   OnFileReset();
   data.reset(); // reset data memory
-  for (i = 0; i < 16; i++) 
+  for (i = 0; i < 16; i++)
     cpu.mm[i] = 0;
 
   screen.clear();
-  terminal.clear(); 
+  terminal.clear();
   return 0;
 }
 
@@ -370,7 +370,7 @@ void Simulator::OnFileMemory() {
 }
 
 void Simulator::toggleDelaySlot() {
-  if (config->delay_slot) 
+  if (config->delay_slot)
     config->delay_slot = FALSE;
   else
     config->delay_slot = TRUE;
@@ -380,7 +380,7 @@ void Simulator::toggleDelaySlot() {
 }
 
 void Simulator::toggleForwarding() {
-  if (config->forwarding) 
+  if (config->forwarding)
     config->forwarding = FALSE;
   else
     config->forwarding = TRUE;
@@ -388,16 +388,16 @@ void Simulator::toggleForwarding() {
 }
 
 void Simulator::toggleBtb() {
-  if (config->branch_target_buffer) 
+  if (config->branch_target_buffer)
     config->branch_target_buffer = FALSE;
-  else  
+  else
     config->branch_target_buffer = TRUE;
   if (config->branch_target_buffer)
     config->delay_slot = FALSE;
   OnFileReset();
 }
 
-/** Metodos para verificar el funcionamiento del Simulador */ 
+/** Metodos para verificar el funcionamiento del Simulador */
 
 void Simulator::dump_reg() {
   cpu.dump();

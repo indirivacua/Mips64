@@ -83,12 +83,12 @@ WORD32 CodeMemory::readInstruction(WORD32 addr) const {
 }
 
 BOOL CodeMemory::writeInstruction(WORD32 addr,
-                                  WORD32 instr, 
+                                  WORD32 instr,
                                   const std::string &line,
                                   const std::string &assembly,
                                   const std::string &mnemonic) {
   WORD32 pos = addr / 4;
-  
+
   this->code[pos] = instr;
   this->line[pos] = line;
   this->assembly[pos] = assembly;
@@ -112,7 +112,7 @@ BOOL CodeMemory::reset() {
   return TRUE;
 }
 
-BOOL CodeMemory::hasBreakpoint(WORD32 addr) const { 
+BOOL CodeMemory::hasBreakpoint(WORD32 addr) const {
   return (status[addr] & CODE_BREAKPOINT) == CODE_BREAKPOINT;
 }
 
@@ -133,7 +133,7 @@ BOOL CodeMemory::predictBranch(WORD32 addr, BOOL state) {
     status[addr] |= CODE_BRANCHPRED;
   else
     status[addr] &= (0xff - CODE_BRANCHPRED);
-  
+
   return TRUE;
 }
 

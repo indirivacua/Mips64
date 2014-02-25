@@ -37,16 +37,16 @@ Screen::~Screen() {
 }
 
 BOOL Screen::setPixel(unsigned int x, unsigned int y, WORD32 color) {
-  if (x > max_x || y > max_y) 
+  if (x > max_x || y > max_y)
     return FALSE;
-  
+
   this->screen[max_x * y + x] = color;
   empty = FALSE;
   return TRUE;
 }
 
 BOOL Screen::clear() {
-  for (unsigned int i = 0; i < max_x * max_y; i++) 
+  for (unsigned int i = 0; i < max_x * max_y; i++)
     this->screen[i] = WHITE;
   empty = TRUE;
   return TRUE;
@@ -62,7 +62,7 @@ void Screen::show() {
       char car = '-';
         int pixel = screen[x + y * max_x];
         switch(pixel) {
-        case BLACK: 
+        case BLACK:
           car = 'X';
           break;
         case WHITE:

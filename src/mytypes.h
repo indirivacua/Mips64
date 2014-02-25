@@ -46,7 +46,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 // 0 => normal
 // 1 => BreakPoint set
 // 2 => Branch Prediction ?
-// 4 => ERROR 
+// 4 => ERROR
 
 #define WHITE  RGB(255,255,255)
 #define BLACK  RGB(0,0,0)

@@ -35,27 +35,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // stalls...
 
-#define RAW  		1
-#define WAW  		2 
-#define STALLED  	3
-#define HALTED  	4
-#define STRUCTURAL  5
-#define WAR         6
-#define BRANCH_TAKEN_STALL 7
+#define RAW                       1
+#define WAW                       2
+#define STALLED                   3
+#define HALTED                    4
+#define STRUCTURAL                5
+#define WAR                       6
+#define BRANCH_TAKEN_STALL        7
 #define BRANCH_MISPREDICTED_STALL 8
 
 // advisories....
 
-#define DATA_ERR  9
-#define EMPTY  	10
-#define DIVIDE_BY_ZERO   11
-#define INTEGER_OVERFLOW 12
-#define NO_SUCH_DATA_MEMORY   13
-#define LOADS  	14
-#define STORES  	15
-#define NO_SUCH_CODE_MEMORY  	16
-#define DATA_MISALIGNED 17
-#define WAITING_FOR_INPUT 18
+#define DATA_ERR                9
+#define EMPTY                  10
+#define DIVIDE_BY_ZERO         11
+#define INTEGER_OVERFLOW       12
+#define NO_SUCH_DATA_MEMORY    13
+#define LOADS                  14
+#define STORES                 15
+#define NO_SUCH_CODE_MEMORY    16
+#define DATA_MISALIGNED        17
+#define WAITING_FOR_INPUT      18
 
 /* register status */
 
@@ -116,7 +116,7 @@ class pipeline {
 public:
 
     pipeline(Processor *);
-   
+
     void initialize(CPUConfig *);
     int clock_tick(RESULT *);
 
@@ -164,7 +164,7 @@ protected:
     Processor *cpu;
     CodeMemory *code;
     DataMemory *data;
- 
+
 };
 
 

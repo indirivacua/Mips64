@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 DataMemory::DataMemory(int size) {
   this->size = size;
-  this->data = new BYTE[size]; 
+  this->data = new BYTE[size];
   this->status = new BYTE[size];
   this->line = new std::string[size/8];
   std::cout << "DataMemory:" << size << " " << this << std::endl;
@@ -61,7 +61,7 @@ BOOL DataMemory::reset() {
 int DataMemory::readByte(WORD32 addr, BYTE &data) {
   if (status[addr] == DATA_VACANT)
     return DATA_ERR;
-    
+
   data = *(BYTE *)(&this->data[addr]);
   return OK;
 }
@@ -70,7 +70,7 @@ int DataMemory::readHalf(WORD32 addr, WORD16 &data) {
   for (int i=0; i < 2; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
-  if (addr % 2) 
+  if (addr % 2)
     return DATA_MISALIGNED;
 
   data = (*(WORD16 *)(&this->data[addr]));
@@ -81,7 +81,7 @@ int DataMemory::readWord32(WORD32 addr, WORD32 &data) {
   for (int i=0; i < 4; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
-  if (addr % 4) 
+  if (addr % 4)
     return DATA_MISALIGNED;
 
   data =  (*(WORD32 *)(&this->data[addr]));
@@ -92,7 +92,7 @@ int DataMemory::readWord64(WORD32 addr, WORD64 &data) {
   for (int i=0; i < 8; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
-  if (addr % 8) 
+  if (addr % 8)
     return DATA_MISALIGNED;
 
   data = (*(WORD64 *)(&this->data[addr]));
@@ -147,6 +147,6 @@ BOOL DataMemory::isValidAddress(WORD32 addr) {
 
 BOOL DataMemory::setAddressDescription(WORD32 addr, const std::string &description) {
 
-  line[addr/STEP] = description; 
+  line[addr/STEP] = description;
   return TRUE;
 }

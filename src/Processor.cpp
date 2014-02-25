@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Processor.h"
 #include "pipeline.h"
 
-Processor::Processor(CodeMemory *mcode, DataMemory *mdata) 
+Processor::Processor(CodeMemory *mcode, DataMemory *mdata)
   : code(mcode),
     data(mdata),
     pipe(this)
@@ -66,19 +66,19 @@ BOOL Processor::setPC(WORD32 newPC) {
   return TRUE;
 }
 
-BOOL Processor::isValidDataMemoryAddress(WORD32 ptr) const { 
-  return (data->isValidAddress(ptr)) 
+BOOL Processor::isValidDataMemoryAddress(WORD32 ptr) const {
+  return (data->isValidAddress(ptr))
              || (ptr >= MMIO && ptr <= MMIO + 16);
 }
 
-BOOL Processor::isValidCodeMemoryAddress(WORD32 ptr) const { 
+BOOL Processor::isValidCodeMemoryAddress(WORD32 ptr) const {
   return code->isValidAddress(ptr);
 }
 
 int Processor::clock_tick(RESULT *r) {
   int status = pipe.clock_tick(r);
 
-  if (status == HALTED) 
+  if (status == HALTED)
     setStatus(HALTED);
 
   return status;

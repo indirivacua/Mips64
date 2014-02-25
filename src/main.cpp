@@ -37,7 +37,7 @@ void ClearScreen() {
     setupterm( NULL, STDOUT_FILENO, &result );
     if (result <= 0) return;
   }
-  
+
   char str[] = "clear";
   putp( tigetstr( str ) );
 }
@@ -45,7 +45,7 @@ void ClearScreen() {
 int main(int argc, char **argv) {
   int grafico = 0;
   char programa[MAX_PATH + 1];
-  
+
   if (argc >= 2) {
     strncpy(programa, argv[1], MAX_PATH);
   } else {
@@ -85,11 +85,11 @@ int main(int argc, char **argv) {
 
   //std::cout << "Res de apertura de archivo: " << res << "\n";
   if (res != 0) {
-    std::cout << "Error al cargar " << programa << ", deteniendo." << std::endl; 
+    std::cout << "Error al cargar " << programa << ", deteniendo." << std::endl;
     return -1;
   }
   std::cout << "Archivo " << programa << " abierto con exito\n";
-  
+
   int i = 0;
   while (x->isRunning()) {
     x->OnExecuteSingle();
