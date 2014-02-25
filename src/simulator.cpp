@@ -227,9 +227,9 @@ int Simulator::update_io() {
     break;
   case 4:
     // need to test here if fp.u is a legal address!
-    cpu.data->getAsciiz(fp.u, az, 255);
+    data.getAsciiz(fp.u, az, 255);
 
-    if (fp.u<cpu.getDataMemorySize()) 
+    if (fp.u<data.getSize()) 
       terminal.write(std::string((const char *)az));
     break;
 
@@ -498,7 +498,7 @@ void Simulator::OnExecuteRunto() {
     status = one_cycle(FALSE);
     if (status) 
       break;
-  } while (stalls || ((!cpu.code->hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
+  } while (stalls || ((!code.hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
   simulation_running = FALSE;
   if (status == WAITING_FOR_INPUT) {
     sprintf(buf, "Simulacion Detenida luego de %d ciclos - Esperando Entrada", lapsed);
@@ -514,7 +514,7 @@ void Simulator::OnExecuteRunto() {
 int Simulator::openfile(const std::string &fname) {
   unsigned int i;
   OnFileReset();
-  cpu.data->reset(); // reset data memory
+  data.reset(); // reset data memory
   for (i = 0; i < 16; i++) 
     cpu.mm[i] = 0;
 
