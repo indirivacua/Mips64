@@ -30,9 +30,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CodeMemory {
 public:
+  CodeMemory();
   CodeMemory(WORD32);
   virtual ~CodeMemory();
 
+
+  BOOL resize(WORD32 size);
+
+  BOOL clear();
   BOOL reset();
 
   WORD32 readInstruction(WORD32 addr) const;
@@ -41,7 +46,7 @@ public:
   BOOL invalidateInstruction(WORD32 addr);
 
   BOOL isValidAddress(WORD32 addr);
-  WORD32 getMemorySize() const { return size; };
+  WORD32 getSize() const { return size; };
 
   BOOL setBreakpoint(WORD32 addr, BOOL); 
   BOOL hasBreakpoint(WORD32 addr) const; 

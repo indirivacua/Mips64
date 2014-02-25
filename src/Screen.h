@@ -20,41 +20,28 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef __DATAMEMORY_H
-#define __DATAMEMORY_H
 
+#ifndef __SCREEN_H
+#define __SCREEN_H
 
-class DataMemory {
+class Screen {
 
 public:
-  DataMemory(int);
-  virtual ~DataMemory();
+  Screen(unsigned int, unsigned int);
+  virtual ~Screen();
 
-  BOOL reset();
+  WORD32 *getScreen() const { return screen; }
+  BOOL setPixel(unsigned int x, unsigned int y, WORD32 color);
+  BOOL clear();
 
-  BOOL setAddressDescription(WORD32 addr, const std::string &description);
+  void show();
 
-  int readByte(WORD32 addr, BYTE &);
-  int readHalf(WORD32 addr, WORD16 &);
-  int readWord32(WORD32 addr, WORD32 &);
-  int readWord64(WORD32 addr, WORD64 &);
+protected:
+  unsigned int max_x;
+  unsigned int max_y;
+  WORD32 *screen;
 
-  BOOL writeByte(WORD32 addr, BYTE);
-  BOOL writeHalf(WORD32 addr, WORD16);
-  BOOL writeWord32(WORD32 addr, WORD32);
-  BOOL writeWord64(WORD32 addr, WORD64);
-
-  BOOL getAsciiz(WORD32 addr, BYTE *dst, int size);
-
-  BOOL isValidAddress(WORD32 addr);
-  WORD32 getSize() const { return size; };
-
-protected: 
-  WORD32 size;
-  BYTE *data;
-  BYTE *status;
-  std::string *line;
-
+  BOOL empty;
 };
 
 #endif

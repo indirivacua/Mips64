@@ -28,7 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mytypes.h"
 #include "utils.h"
 #include "Processor.h"
+#include "Screen.h"
 #include "assembler.h"
+
+#include "Terminal.h"
 
 // Stages
 #define IFETCH  1
@@ -64,12 +67,15 @@ class Simulator {
   void toggleForwarding();
   void toggleBtb();
 
-  CodeMemory *getCodeMemory() const { return cpu.code; }
-  DataMemory *getDataMemory() const { return cpu.data; }
+  CodeMemory *getCodeMemory() { return &code; }
+  DataMemory *getDataMemory() { return &data; }
 
  protected:
   
   Processor cpu;
+
+  DataMemory data;
+  CodeMemory code;
 
   CPUConfig *config;
   
@@ -97,6 +103,12 @@ class Simulator {
   WORD32 offset;
   
   RESULT result;
+
+  Terminal terminal;
+  Screen screen;
+
+  WORD32 keyboard;
+
   
  protected:
   void clear();

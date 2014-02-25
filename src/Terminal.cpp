@@ -20,41 +20,37 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef __DATAMEMORY_H
-#define __DATAMEMORY_H
+#include "Terminal.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 
-class DataMemory {
+Terminal::Terminal() {
+}
 
-public:
-  DataMemory(int);
-  virtual ~DataMemory();
+void Terminal::dump() {
+  if (empty()) 
+    return;
+  std::cout << "Terminal: ";
+  std::cout << getContents() << std::endl;
+  clear();
+}
 
-  BOOL reset();
+BOOL Terminal::readNumber(WORD64 *result) {
+  char line[MAX_PATH+1];
+  fgets(line, MAX_PATH, stdin); 
+  DOUBLE64 number;
+  if (strstr(line,"."))
+    number.d = atof(line);
+  else
+    number.s = atoll(line);
+  *result = number.u; 
+  return TRUE;
+}
 
-  BOOL setAddressDescription(WORD32 addr, const std::string &description);
-
-  int readByte(WORD32 addr, BYTE &);
-  int readHalf(WORD32 addr, WORD16 &);
-  int readWord32(WORD32 addr, WORD32 &);
-  int readWord64(WORD32 addr, WORD64 &);
-
-  BOOL writeByte(WORD32 addr, BYTE);
-  BOOL writeHalf(WORD32 addr, WORD16);
-  BOOL writeWord32(WORD32 addr, WORD32);
-  BOOL writeWord64(WORD32 addr, WORD64);
-
-  BOOL getAsciiz(WORD32 addr, BYTE *dst, int size);
-
-  BOOL isValidAddress(WORD32 addr);
-  WORD32 getSize() const { return size; };
-
-protected: 
-  WORD32 size;
-  BYTE *data;
-  BYTE *status;
-  std::string *line;
-
-};
-
-#endif
+BOOL Terminal::readChar(BYTE *result) {
+  *result= getchar(); 
+  return TRUE;
+}

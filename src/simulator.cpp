@@ -36,10 +36,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "assembler.h"
 
+#define GSXY 50
+
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
 
-Simulator::Simulator(CPUConfig *config) {
+Simulator::Simulator(CPUConfig *config) 
+  : cpu(&code, &data),
+    data(config->datasize),
+    code(config->codesize),
+    screen(GSXY, GSXY)
+ {
 
   this->config = config;
 
@@ -54,16 +61,18 @@ Simulator::~Simulator() {
 }
 
 void Simulator::clear() {
-	cycles = instructions = loads = stores = branch_taken_stalls = branch_misprediction_stalls = 0;
-	raw_stalls = waw_stalls = war_stalls = structural_stalls = 0;
-	cpu.setPC(0);
-	entries = 1;
-	offset = 0;
-	history[0].IR = 0;
-	history[0].start_cycle = 0;
-	history[0].status[0].stage = IFETCH;
-	multi = 5;
-	stall_type = stalls = 0;
+  cycles = instructions = loads = stores = branch_taken_stalls = branch_misprediction_stalls = 0;
+  raw_stalls = waw_stalls = war_stalls = structural_stalls = 0;
+  cpu.setPC(0);
+  entries = 1;
+  offset = 0;
+  history[0].IR = 0;
+  history[0].start_cycle = 0;
+  history[0].status[0].stage = IFETCH;
+  multi = 5;
+  stall_type = stalls = 0;
+
+  code.reset();
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -71,14 +80,17 @@ void Simulator::clear() {
 
 
 void Simulator::OnFileReset() {
-	 // Reset the processor
-	cpu.reset();
+   // Reset the processor
+  cpu.reset();
+  clear();
 }
 
 void Simulator::OnFullReset() {
-	 // Reset Data Memory as well
-	cpu.reset(TRUE);
-	clear();
+  cpu.reset(TRUE);
+
+  // Reset Data Memory as well
+  data.reset();
+  clear();
 }
 
 void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt) {
@@ -203,283 +215,247 @@ int Simulator::update_io() {
   switch (func) {
   case 1:
     sprintf(txt,"%" PRIu64 "\n", fp.u);
-    cpu.writeTerminal(txt);
-    //UpdateAllViews(NULL, 2);
+    terminal.write(txt);
     break;
   case 2:
     sprintf(txt,"%" PRIi64 "\n", fp.s);
-    cpu.writeTerminal(txt);
-    //UpdateAllViews(NULL, 2);
+    terminal.write(txt);
     break;
   case 3:
     sprintf(txt,"%lf\n", fp.d);
-    cpu.writeTerminal(txt);
-    //UpdateAllViews(NULL,2);
+    terminal.write(txt);
     break;
   case 4:
     // need to test here if fp.u is a legal address!
     cpu.data->getAsciiz(fp.u, az, 255);
 
     if (fp.u<cpu.getDataMemorySize()) 
-      cpu.writeTerminal(std::string((const char *)az));
-    //UpdateAllViews(NULL,2);
+      terminal.write(std::string((const char *)az));
     break;
 
   case 5:
     y = (WORD32) ((fp.u >> 32) & 255);
     x = (WORD32) ((fp.u >> 40) & 255);
-    cpu.drawit = TRUE;
-    if (x < GSXY && y < GSXY) {
-      cpu.setScreenPixel(x, y, (WORD32) fp.u);
-    }
-    //UpdateAllViews(NULL,2);
+    screen.setPixel(x, y, (WORD32) fp.u);
     break;
   case 6:
-    cpu.clearTerminal();
-    //UpdateAllViews(NULL,2);
+    terminal.clear();
     break;
   case 7:
-   cpu.clearScreen();
-   cpu.drawit = FALSE;
-   //UpdateAllViews(NULL,2);
+   screen.clear();
    break;
   case 8:
-/*
-    cpu.keyboard=1;
-    status=1;
-*/
-    {
-       char line[MAX_PATH+1];
-       fgets(line, MAX_PATH, stdin); 
-       DOUBLE64 number;
-       if (strstr(line,"."))
-         number.d = atof(line);
-       else
-         number.s = atoll(line);
-       *(WORD64 *)&(cpu.mm[8]) = number.u; 
-    }
+    terminal.readNumber((WORD64 *) &cpu.mm[8]);
     break;
+
   case 9:
-/*
-    cpu.keyboard=2;
-    status=1;
-*/
-    {
-      (cpu.mm[8]) = getchar(); 
-    }
+    terminal.readChar(&cpu.mm[8]);
     break;
+
   default:
     break;
   }
 
-/*
-  for (i = 0; i < cpu->Terminal.GetLength(); i++) {
-    if (cpu->Terminal[i]=='\n') {
-      ncols=0;
-    } else
-      ncols++;
-  }
-*/
   *(WORD32 *)&cpu.mm[0]=0;
   return status;
 }
 
 void Simulator::update_history() {
-	int substage, stage;
-	unsigned int i, cc;
-	WORD32 previous;
-	BOOL passed;
-	pipeline *pipe = cpu.getPipeline();
+  int substage, stage;
+  unsigned int i, cc;
+  WORD32 previous;
+  BOOL passed;
+  pipeline *pipe = cpu.getPipeline();
 
-	if (result.MEM != RAW) {
-		if (result.EX == STALLED) 
-			result.EX = STRUCTURAL;
-		if (result.DIVIDER == STALLED) 
-			result.DIVIDER = STRUCTURAL;
-		if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) 
-			result.MULTIPLIER[config->MUL_LATENCY-1] = STRUCTURAL;
-		if (result.ADDER[config->ADD_LATENCY-1] == STALLED) 
-			result.ADDER[config->ADD_LATENCY-1] = STRUCTURAL;
-	}	
+  if (result.MEM != RAW) {
+    if (result.EX == STALLED) 
+      result.EX = STRUCTURAL;
+    if (result.DIVIDER == STALLED) 
+      result.DIVIDER = STRUCTURAL;
+    if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) 
+      result.MULTIPLIER[config->MUL_LATENCY-1] = STRUCTURAL;
+    if (result.ADDER[config->ADD_LATENCY-1] == STALLED) 
+      result.ADDER[config->ADD_LATENCY-1] = STRUCTURAL;
+  }  
 
-	for (i = 0; i < entries; i++) {
-		previous = history[i].IR;
-		cc = cycles-history[i].start_cycle;
-		stage = history[i].status[cc-1].stage; // previous stage
-		substage = history[i].status[cc-1].substage;
-	
-		switch (stage) {
+  for (i = 0; i < entries; i++) {
+    previous = history[i].IR;
+    cc = cycles-history[i].start_cycle;
+    stage = history[i].status[cc-1].stage; // previous stage
+    substage = history[i].status[cc-1].substage;
+  
+    switch (stage) {
 
-		case IFETCH:
-			if (pipe->if_id.active)	{
-				if (pipe->if_id.IR == previous) {
+    case IFETCH:
+      if (pipe->if_id.active)  {
+        if (pipe->if_id.IR == previous) {
 
-					history[i].status[cc].stage = IDECODE;
-					history[i].status[cc].cause = 0;
-				} else {
-					history[i].status[cc].stage = IFETCH;
-					history[i].status[cc].cause = (BYTE) result.IF;
-				}
-			} else {
-				history[i].status[cc].stage = 0;
-				history[i].status[cc].cause = 0;
-			}
-			break;
-		case IDECODE:
-			passed = FALSE;
-			
-			if (pipe->integer.active && pipe->integer.IR == previous && result.ID != STALLED) {
-				passed = TRUE;
-				history[i].status[cc].stage = INTEX;
-				history[i].status[cc].cause = 0;
-			}
-			if (pipe->m[0].active && pipe->m[0].IR == previous && result.ID != STALLED) {
-				passed = TRUE;
-				history[i].status[cc].stage = MULEX;
-				history[i].status[cc].substage = 0;
-				history[i].status[cc].cause = 0;
-			}
-			if (pipe->a[0].active && pipe->a[0].IR == previous && result.ID != STALLED) {
-				passed = TRUE;
-				history[i].status[cc].stage = ADDEX;
-				history[i].status[cc].substage = 0;
-				history[i].status[cc].cause = 0;
-			}
-			if (pipe->div.active && pipe->div.IR == previous && result.ID != STALLED) {
-				passed = TRUE;
-				history[i].status[cc].stage = DIVEX;
-				history[i].status[cc].cause = 0;
-			}
-			
-			if (!passed) {
-				history[i].status[cc].stage = IDECODE;
-				history[i].status[cc].cause = (BYTE) result.ID;
-			}
-			break;
-		case INTEX:
-			if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
-				history[i].status[cc].stage = MEMORY;
-				history[i].status[cc].cause = 0;
-			} else {
-				history[i].status[cc].stage = INTEX;
-				history[i].status[cc].cause = (BYTE) result.EX;
-			}
-			break;
+          history[i].status[cc].stage = IDECODE;
+          history[i].status[cc].cause = 0;
+        } else {
+          history[i].status[cc].stage = IFETCH;
+          history[i].status[cc].cause = (BYTE) result.IF;
+        }
+      } else {
+        history[i].status[cc].stage = 0;
+        history[i].status[cc].cause = 0;
+      }
+      break;
+    case IDECODE:
+      passed = FALSE;
+      
+      if (pipe->integer.active && pipe->integer.IR == previous && result.ID != STALLED) {
+        passed = TRUE;
+        history[i].status[cc].stage = INTEX;
+        history[i].status[cc].cause = 0;
+      }
+      if (pipe->m[0].active && pipe->m[0].IR == previous && result.ID != STALLED) {
+        passed = TRUE;
+        history[i].status[cc].stage = MULEX;
+        history[i].status[cc].substage = 0;
+        history[i].status[cc].cause = 0;
+      }
+      if (pipe->a[0].active && pipe->a[0].IR == previous && result.ID != STALLED) {
+        passed = TRUE;
+        history[i].status[cc].stage = ADDEX;
+        history[i].status[cc].substage = 0;
+        history[i].status[cc].cause = 0;
+      }
+      if (pipe->div.active && pipe->div.IR == previous && result.ID != STALLED) {
+        passed = TRUE;
+        history[i].status[cc].stage = DIVEX;
+        history[i].status[cc].cause = 0;
+      }
+      
+      if (!passed) {
+        history[i].status[cc].stage = IDECODE;
+        history[i].status[cc].cause = (BYTE) result.ID;
+      }
+      break;
+    case INTEX:
+      if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
+        history[i].status[cc].stage = MEMORY;
+        history[i].status[cc].cause = 0;
+      } else {
+        history[i].status[cc].stage = INTEX;
+        history[i].status[cc].cause = (BYTE) result.EX;
+      }
+      break;
 
-		case MULEX:
-			if (substage == pipe->MUL_LATENCY - 1) {
-				if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
-					history[i].status[cc].stage = MEMORY;
-					history[i].status[cc].cause = 0;
-				} else {
-					history[i].status[cc].stage = MULEX;
-					history[i].status[cc].substage = (BYTE) substage;
-					history[i].status[cc].cause = (BYTE) result.MULTIPLIER[config->MUL_LATENCY - 1];
-				}
-			} else {
-				if (pipe->m[substage+1].active && pipe->m[substage+1].IR == previous) {
-					history[i].status[cc].stage = MULEX;
-					history[i].status[cc].substage = (BYTE) (substage + 1);
-					history[i].status[cc].cause = 0;
-				} else {
-					history[i].status[cc].stage = MULEX;
-					history[i].status[cc].substage = (BYTE) substage;
-					history[i].status[cc].cause = (BYTE) result.MULTIPLIER[substage];
-				}
-			}
-			break;
+    case MULEX:
+      if (substage == pipe->MUL_LATENCY - 1) {
+        if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
+          history[i].status[cc].stage = MEMORY;
+          history[i].status[cc].cause = 0;
+        } else {
+          history[i].status[cc].stage = MULEX;
+          history[i].status[cc].substage = (BYTE) substage;
+          history[i].status[cc].cause = (BYTE) result.MULTIPLIER[config->MUL_LATENCY - 1];
+        }
+      } else {
+        if (pipe->m[substage+1].active && pipe->m[substage+1].IR == previous) {
+          history[i].status[cc].stage = MULEX;
+          history[i].status[cc].substage = (BYTE) (substage + 1);
+          history[i].status[cc].cause = 0;
+        } else {
+          history[i].status[cc].stage = MULEX;
+          history[i].status[cc].substage = (BYTE) substage;
+          history[i].status[cc].cause = (BYTE) result.MULTIPLIER[substage];
+        }
+      }
+      break;
 
-		case ADDEX:
-			if (substage == pipe->ADD_LATENCY - 1) {
-				if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
-					history[i].status[cc].stage = MEMORY;
-					history[i].status[cc].cause = 0;
-				} else {
-					history[i].status[cc].stage = ADDEX;
-					history[i].status[cc].substage = (BYTE) substage;
-					history[i].status[cc].cause = (BYTE) result.ADDER[config->ADD_LATENCY-1];
-				}
-			} else {
-				if (pipe->a[substage+1].active && pipe->a[substage+1].IR == previous) {
-					history[i].status[cc].stage = ADDEX;
-					history[i].status[cc].substage = (BYTE) (substage + 1);
-					history[i].status[cc].cause = 0;
-				} else {
-					history[i].status[cc].stage = ADDEX;
-					history[i].status[cc].substage = (BYTE) substage;
-					history[i].status[cc].cause = (BYTE) result.ADDER[substage];
-				}
-			}
-			break;
-		case DIVEX:
-			if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
-				history[i].status[cc].stage = MEMORY;
-				history[i].status[cc].cause = 0;
-			} else {
-				history[i].status[cc].stage = DIVEX;
-				history[i].status[cc].cause = (BYTE) result.DIVIDER;
-			}
-			break;
+    case ADDEX:
+      if (substage == pipe->ADD_LATENCY - 1) {
+        if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
+          history[i].status[cc].stage = MEMORY;
+          history[i].status[cc].cause = 0;
+        } else {
+          history[i].status[cc].stage = ADDEX;
+          history[i].status[cc].substage = (BYTE) substage;
+          history[i].status[cc].cause = (BYTE) result.ADDER[config->ADD_LATENCY-1];
+        }
+      } else {
+        if (pipe->a[substage+1].active && pipe->a[substage+1].IR == previous) {
+          history[i].status[cc].stage = ADDEX;
+          history[i].status[cc].substage = (BYTE) (substage + 1);
+          history[i].status[cc].cause = 0;
+        } else {
+          history[i].status[cc].stage = ADDEX;
+          history[i].status[cc].substage = (BYTE) substage;
+          history[i].status[cc].cause = (BYTE) result.ADDER[substage];
+        }
+      }
+      break;
+    case DIVEX:
+      if (pipe->ex_mem.active && pipe->ex_mem.IR == previous) {
+        history[i].status[cc].stage = MEMORY;
+        history[i].status[cc].cause = 0;
+      } else {
+        history[i].status[cc].stage = DIVEX;
+        history[i].status[cc].cause = (BYTE) result.DIVIDER;
+      }
+      break;
 
-		case MEMORY:
-			if (pipe->mem_wb.active && pipe->mem_wb.IR == previous) {
-				history[i].status[cc].stage = WRITEB;
-				history[i].status[cc].cause = 0;
-			} else {
-				history[i].status[cc].stage = MEMORY;
-				history[i].status[cc].cause = (BYTE) result.MEM;
-			}
-			break;
+    case MEMORY:
+      if (pipe->mem_wb.active && pipe->mem_wb.IR == previous) {
+        history[i].status[cc].stage = WRITEB;
+        history[i].status[cc].cause = 0;
+      } else {
+        history[i].status[cc].stage = MEMORY;
+        history[i].status[cc].cause = (BYTE) result.MEM;
+      }
+      break;
 
-		case WRITEB:
-			history[i].status[cc].stage = 0;
-			history[i].status[cc].cause = 0;
-			break;
+    case WRITEB:
+      history[i].status[cc].stage = 0;
+      history[i].status[cc].cause = 0;
+      break;
 
-		default:
-			history[i].status[cc].stage = 0;
-			history[i].status[cc].cause = 0;
-		}
-	}
+    default:
+      history[i].status[cc].stage = 0;
+      history[i].status[cc].cause = 0;
+    }
+  }
 
 // make a new entry
-//	if (cpu->PC != history[entries-1].IR)
-	if ((result.ID == OK || result.ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe->active) {
-		history[entries].IR = cpu.getPC();
-		history[entries].status[0].stage = IFETCH;
-		history[entries].status[0].cause = 0;
-		history[entries].start_cycle = cycles;
-		entries++;
-	}
-	if (entries == 50) {
-		entries--;
-		for (i = 0; i < entries; i++) {
-			history[i] = history[i + 1];
-		}
-	}
+//  if (cpu->PC != history[entries-1].IR)
+  if ((result.ID == OK || result.ID == EMPTY || cpu.getPC() != history[entries-1].IR) && pipe->active) {
+    history[entries].IR = cpu.getPC();
+    history[entries].status[0].stage = IFETCH;
+    history[entries].status[0].cause = 0;
+    history[entries].start_cycle = cycles;
+    entries++;
+  }
+  if (entries == 50) {
+    entries--;
+    for (i = 0; i < entries; i++) {
+      history[i] = history[i + 1];
+    }
+  }
 }
 
 int Simulator::one_cycle(BOOL show) {
-	int status = 0;
+  int status = 0;
 
-	if (cpu.getStatus() == HALTED) 
-		return HALTED;
+  if (cpu.getStatus() == HALTED) 
+    return HALTED;
 
-	status = cpu.clock_tick(&result);
-	++cycles;
-	process_result(show);
-	update_history();
-	if (update_io()) 
-		return WAITING_FOR_INPUT;
+  status = cpu.clock_tick(&result);
+  ++cycles;
+  process_result(show);
+  update_history();
+  if (update_io()) 
+    return WAITING_FOR_INPUT;
 
-	return status;
+  return status;
 }
 
 void Simulator::OnExecuteSingle() {
-	int status = one_cycle(TRUE);
-	if (status == WAITING_FOR_INPUT) {
-	//	pStatus->SetPaneText(0,"Esperando Entrada");
-	}
+  int status = one_cycle(TRUE);
+  if (status == WAITING_FOR_INPUT) {
+  //  pStatus->SetPaneText(0,"Esperando Entrada");
+  }
 }
 
 void Simulator::OnExecuteMulticycle() {
@@ -512,11 +488,11 @@ void Simulator::OnExecuteRunto() {
   //pStatus->SetPaneText(0,"Ejecutando Simulación");
   do {
 /*
-		if (::PeekMessage(&message,NULL,0,0,PM_REMOVE))
-		{
-			::TranslateMessage(&message);
-			::DispatchMessage(&message);
-		}
+    if (::PeekMessage(&message,NULL,0,0,PM_REMOVE))
+    {
+      ::TranslateMessage(&message);
+      ::DispatchMessage(&message);
+    }
 */
     lapsed++;
     status = one_cycle(FALSE);
@@ -542,15 +518,12 @@ int Simulator::openfile(const std::string &fname) {
   for (i = 0; i < 16; i++) 
     cpu.mm[i] = 0;
 
-  cpu.clearScreen();
-  cpu.clearTerminal(); 
-  cpu.drawit = FALSE; 
-  cpu.keyboard = 0;
+  screen.clear();
+  terminal.clear(); 
   return 0;
 }
 
-void Simulator::OnFileMemory() 
-{
+void Simulator::OnFileMemory() {
   cpu.initialize(config);
   clear();
 }
@@ -576,7 +549,7 @@ void Simulator::toggleForwarding() {
 void Simulator::toggleBtb() {
   if (config->branch_target_buffer) 
     config->branch_target_buffer = FALSE;
-  else	
+  else  
     config->branch_target_buffer = TRUE;
   if (config->branch_target_buffer)
     config->delay_slot = FALSE;
@@ -600,51 +573,29 @@ void Simulator::dump_reg() {
 }
 
 void Simulator::dump_Terminal() {
-	if (cpu.emptyTerminal()) 
-		return;
-	std::cout << "Terminal: ";
-	std::cout << cpu.getTerminal() << std::endl;
-	cpu.clearTerminal();
+  terminal.dump();
 }
 
 void Simulator::show_stats() {
 
-	std::cout << "----- Estadisticas -----" << std::endl;
-	std::cout << "Ciclo(s)               : " << cycles << std::endl;
-	std::cout << "Instruccion(es)        : " << instructions << std::endl;
-	if (instructions)
-		std::cout << "CPI                    : " << (double) cycles/instructions << std::endl;
-	std::cout << "Total Loads            : " << loads << std::endl;
-	std::cout << "Total Stores           : " << stores << std::endl;
-	std::cout << "Atasco(s) RAW          : " << raw_stalls << std::endl;
-	std::cout << "Atasco(s) WAW          : " << waw_stalls << std::endl;
-	std::cout << "Atasco(s) WAR          : " << war_stalls << std::endl;
-	std::cout << "Atasco(s) Estructural  : " << structural_stalls << std::endl;
-	std::cout << "Atasco(s) Branch Taken : " << branch_taken_stalls << std::endl;
-	std::cout << "Atasco(s) Branch Mispr.: " << branch_misprediction_stalls << std::endl;
-	//std::cout << "Tamanio del Codigo     : " << codeptr << std::endl;
+  std::cout << "----- Estadisticas -----" << std::endl;
+  std::cout << "Ciclo(s)               : " << cycles << std::endl;
+  std::cout << "Instruccion(es)        : " << instructions << std::endl;
+  if (instructions)
+    std::cout << "CPI                    : " << (double) cycles/instructions << std::endl;
+  std::cout << "Total Loads            : " << loads << std::endl;
+  std::cout << "Total Stores           : " << stores << std::endl;
+  std::cout << "Atasco(s) RAW          : " << raw_stalls << std::endl;
+  std::cout << "Atasco(s) WAW          : " << waw_stalls << std::endl;
+  std::cout << "Atasco(s) WAR          : " << war_stalls << std::endl;
+  std::cout << "Atasco(s) Estructural  : " << structural_stalls << std::endl;
+  std::cout << "Atasco(s) Branch Taken : " << branch_taken_stalls << std::endl;
+  std::cout << "Atasco(s) Branch Mispr.: " << branch_misprediction_stalls << std::endl;
+  //std::cout << "Tamanio del Codigo     : " << codeptr << std::endl;
 
 }
 
 void Simulator::show_screen() {
-	std::cout << "----- Pantalla -----" << std::endl;
-	const WORD32 *pantalla = cpu.getScreen();	
-
-	for (int y = GSXY - 1; y > 0; --y) {
-	  for (int x = 0; x < GSXY; ++x) {
-		char car = '-';
-		int pixel = pantalla[x+y*GSXY];
-		switch(pixel) {
-		case BLACK: 
-			car = 'X';
-			break;
-		case WHITE:
-			car = ' ';
-			break;
-		}
-		std::cout << car;
-          }
-	  std::cout << std::endl;
-        }
+  screen.show();
 }
 

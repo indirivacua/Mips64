@@ -118,6 +118,4 @@ typedef struct {
     SIGNED32 Imm;
 } instruction;
 
-#define GSXY 50
-
 #endif

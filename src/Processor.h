@@ -47,7 +47,7 @@ typedef struct {
 class Processor {
 
 public:
-  Processor();
+  Processor(CodeMemory *code, DataMemory *data);
   virtual ~Processor();
 
   void initialize(CPUConfig *config);
@@ -63,23 +63,11 @@ public:
 
   pipeline *getPipeline() { return &pipe; }
 
-  WORD32 *getScreen() const { return screen; }
-  BOOL setScreenPixel(int x, int y, WORD32 color);
-  BOOL clearScreen();
+  BOOL isValidDataMemoryAddress (WORD32 addr) const;
+  BOOL isValidCodeMemoryAddress (WORD32 addr) const;
+  WORD32 getCodeMemorySize() const { return code->getSize(); }
+  WORD32 getDataMemorySize() const { return data->getSize(); }
 
-  BOOL writeTerminal(const std::string &msg) { this->terminal += msg; return TRUE; }
-  BOOL clearTerminal() { this->terminal = ""; return TRUE; }  
-  BOOL emptyTerminal() { return this->terminal == ""; }
-  const std::string &getTerminal() { return this->terminal; }
-
-  const BOOL isValidDataMemoryAddress(WORD32 addr);
-  const BOOL isValidCodeMemoryAddress(WORD32 addr);
-  const WORD32 getCodeMemorySize() { return config->codesize; }
-  const WORD32 getDataMemorySize() { return config->datasize; }
-
-  // Esto deberia ir o protegido o eliminado (otra clase o algo)
-  CodeMemory *code;
-  DataMemory *data;
 
   BYTE   mm[16];
 
@@ -87,8 +75,8 @@ public:
   reg    wreg[64];
   BOOL fp_cc;
 
-  BOOL drawit;
-  WORD32 keyboard;
+  CodeMemory *code;
+  DataMemory *data;
 
 protected:
   WORD32 PC;
@@ -97,11 +85,6 @@ protected:
   pipeline pipe;
   CPUConfig *config;
 
-  // A una clase Screen
-  WORD32 *screen;
-
-  // A una clase Terminal
-  std::string terminal;
 };
 
 #endif

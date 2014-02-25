@@ -20,40 +20,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef __DATAMEMORY_H
-#define __DATAMEMORY_H
 
+#ifndef __TERMINAL_H
+#define __TERMINAL_H
 
-class DataMemory {
+#include<iostream>
+
+#include "mytypes.h"
+
+class Terminal {
 
 public:
-  DataMemory(int);
-  virtual ~DataMemory();
+  Terminal();
+  BOOL write(const std::string &msg) { this->terminal += msg; return TRUE; }
+  BOOL clear() { this->terminal = ""; return TRUE; }  
+  BOOL empty() { return this->terminal == ""; }
+  const std::string &getContents() const { return this->terminal; }
 
-  BOOL reset();
+  BOOL readNumber(WORD64 *result);
+  BOOL readChar(BYTE *result);
 
-  BOOL setAddressDescription(WORD32 addr, const std::string &description);
+  void dump();
 
-  int readByte(WORD32 addr, BYTE &);
-  int readHalf(WORD32 addr, WORD16 &);
-  int readWord32(WORD32 addr, WORD32 &);
-  int readWord64(WORD32 addr, WORD64 &);
+protected:
 
-  BOOL writeByte(WORD32 addr, BYTE);
-  BOOL writeHalf(WORD32 addr, WORD16);
-  BOOL writeWord32(WORD32 addr, WORD32);
-  BOOL writeWord64(WORD32 addr, WORD64);
-
-  BOOL getAsciiz(WORD32 addr, BYTE *dst, int size);
-
-  BOOL isValidAddress(WORD32 addr);
-  WORD32 getSize() const { return size; };
-
-protected: 
-  WORD32 size;
-  BYTE *data;
-  BYTE *status;
-  std::string *line;
+  std::string terminal;
 
 };
 

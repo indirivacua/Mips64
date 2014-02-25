@@ -25,32 +25,66 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <iostream>
 
-
-CodeMemory::CodeMemory(WORD32 size) {
-        this->size = size;
-	line = new std::string[size/4];
-	assembly = new std::string[size/4];
-	mnemonic = new std::string[size/4];
-        code = new WORD32[size/4];
-        status = new BYTE[size/4];
-        reset();
+CodeMemory::CodeMemory() {
+  size     = 0;
+  line     = NULL;
+  assembly = NULL;
+  mnemonic = NULL;
+  code     = NULL;
+  status   = NULL;
 }
 
+CodeMemory::CodeMemory(WORD32 size) {
+  line     = NULL;
+  assembly = NULL;
+  mnemonic = NULL;
+  code     = NULL;
+  status   = NULL;
+  this->resize(size);
+}
+
+BOOL CodeMemory::resize(WORD32 size) {
+  delete [] line;
+  delete [] assembly;
+  delete [] mnemonic;
+  delete [] code;
+  delete [] status;
+  this->size = size;
+  line = new std::string[size/4];
+  assembly = new std::string[size/4];
+  mnemonic = new std::string[size/4];
+  code = new WORD32[size/4];
+  status = new BYTE[size/4];
+  return clear();
+}
+
+BOOL CodeMemory::clear() {
+  for (unsigned int i = 0; i < size/4; i++) {
+    this->code[i] = 0;
+    this->status[i] = CODE_VALID;
+    this->line[i] = "";
+    this->assembly[i] = "";
+    this->mnemonic[i] = "";
+  }
+  return TRUE;
+}
+
+
 CodeMemory::~CodeMemory() {
-        delete [] code;
-        delete [] status;
-	delete [] line;
-	delete [] assembly;
-	delete [] mnemonic;
+  delete [] code;
+  delete [] status;
+  delete [] line;
+  delete [] assembly;
+  delete [] mnemonic;
 }
 
 WORD32 CodeMemory::readInstruction(WORD32 addr) const {
-	return code[addr/4];
+  return code[addr/4];
 }
 
 BOOL CodeMemory::writeInstruction(WORD32 addr,
                                   WORD32 instr, 
-				  const std::string &line,
+                                  const std::string &line,
                                   const std::string &assembly,
                                   const std::string &mnemonic) {
   WORD32 pos = addr / 4;
@@ -69,7 +103,7 @@ BOOL CodeMemory::invalidateInstruction(WORD32 addr) {
 }
 
 BOOL CodeMemory::isValidAddress(WORD32 addr) {
-	return (addr <= size);
+  return (addr <= size);
 }
 
 BOOL CodeMemory::reset() {
@@ -79,27 +113,27 @@ BOOL CodeMemory::reset() {
 }
 
 BOOL CodeMemory::hasBreakpoint(WORD32 addr) const { 
-	return (status[addr] & CODE_BREAKPOINT) == CODE_BREAKPOINT;
+  return (status[addr] & CODE_BREAKPOINT) == CODE_BREAKPOINT;
 }
 
 BOOL CodeMemory::setBreakpoint(WORD32 addr, BOOL state) {
   if (state)
-  	status[addr] |= CODE_BREAKPOINT;
+    status[addr] |= CODE_BREAKPOINT;
   else
-  	status[addr] &= (0xff - CODE_BREAKPOINT);
+    status[addr] &= (0xff - CODE_BREAKPOINT);
   return TRUE;
 }
 
 BOOL CodeMemory::branchPredicted(WORD32 addr) const {
-	return (status[addr] & CODE_BRANCHPRED) == CODE_BRANCHPRED;
+  return (status[addr] & CODE_BRANCHPRED) == CODE_BRANCHPRED;
 }
 
 BOOL CodeMemory::predictBranch(WORD32 addr, BOOL state) {
   if (state)
-  	status[addr] |= CODE_BRANCHPRED;
+    status[addr] |= CODE_BRANCHPRED;
   else
-  	status[addr] &= (0xff - CODE_BRANCHPRED);
-	
+    status[addr] &= (0xff - CODE_BRANCHPRED);
+  
   return TRUE;
 }
 

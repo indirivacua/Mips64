@@ -25,29 +25,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Processor.h"
 #include "pipeline.h"
 
-Processor::Processor() : pipe(this) {
-  code = NULL;
-  data = NULL;
-  screen = NULL;
+Processor::Processor(CodeMemory *code, DataMemory *data) 
+  : pipe(this) 
+{
+  this->code = code;
+  this->data = data;
 }
 
 Processor::~Processor() {
-  delete code;
-  delete data;
-  delete[] screen;
 }
 
-void Processor::initialize(CPUConfig *config) {
+void Processor::initialize(CPUConfig *config) 
+{
     this->config = config;
-
-    delete code;
-    delete data;
-    delete[] screen;
-
-    this->code = new CodeMemory(config->codesize);
-    this->data = new DataMemory(config->datasize);
-    this->screen = new WORD32[GSXY*GSXY];
-
     this->reset(TRUE);
 }
 
@@ -64,17 +54,6 @@ void Processor::reset(BOOL full) {
       rreg[i].source = wreg[i].source = FROM_REGISTER;
   }
 
-  code->reset();
-  if (full) {
-	data->reset();
-  }
-
-  this->terminal = "";
-  this->drawit = FALSE; 
-  this->keyboard = 0;
-
-  clearScreen();
-
   fp_cc = FALSE;
 
   pipe.initialize(config);
@@ -85,25 +64,13 @@ BOOL Processor::setPC(WORD32 newPC) {
   return TRUE;
 }
 
-
-BOOL Processor::setScreenPixel(int x, int y, WORD32 color) {
-  this->screen[GSXY*y+x] = color;
-  return TRUE;
+BOOL Processor::isValidDataMemoryAddress(WORD32 ptr) const { 
+  return (data->isValidAddress(ptr)) 
+	|| (ptr >= MMIO && ptr <= MMIO + 16);
 }
 
-BOOL Processor::clearScreen() {
-  for (int i = 0; i < GSXY * GSXY; i++) 
-    this->screen[i] = WHITE;
-  return TRUE;
-}
-
-const BOOL Processor::isValidDataMemoryAddress(WORD32 ptr) { 
-  return (ptr <= config->datasize) 
-	|| (ptr >= MMIO && ptr <= MMIO+16);
-}
-
-const BOOL Processor::isValidCodeMemoryAddress(WORD32 ptr) { 
-  return ptr <= config->codesize;
+BOOL Processor::isValidCodeMemoryAddress(WORD32 ptr) const { 
+  return code->isValidAddress(ptr);
 }
 
 int Processor::clock_tick(RESULT *r) {
