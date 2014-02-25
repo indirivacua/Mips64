@@ -50,7 +50,7 @@ class PipelineHistory {
 public:
   PipelineHistory();
 
-  void update_history(unsigned int cycles, RESULT result, Processor &cpu);
+  void update_history(unsigned int cycles, const RESULT &result, Processor &cpu);
   BOOL initialize(CPUConfig *config);
 
 protected:

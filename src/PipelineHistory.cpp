@@ -43,23 +43,12 @@ BOOL PipelineHistory::initialize(CPUConfig *config) {
   return TRUE;
 }
 
-void PipelineHistory::update_history(unsigned int cycles, RESULT result, Processor &cpu) {
+void PipelineHistory::update_history(unsigned int cycles, const RESULT &result, Processor &cpu) {
   int substage, stage;
   unsigned int i, cc;
   WORD32 previous;
   BOOL passed;
   pipeline *pipe = cpu.getPipeline();
-
-  if (result.MEM != RAW) {
-    if (result.EX == STALLED) 
-      result.EX = STRUCTURAL;
-    if (result.DIVIDER == STALLED) 
-      result.DIVIDER = STRUCTURAL;
-    if (result.MULTIPLIER[this->MUL_LATENCY-1] == STALLED) 
-      result.MULTIPLIER[this->MUL_LATENCY-1] = STRUCTURAL;
-    if (result.ADDER[this->ADD_LATENCY-1] == STALLED) 
-      result.ADDER[this->ADD_LATENCY-1] = STRUCTURAL;
-  }  
 
   for (i = 0; i < entries; i++) {
     previous = history[i].IR;

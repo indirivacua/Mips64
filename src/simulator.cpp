@@ -50,10 +50,11 @@ Simulator::Simulator(CPUConfig *config)
 
   this->config = config;
 
-  cpu.initialize(config);
-
   simulation_running = FALSE;
   restart = FALSE;
+
+  cpu.initialize(config);
+  history.initialize(config);
   clear();
 }
 
@@ -118,7 +119,7 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
     std::cout << "Stall Msg: " << mess << std::endl;
 }
 
-void Simulator::process_result(BOOL show) {
+void Simulator::process_result(RESULT result, BOOL show) {
   char txt[300];
   //BOOL something = FALSE;
   if (result.WB == OK || result.WB == HALTED)
@@ -257,14 +258,30 @@ int Simulator::update_io() {
 
 int Simulator::one_cycle(BOOL show) {
   int status = 0;
+  RESULT result;
 
   if (cpu.getStatus() == HALTED) 
     return HALTED;
 
   status = cpu.clock_tick(&result);
   ++cycles;
-  process_result(show);
+  process_result(result, show);
+
+  // used to be in update_history but it is not part 
+  // Move to process_result ?? 
+  if (result.MEM != RAW) {
+    if (result.EX == STALLED) 
+      result.EX = STRUCTURAL;
+    if (result.DIVIDER == STALLED) 
+      result.DIVIDER = STRUCTURAL;
+    if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) 
+      result.MULTIPLIER[config->MUL_LATENCY-1] = STRUCTURAL;
+    if (result.ADDER[config->ADD_LATENCY-1] == STALLED) 
+      result.ADDER[config->ADD_LATENCY-1] = STRUCTURAL;
+  }  
+
   history.update_history(cycles, result, cpu);
+
   if (update_io()) 
     return WAITING_FOR_INPUT;
 
@@ -345,6 +362,7 @@ int Simulator::openfile(const std::string &fname) {
 
 void Simulator::OnFileMemory() {
   cpu.initialize(config);
+  history.initialize(config);
   clear();
 }
 

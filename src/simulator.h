@@ -78,8 +78,6 @@ class Simulator {
   int stalls;
   int amount;
   
-  RESULT result;
-
   Terminal terminal;
   Screen screen;
   PipelineHistory history;
@@ -88,7 +86,7 @@ class Simulator {
   void clear();
   int one_cycle(BOOL);
   void check_stalls(int,const char *,int, char *);
-  void process_result(BOOL);
+  void process_result(RESULT, BOOL);
   int update_io();
 
   // Generated message map functions
