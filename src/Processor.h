@@ -68,6 +68,8 @@ public:
   WORD32 getCodeMemorySize() const { return code->getSize(); }
   WORD32 getDataMemorySize() const { return data->getSize(); }
 
+  CodeMemory *getCodeMemory() { return code; }
+  DataMemory *getDataMemory() { return data; }
 
   BYTE   mm[16];
 
@@ -75,15 +77,15 @@ public:
   reg    wreg[64];
   BOOL fp_cc;
 
-  CodeMemory *code;
-  DataMemory *data;
 
 protected:
   WORD32 PC;
   int    status;
 
-  pipeline pipe;
+  CodeMemory *code;
+  DataMemory *data;
   CPUConfig *config;
+  pipeline pipe;
 
 };
 

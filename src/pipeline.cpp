@@ -78,6 +78,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 pipeline::pipeline(Processor *cpu) {
   this->cpu = cpu;
+  this->code = cpu->getCodeMemory();
+  this->data = cpu->getDataMemory();
 }
 
 void pipeline::initialize(CPUConfig *config) {
@@ -106,6 +108,7 @@ void pipeline::initialize(CPUConfig *config) {
   this->forwarding = config->forwarding;
   this->branch_target_buffer = config->branch_target_buffer;
   this->delay_slot = config->delay_slot;
+
 }
 
 /* get instruction type */
@@ -454,7 +457,7 @@ int pipeline::IF() {
 */
   if (this->active) {
     this->if_id.IR = cpu->getPC();
-    codeword = cpu->code->readInstruction(cpu->getPC());
+    codeword = this->code->readInstruction(cpu->getPC());
     /*type=*/parse(codeword, &ins);
   } else {
     /* if pipeline is inactive, deactivate the pipe */
@@ -479,7 +482,7 @@ int pipeline::IF() {
   this->if_id.NPC = cpu->getPC() + 4;
   this->if_id.predicted = FALSE;
   
-  if (!this->branch && branch_target_buffer && cpu->code->branchPredicted(cpu->getPC())) {
+  if (!this->branch && branch_target_buffer && this->code->branchPredicted(cpu->getPC())) {
     // predict branch taken
     this->if_id.NPC = cpu->getPC() + 4 + 4*ins.Imm;
     this->if_id.predicted = TRUE;
@@ -881,9 +884,9 @@ int pipeline::ID(int *rawreg) {
   if (branch_target_buffer && predictable) {
       if (branch_status == BRANCH_TAKEN) {
 	  status = BRANCH_TAKEN_STALL;
-	  if (!cpu->code->branchPredicted(this->if_id.IR))
+	  if (!this->code->branchPredicted(this->if_id.IR))
 	    { // throw in an extra stall...
-	      cpu->code->predictBranch(this->if_id.IR, TRUE);
+	      this->code->predictBranch(this->if_id.IR, TRUE);
 	      this->if_id.active = TRUE;
 	      return status;
 	    }
@@ -896,8 +899,8 @@ int pipeline::ID(int *rawreg) {
 	  if (this->if_id.predicted) {
 	    // its was predicted, but it didn't happen!
 	      status = BRANCH_MISPREDICTED_STALL;
-	      if (cpu->code->branchPredicted(this->if_id.IR)) {
-		  cpu->code->predictBranch(this->if_id.IR, FALSE);
+	      if (this->code->branchPredicted(this->if_id.IR)) {
+		  this->code->predictBranch(this->if_id.IR, FALSE);
 		  this->if_id.active = TRUE;
 		  return status;
 		}
@@ -1511,7 +1514,7 @@ int pipeline::MEM(int *rawreg) {
 	      if (mmio)
 		b = *(BYTE *)(&cpu->mm[ptr - MMIO]);
 	      else {
-		status = cpu->data->readByte(ptr, b);
+		status = this->data->readByte(ptr, b);
 	      }
 	      s = b;
 	      this->mem_wb.LMD = (s << 56) >> 56;
@@ -1520,7 +1523,7 @@ int pipeline::MEM(int *rawreg) {
 	      if (mmio)
 		b=*(BYTE *)(&cpu->mm[ptr - MMIO]);
 	      else {
-		status = cpu->data->readByte(ptr, b);
+		status = this->data->readByte(ptr, b);
 	      }
 	      u = b;
 	      this->mem_wb.LMD = (u << 56) >> 56;
@@ -1534,7 +1537,7 @@ int pipeline::MEM(int *rawreg) {
 	      if (mmio)
 		h = *(WORD16 *)(&cpu->mm[ptr - MMIO]);
 	      else {
-		  status = cpu->data->readHalf(ptr, h);
+		  status = this->data->readHalf(ptr, h);
 		}
 	      s = h;
 	      this->mem_wb.LMD = (s << 48) >> 48;
@@ -1548,7 +1551,7 @@ int pipeline::MEM(int *rawreg) {
 	      if (mmio)
 		h = *(WORD16 *)(&cpu->mm[ptr - MMIO]);
 	      else {
-		status = cpu->data->readHalf(ptr, h);
+		status = this->data->readHalf(ptr, h);
 	      }
 	      u = h;
 	      this->mem_wb.LMD=(u<<48)>>48;
@@ -1563,7 +1566,7 @@ int pipeline::MEM(int *rawreg) {
 	      if (mmio)
 		w = *(WORD32 *)(&cpu->mm[ptr - MMIO]);
 	      else {
-		status = cpu->data->readWord32(ptr, w);	
+		status = this->data->readWord32(ptr, w);	
 	      }
 	      s = w;
 	      this->mem_wb.LMD = (s<<32)>>32;
@@ -1577,7 +1580,7 @@ int pipeline::MEM(int *rawreg) {
 	      if (mmio)
 		w=*(WORD32 *)(&cpu->mm[ptr-MMIO]);
 	      else {
-		status = cpu->data->readWord32(ptr, w);	
+		status = this->data->readWord32(ptr, w);	
 	      }
 	      u = w;
 	      this->mem_wb.LMD=(u<<32)>>32;
@@ -1592,7 +1595,7 @@ int pipeline::MEM(int *rawreg) {
 	      if (mmio)
 		this->mem_wb.LMD=*(WORD64 *)(&cpu->mm[ptr-MMIO]);
 	      else {
-		status = cpu->data->readWord64(ptr, this->mem_wb.LMD);	
+		status = this->data->readWord64(ptr, this->mem_wb.LMD);	
 	      }
 	      break;
 	    default:
@@ -1621,7 +1624,7 @@ int pipeline::MEM(int *rawreg) {
 	      //if (!mmio) cpu->dstat[ptr] = WRITTEN;
 	      b=(BYTE)cpu->rreg[rB].val;
 	      if (!mmio) 
-		cpu->data->writeByte(ptr, b);
+		this->data->writeByte(ptr, b);
 	      else 
 		*(BYTE *)(&cpu->mm[ptr-MMIO]) = b;
 	      break;
@@ -1634,7 +1637,7 @@ int pipeline::MEM(int *rawreg) {
 	      //if (!mmio) for (i=0;i<2;i++) cpu->dstat[ptr+i] = WRITTEN;
 	      h = (WORD16)cpu->rreg[rB].val;
 	      if (!mmio) 
-		cpu->data->writeHalf(ptr, h);
+		this->data->writeHalf(ptr, h);
 	      else 
 		*(WORD16 *)(&cpu->mm[ptr-MMIO]) = h;
 	      break;
@@ -1646,7 +1649,7 @@ int pipeline::MEM(int *rawreg) {
 	      //if (!mmio) for (i=0;i<4;i++) cpu->dstat[ptr+i] = WRITTEN;
 	      w=(WORD32)cpu->rreg[rB].val;
 	      if (!mmio) 
-		cpu->data->writeWord32(ptr, w); 
+		this->data->writeWord32(ptr, w); 
 	      else 
 		*(WORD32 *)(&cpu->mm[ptr-MMIO]) = w;
 	      break;
@@ -1658,7 +1661,7 @@ int pipeline::MEM(int *rawreg) {
 		}
 	      //if (!mmio) for (i=0;i<8;i++) cpu->dstat[ptr+i] = WRITTEN;
 	      if (!mmio) 
-		cpu->data->writeWord64(ptr, cpu->rreg[rB].val); 
+		this->data->writeWord64(ptr, cpu->rreg[rB].val); 
 	      else *(WORD64 *)(&cpu->mm[ptr-MMIO]) = cpu->rreg[rB].val;
 	      break;
 	    default:

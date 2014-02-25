@@ -25,18 +25,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "Processor.h"
 #include "pipeline.h"
 
-Processor::Processor(CodeMemory *code, DataMemory *data) 
-  : pipe(this) 
+Processor::Processor(CodeMemory *mcode, DataMemory *mdata) 
+  : code(mcode),
+    data(mdata),
+    pipe(this)
 {
-  this->code = code;
-  this->data = data;
 }
 
 Processor::~Processor() {
 }
 
-void Processor::initialize(CPUConfig *config) 
-{
+void Processor::initialize(CPUConfig *config)  {
     this->config = config;
     this->reset(TRUE);
 }

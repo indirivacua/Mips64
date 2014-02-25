@@ -108,6 +108,8 @@ typedef struct {
 
 
 class Processor;
+class CodeMemory;
+class DataMemory;
 
 class pipeline {
 
@@ -160,6 +162,8 @@ protected:
     WORD32 destination;
 
     Processor *cpu;
+    CodeMemory *code;
+    DataMemory *data;
  
 };
 
