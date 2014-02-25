@@ -71,11 +71,14 @@ public:
   CodeMemory *getCodeMemory() { return code; }
   DataMemory *getDataMemory() { return data; }
 
+  BOOL hasFPFlagOn() const { return fp_cc; } 
+  BOOL hasFPFlagOff() const { return !fp_cc; } 
+  BOOL setFPFlag(BOOL state) { fp_cc = state; return TRUE; } 
+
   BYTE   mm[16];
 
   reg    rreg[64];
   reg    wreg[64];
-  BOOL fp_cc;
 
 
 protected:
@@ -87,6 +90,8 @@ protected:
   CPUConfig *config;
   pipeline pipe;
 
+  // Flag FP 
+  BOOL fp_cc;
 };
 
 #endif

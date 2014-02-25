@@ -797,12 +797,12 @@ int pipeline::ID(int *rawreg) {
     //branch_complete = TRUE;
     branch_status = BRANCH_NOT_TAKEN;
     predictable = TRUE;
-    if (ins.tf && cpu->fp_cc) {
+    if (ins.tf && cpu->hasFPFlagOn()) {
 	branch_status = BRANCH_TAKEN;
 	this->branch = TRUE;
 	this->destination = this->if_id.NPC+4*this->if_id.ins.Imm;
       }
-    if (!ins.tf && !cpu->fp_cc) {
+    if (!ins.tf && cpu->hasFPFlagOff()) {
 	branch_status = BRANCH_TAKEN;
 	this->branch = TRUE;
 	this->destination = this->if_id.NPC+4*this->if_id.ins.Imm;
@@ -1414,16 +1414,19 @@ int pipeline::EX_INT(int *rawreg) {
       if (!available(rB)) {*rawreg = rB; return RAW;}
       fpA.u = cpu->rreg[rA].val;
       fpB.u = cpu->rreg[rB].val;
-      cpu->fp_cc = FALSE;
+      cpu->setFPFlag(FALSE);
       switch (function)	{
 	case F_C_LT_D:
-	  if (fpA.d< fpB.d) cpu->fp_cc = TRUE;
+	  if (fpA.d< fpB.d) 
+            cpu->setFPFlag(TRUE);
 	  break;
 	case F_C_LE_D:
-	  if (fpA.d <= fpB.d) cpu->fp_cc = TRUE;
+	  if (fpA.d <= fpB.d)
+            cpu->setFPFlag(TRUE);
 	  break;
 	case F_C_EQ_D:
-	  if (fpA.d == fpB.d) cpu->fp_cc = TRUE;
+	  if (fpA.d == fpB.d)
+            cpu->setFPFlag(TRUE);
 	  break;
 	  
 	}
