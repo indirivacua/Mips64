@@ -33,27 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Terminal.h"
 
-// Stages
-#define IFETCH  1
-#define IDECODE 2
-#define INTEX   3
-#define ADDEX   4
-#define MULEX   5
-#define DIVEX   6
-#define MEMORY  7
-#define WRITEB  8
-
-typedef struct {
-	BYTE stage;
-	BYTE substage;
-	BYTE cause;
-} entry;
-
-typedef struct {
-	WORD32 IR;
-	WORD32 start_cycle;
-	entry status[500];
-} record;
+#include "PipelineHistory.h"
 
 class Simulator {
  public: // create from serialization only
@@ -98,27 +78,19 @@ class Simulator {
   int stalls;
   int amount;
   
-  record history[50];
-  WORD32 entries;
-  WORD32 offset;
-  
   RESULT result;
 
   Terminal terminal;
   Screen screen;
+  PipelineHistory history;
 
-  WORD32 keyboard;
-
-  
  protected:
   void clear();
   int one_cycle(BOOL);
   void check_stalls(int,const char *,int, char *);
   void process_result(BOOL);
-  void update_history();
   int update_io();
 
-  
   // Generated message map functions
  public:
   void OnFileReset();
