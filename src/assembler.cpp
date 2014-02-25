@@ -494,13 +494,13 @@ int Assembler::first_pass(const char *line, int lineptr) {
 }
 
 int Assembler::second_pass(const char *line, int /* lineptr */) {
-  WORD32 w, byte;
+  WORD32 w/*, byte*/;
   WORD32 op, code_word = 0;
   WORD32 flags = 0;
   int instruct;
   const char *start, *end, *fin;
   int rs, rt, rd, sub, type;
-  BOOL sign, error = TRUE;
+  BOOL /*sign, */error = TRUE;
   
   const char *ptr = line;
   ptr = eatwhite(ptr);
@@ -539,8 +539,8 @@ int Assembler::second_pass(const char *line, int /* lineptr */) {
   //ptr = eatwhite(ptr); 
   fin = ptr;
   rs = rt = rd = 0;
-  w = 0; byte = 0; flags = 0;
-  sign = TRUE;
+  w = 0; /*byte = 0;*/ flags = 0;
+  /*sign = TRUE;*/
   
   switch (sub) {
   case NOP:
