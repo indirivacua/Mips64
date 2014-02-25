@@ -2,7 +2,6 @@ Por Hacer:
 ----------
 
 - Hay que reorganizar muchooooooooo codigo
-  - Sacar memorias de la clase CPU y darselas al simulador
   - Metodos para configurar el simulador
   - La entrada/salida esta "muy cableada", ver si se puede separar
   - Emprolijar las clases, eliminar de la visibilidad publica todo
