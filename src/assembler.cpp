@@ -475,7 +475,7 @@ int Assembler::first_pass(const char *line, int lineptr) {
       std::cout << txt << "\n";
       return 1;
     }
-    codeptr = alignment(codeptr,4);
+    codeptr = alignment(codeptr, 4);
     codeptr += 4;
     if (!code->isValidAddress(codeptr)) {
       sprintf(txt,"Pasada 1 - Error en linea %d\nNo existe esa ubicacion de memoria", lineptr);
@@ -679,7 +679,7 @@ int Assembler::second_pass(const char *line, int /* lineptr */) {
 
   case JUMP:
   case BC:
-    if (!getcodesym(ptr,&w)) break;
+    if (!getcodesym(ptr, &w)) break;
     w -= (codeptr + 4);   /* relative jump */
     w  = (SIGNED32) w/4;
     if (eatwhite(ptr) != NULL) break;
@@ -720,12 +720,12 @@ int Assembler::second_pass(const char *line, int /* lineptr */) {
     switch (type) {
     case I_TYPE:
       if (in_range(w, 0xffff))
-        code_word = op | rs<<21 | rt<<16 | (w & 0xffff);
+        code_word = op | rs << 21 | rt << 16 | (w & 0xffff);
       else error = TRUE;
       break;
     case R_TYPE:
       if (in_range(flags, 0x1F))
-        code_word = (op | rs<<21 | rt << 16 | rd<<11 | flags<<6);
+        code_word = (op | rs << 21 | rt << 16 | rd << 11 | flags << 6);
       else error = TRUE;
       break;
     case J_TYPE:
@@ -971,7 +971,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
         data->writeWord64(dataptr, fw);
         dataptr += 8;
         while ((ptr = skip(ptr, ',')) != NULL) {
-          if (!getfullnum(ptr,&fw))
+          if (!getfullnum(ptr, &fw))
             return FALSE;
           //printf("         %08x\n", num);
           data->writeWord64(dataptr, fw);
@@ -1056,7 +1056,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
         }
     }
     if (pass == 2) {
-      if (!getnum(ptr,&num))
+      if (!getnum(ptr, &num))
         return FALSE;
       if (!in_range(num, 0xff))
         return FALSE;
@@ -1065,9 +1065,9 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
         data->writeByte(dataptr, (unsigned char) num);
         ++dataptr;
         while ((ptr = skip(ptr, ',')) != NULL) {
-          if (!getnum(ptr,&num))
+          if (!getnum(ptr, &num))
             return FALSE;
-          if (!in_range(num,0xff))
+          if (!in_range(num, 0xff))
             return FALSE;
           data->writeByte(dataptr, (unsigned char) num);
           ++dataptr;
@@ -1106,7 +1106,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
         data->writeWord64(dataptr, db.u);
         dataptr += 8;
             while ((ptr = skip(ptr, ',')) != NULL) {
-          if (!getdouble(ptr,&db.d)) return FALSE;
+          if (!getdouble(ptr, &db.d)) return FALSE;
           //   printf("         %08x\n", num);
                 data->writeWord64(dataptr, db.u);
                 dataptr += 8;
@@ -1127,7 +1127,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
 
   case 9:    // .org
     if (CODEORDATA == DATA) {
-        if (!getnum(ptr,&num))
+        if (!getnum(ptr, &num))
           return FALSE;
         if (num < dataptr /* || num>DATASIZE*/ )
           return FALSE;

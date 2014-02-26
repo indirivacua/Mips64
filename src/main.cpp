@@ -65,19 +65,17 @@ int main(int argc, char **argv) {
   if (res == 1) {
   char txt[512];
   sprintf(txt, "No se pudo abrir el archivo %s", programa);
-  //AfxMessageBox(txt,MB_OK|MB_ICONEXCLAMATION);
+  //AfxMessageBox(txt, MB_OK | MB_ICONEXCLAMATION);
   std::cout << txt << std::endl;
   return res;
   }
   if (res == 2) {
-  //AfxMessageBox("Errores detectados en 1ra Pasada");
-  std::cout << "Errores detectados en 1ra Pasada" << std::endl;
-  return res;
+    std::cout << "Errores detectados en 1ra Pasada" << std::endl;
+    return res;
   }
   if (res == 3) {
-  //AfxMessageBox("Errores detectados en 2da Pasada");
-  std::cout << "Errores detectados en 2da Pasada" << std::endl;
-  return res;
+    std::cout << "Errores detectados en 2da Pasada" << std::endl;
+    return res;
   }
   //AfxGetMainWnd()->SetWindowText("WinMIPS64 - Simulador de Procesador MIPS64 - " + fname);
 

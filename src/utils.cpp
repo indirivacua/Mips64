@@ -40,8 +40,8 @@ BOOL in_range(WORD32 num, WORD32 mask) {
 }
 
 /* align objects on num-byte boundaries */
-int alignment(int ptr,int num) {
-    int t,r = ptr;
+int alignment(int ptr, int num) {
+    int t, r = ptr;
     t = r%num;
     if (t > 0)
       r += num-t;
@@ -69,7 +69,7 @@ int compare(const char *ptr1, const char *ptr2) {
 
 WORD64 strtoint64(const char *ptr, const char **end, int b) {
   WORD64 n = 0;
-    int ch,s = 0;
+    int ch, s = 0;
     int base = 10;
 
     while (*ptr == ' ' || *ptr == 9)
@@ -97,26 +97,26 @@ WORD64 strtoint64(const char *ptr, const char **end, int b) {
     for (;;) {
       ch=*ptr;
       if (base == 8) {
-        if (ch<'0' || ch>'7')
+        if (ch < '0' || ch > '7')
           break;
-        n = n * base+(ch - '0');
+        n = n * base + (ch - '0');
       }
       if (base == 10) {
         if (ch < '0' || ch > '9')
           break;
-        n = n * base+(ch - '0');
+        n = n * base + (ch - '0');
       }
       if (base == 16) {
-        if ((ch<'0' || ch>'9') &&
+        if ((ch < '0' || ch > '9') &&
             (ch < 'A' || ch > 'F') &&
             (ch < 'a' || ch > 'f'))
           break;
         if (ch >= '0' && ch <= '9')
-          n = n * base+(ch - '0');
+          n = n * base + (ch - '0');
         if (ch >= 'A' && ch <= 'F')
           n = n * base + 10 + (ch - 'A');
         if (ch >= 'a' && ch <= 'f')
-          n = n * base + 10 +(ch - 'a');
+          n = n * base + 10 + (ch - 'a');
       }
       ptr++;
     }

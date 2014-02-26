@@ -93,8 +93,8 @@ void Processor::dump() {
   DOUBLE64 db;
 
   for (int i = 0; i < 32; i++) {
-   db.s = rreg[i+32].val;
-   printf("F%02i = %016.8f%s", i, db.d, ((i+1)%4)?"\t":"\n");
+   db.s = rreg[i + 32].val;
+   printf("F%02i = %016.8f%s", i, db.d, ((i + 1)%4)?"\t":"\n");
   }
 
 }

@@ -125,7 +125,7 @@ void PipelineHistory::update_history(unsigned int cycles, const RESULT &result, 
           history[i].status[cc].cause = (BYTE) result.MULTIPLIER[this->MUL_LATENCY - 1];
         }
       } else {
-        if (pipe->m[substage+1].active && pipe->m[substage+1].IR == previous) {
+        if (pipe->m[substage + 1].active && pipe->m[substage + 1].IR == previous) {
           history[i].status[cc].stage = MULEX;
           history[i].status[cc].substage = (BYTE) (substage + 1);
           history[i].status[cc].cause = 0;
@@ -148,7 +148,7 @@ void PipelineHistory::update_history(unsigned int cycles, const RESULT &result, 
           history[i].status[cc].cause = (BYTE) result.ADDER[this->ADD_LATENCY-1];
         }
       } else {
-        if (pipe->a[substage+1].active && pipe->a[substage+1].IR == previous) {
+        if (pipe->a[substage + 1].active && pipe->a[substage + 1].IR == previous) {
           history[i].status[cc].stage = ADDEX;
           history[i].status[cc].substage = (BYTE) (substage + 1);
           history[i].status[cc].cause = 0;

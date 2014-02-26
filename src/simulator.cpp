@@ -328,7 +328,7 @@ void Simulator::OnExecuteRunto() {
   //pStatus->SetPaneText(0,"Ejecutando Simulación");
   do {
 /*
-    if (::PeekMessage(&message,NULL,0,0,PM_REMOVE))
+    if (::PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
     {
       ::TranslateMessage(&message);
       ::DispatchMessage(&message);

@@ -39,7 +39,7 @@ void Terminal::dump() {
 }
 
 BOOL Terminal::readNumber(WORD64 *result) {
-  char line[MAX_PATH+1];
+  char line[MAX_PATH + 1];
   fgets(line, MAX_PATH, stdin);
   DOUBLE64 number;
   if (strstr(line,"."))
