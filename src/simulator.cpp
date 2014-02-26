@@ -255,7 +255,7 @@ int Simulator::update_io() {
     break;
   }
 
-  *(WORD32 *)&cpu.mm[0]=0;
+  *(WORD32 *)&cpu.mm[0] = 0;
   return status;
 }
 

@@ -451,7 +451,7 @@ int pipeline::IF() {
 /*
   if (cpu->cstat != NULL)
   if (cpu->cstat[cpu->PC]) {
-  //cpu->cstat[cpu->PC]=0; // Clear Break-point
+  //cpu->cstat[cpu->PC] = 0; // Clear Break-point
     return BREAK;          // Break
   }
 */
@@ -986,7 +986,7 @@ int pipeline::EX_DIV(int *rawreg) {
             this->div.cycles--;
             status = OK;
           }
-      if (this->div.cycles==0) {
+      if (this->div.cycles == 0) {
           if (!this->ex_mem.active)
             { /*  finish divide  */
 
@@ -1103,7 +1103,8 @@ void pipeline::EX_ADD(int *rawreg, int *status) {
   id_ex_reg idle;
 
   ADDS = this->ADD_LATENCY;
-  for (i=0;i<ADDS;i++) status[i] = OK;
+  for (i = 0;i < ADDS; i++) 
+    status[i] = OK;
   ins = this->a[ADDS-1].ins;
   idle.active = FALSE;
   if (this->a[ADDS-1].active) {
@@ -1228,7 +1229,7 @@ int pipeline::EX_INT(int *rawreg) {
         default:
           break;
         }
-      if (forwarding && ins.rt!=0)
+      if (forwarding && ins.rt != 0)
         {
           cpu->wreg[ins.rt].val = this->ex_mem.ALUOutput;
           cpu->wreg[ins.rt].source = FROM_EX;
@@ -1332,12 +1333,16 @@ int pipeline::EX_INT(int *rawreg) {
           this->ex_mem.ALUOutput = fpA.u ^ fpB.u;
           break;
         case R_SLT:
-          if (fpA.s < fpB.s) this->ex_mem.ALUOutput=1;
-          else               this->ex_mem.ALUOutput=0;
+          if (fpA.s < fpB.s)
+            this->ex_mem.ALUOutput = 1;
+          else
+            this->ex_mem.ALUOutput = 0;
           break;
         case R_SLTU:
-          if (fpA.u < fpB.u) this->ex_mem.ALUOutput=1;
-          else               this->ex_mem.ALUOutput=0;
+          if (fpA.u < fpB.u)
+            this->ex_mem.ALUOutput = 1;
+          else
+            this->ex_mem.ALUOutput = 0;
           break;
         case R_DADD:
           rlt = fpA.s + fpB.s;
@@ -1366,12 +1371,16 @@ int pipeline::EX_INT(int *rawreg) {
           this->ex_mem.ALUOutput = fpA.s >> (fpB.u & 0x3F);
           break;
         case R_MOVZ:
-          if (fpB.u==0) this->ex_mem.ALUOutput = fpA.u;
-          else condition = FALSE;
+          if (fpB.u == 0) 
+            this->ex_mem.ALUOutput = fpA.u;
+          else
+            condition = FALSE;
           break;
         case R_MOVN:
-          if (fpB.u!=0) this->ex_mem.ALUOutput = fpA.u;
-          else condition = FALSE;
+          if (fpB.u != 0) 
+            this->ex_mem.ALUOutput = fpA.u;
+          else
+            condition = FALSE;
           break;
         default:
           break;
@@ -1401,7 +1410,7 @@ int pipeline::EX_INT(int *rawreg) {
       unavail(BOTH, ins.rt);
       fpA.u = cpu->rreg[rA].val;
       this->ex_mem.ALUOutput = fpA.s;
-      if (forwarding && ins.rt!=0) {
+      if (forwarding && ins.rt != 0) {
           cpu->wreg[ins.rt].val = this->ex_mem.ALUOutput;
           cpu->wreg[ins.rt].source = FROM_EX;
         }
@@ -1548,7 +1557,7 @@ int pipeline::MEM(int *rawreg) {
             case I_LHU:
               if (ptr % 2 != 0) {
                   status = DATA_MISALIGNED;
-                  this->mem_wb.LMD=0;
+                  this->mem_wb.LMD = 0;
                   break;
                 }
               if (mmio)
@@ -1557,10 +1566,10 @@ int pipeline::MEM(int *rawreg) {
                 status = this->data->readHalf(ptr, h);
               }
               u = h;
-              this->mem_wb.LMD=(u<<48)>>48;
+              this->mem_wb.LMD = (u << 48) >> 48;
               break;
             case I_LW:
-              if (ptr%4!=0)
+              if (ptr%4 != 0)
                 {
                   status = DATA_MISALIGNED;
                   this->mem_wb.LMD = 0;
@@ -1577,7 +1586,7 @@ int pipeline::MEM(int *rawreg) {
             case I_LWU:
               if (ptr % 4 != 0) {
                 status = DATA_MISALIGNED;
-                this->mem_wb.LMD=0;
+                this->mem_wb.LMD = 0;
                 break;
               }
               if (mmio)
@@ -1637,7 +1646,7 @@ int pipeline::MEM(int *rawreg) {
                   break;
                 }
 
-              //if (!mmio) for (i=0;i<2;i++) cpu->dstat[ptr+i] = WRITTEN;
+              //if (!mmio) for (i = 0; i < 2; i++) cpu->dstat[ptr + i] = WRITTEN;
               h = (WORD16)cpu->rreg[rB].val;
               if (!mmio)
                 this->data->writeHalf(ptr, h);
@@ -1649,8 +1658,8 @@ int pipeline::MEM(int *rawreg) {
                   status = DATA_MISALIGNED;
                   break;
                 }
-              //if (!mmio) for (i=0;i<4;i++) cpu->dstat[ptr+i] = WRITTEN;
-              w=(WORD32)cpu->rreg[rB].val;
+              //if (!mmio) for (i = 0; i < 4; i++) cpu->dstat[ptr + i] = WRITTEN;
+              w = (WORD32)cpu->rreg[rB].val;
               if (!mmio)
                 this->data->writeWord32(ptr, w);
               else
@@ -1662,7 +1671,7 @@ int pipeline::MEM(int *rawreg) {
                   status = DATA_MISALIGNED;
                   break;
                 }
-              //if (!mmio) for (i=0;i<8;i++) cpu->dstat[ptr+i] = WRITTEN;
+              //if (!mmio) for (i = 0; i < 8; i++) cpu->dstat[ptr+i] = WRITTEN;
               if (!mmio)
                 this->data->writeWord64(ptr, cpu->rreg[rB].val);
               else *(WORD64 *)(&cpu->mm[ptr-MMIO]) = cpu->rreg[rB].val;
@@ -1724,7 +1733,7 @@ int pipeline::WB() {
   switch (type) {
     case LOAD:
     case FLOAD:
-      if (ins.rt==0) break;
+      if (ins.rt == 0) break;
       if (!forwarding) {
           make_available(ins.rt, this->mem_wb.LMD);
         } else {
@@ -1737,7 +1746,7 @@ int pipeline::WB() {
     case REG1I:
     case REG2I:
     case REGDI:
-      if (ins.rt==0) break;
+      if (ins.rt == 0) break;
       if (!forwarding) {
           make_available(ins.rt, this->mem_wb.ALUOutput);
         } else {
@@ -1747,7 +1756,8 @@ int pipeline::WB() {
       break;
     case REGID:
     case REG2F:
-      if (ins.rd==0) break;
+      if (ins.rd == 0)
+        break;
       if (!forwarding) {
           make_available(ins.rd, this->mem_wb.ALUOutput);
         } else {
@@ -1759,7 +1769,7 @@ int pipeline::WB() {
     case REG3X:
     case REG2S:
     case REG3F:
-      if (ins.rd==0 || !condition) break;
+      if (ins.rd == 0 || !condition) break;
       if (!forwarding) {
                         make_available(ins.rd, this->mem_wb.ALUOutput);
         } else {

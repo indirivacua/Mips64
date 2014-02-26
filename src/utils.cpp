@@ -75,15 +75,15 @@ WORD64 strtoint64(const char *ptr, const char **end, int b) {
     while (*ptr == ' ' || *ptr == 9)
       ptr++;
     if (*ptr == '-') {
-      s=1;
+      s = 1;
       ptr++;
-    } else if (*ptr=='+')
+    } else if (*ptr == '+')
       ptr++;
     while (*ptr == ' ' || *ptr == 9)
       ptr++;
 
     if (b > 0)
-      base=b;
+      base = b;
     else {
       if (*ptr == '0') {
         ptr++;

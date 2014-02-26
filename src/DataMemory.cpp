@@ -67,7 +67,7 @@ int DataMemory::readByte(WORD32 addr, BYTE &data) {
 }
 
 int DataMemory::readHalf(WORD32 addr, WORD16 &data) {
-  for (int i=0; i < 2; ++i)
+  for (int i = 0; i < 2; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
   if (addr % 2)
@@ -78,7 +78,7 @@ int DataMemory::readHalf(WORD32 addr, WORD16 &data) {
 }
 
 int DataMemory::readWord32(WORD32 addr, WORD32 &data) {
-  for (int i=0; i < 4; ++i)
+  for (int i = 0; i < 4; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
   if (addr % 4)
@@ -89,7 +89,7 @@ int DataMemory::readWord32(WORD32 addr, WORD32 &data) {
 }
 
 int DataMemory::readWord64(WORD32 addr, WORD64 &data) {
-  for (int i=0; i < 8; ++i)
+  for (int i = 0; i < 8; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
   if (addr % 8)

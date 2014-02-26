@@ -93,7 +93,7 @@ BOOL getdouble(const char *&ptr, double *num) {
   if (ptr == NULL)
     return FALSE;
 
-  //  if (*ptr=='#') ptr++;   /* skip over # */
+  //  if (*ptr == '#') ptr++;   /* skip over # */
   if (!isdigit(*ptr) && *ptr != '.' && *ptr != '-' && *ptr != '+')
     return FALSE;
 
@@ -134,7 +134,7 @@ int getreg(const char *&ptr) {
     return -1;
 
   /* check for register pseudo-name */
-  type=0;
+  type = 0;
   if (strncmp(ptr,"zero", 4) == 0) {
     n = 0;
     ptr += 4;
@@ -166,7 +166,7 @@ int getreg(const char *&ptr) {
     return n;
   }
   if (strncmp(ptr,"v", 1) == 0) {
-    type=1;
+    type = 1;
     ptr++;
   }
   if (strncmp(ptr,"a", 1) == 0) {
@@ -257,7 +257,7 @@ BOOL getnum(const char *&ptr, WORD32 *n) {
   ptr = eatwhite(ptr);
   if (ptr == NULL)
     return FALSE;
-  //if (*ptr=='#') ptr++;   // skip over #
+  //if (*ptr == '#') ptr++;   // skip over #
   if (!isdigit(*ptr) && *ptr != '-' && *ptr != '+')
     return FALSE;
 
@@ -284,7 +284,7 @@ BOOL getfullnum(const char *&ptr, WORD64 *num) {
   if (ptr == NULL)
     return FALSE;
 
-   //if (*ptr=='#') ptr++;   // skip over #
+   //if (*ptr == '#') ptr++;   // skip over #
   if (!isdigit(*ptr) && *ptr != '-' && *ptr != '+')
     return FALSE;
 
@@ -388,7 +388,7 @@ int Assembler::openit(const std::string &fname) {
       // replace Tabs with 2 spaces
       if (preline[i] == '\t')
         for (k = 0; k < 2; k++)
-          line[j++]=' ';
+          line[j++] = ' ';
         else
           line[j++] = preline[i];
       if (preline[i] == 0) {
@@ -807,7 +807,7 @@ int Assembler::instruction(const char *start) {
 
   text[i] = 0;    /* terminate it */
 
-  for (i=0; ; i++) {
+  for (i = 0; ; i++) {
     if (codes[i].name == NULL)
       return -1;
     if (strcmp(text, codes[i].name) == 0)
@@ -858,10 +858,13 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
   case 5:     // .ascii
     zero = FALSE;
   case 1:     // .asciiz
-    if (CODEORDATA == CODE) return FALSE;
+    if (CODEORDATA == CODE)
+      return FALSE;
     ptr = eatwhite(ptr);
-    if (ptr == NULL) return -1;
-    if (*ptr!='"' && *ptr!='\'') return -1;
+    if (ptr == NULL)
+      return -1;
+    if (*ptr != '"' && *ptr != '\'')
+      return -1;
     sc = *ptr;    // character to indicate end of string
 
     ++ptr;
@@ -875,7 +878,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
     //  Por ahora se pone iptr como char *, en lugar de const char *, y cuando se asigna
     //  lo asignamos con un cast. Cuando este arreglado, iptr deberia ser const (o desaparecer)
     //  Notar la linea mas abajo que es la que hace el trabajo sucio:
-    //            if (zero) *iptr=0;     // stuff in a zero
+    //            if (zero) *iptr = 0;     // stuff in a zero
 
 
     iptr = (char *) ptr;
@@ -984,7 +987,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
     if (pass == 1) {
       if (CODEORDATA == DATA) {
         do {
-          dataptr+=4;
+          dataptr += 4;
         } while ((ptr = skipover(ptr, ',')) != NULL);
         if (!data->isValidAddress(dataptr))
           return FALSE;
@@ -1013,7 +1016,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
     if (pass == 1) {
       if (CODEORDATA == DATA) {
         do {
-          dataptr+=2;
+          dataptr += 2;
         } while ((ptr = skipover(ptr, ',')) != NULL);
         if (!data->isValidAddress(dataptr))
           return FALSE;
@@ -1140,7 +1143,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
       if (num < codeptr || code->isValidAddress(num))
         return FALSE;
       codeptr = alignment(num, 4);
-      //if (pass==2)
+      //if (pass == 2)
       //  printf("%08x          %s", codeptr, line);
       return TRUE;
     }
