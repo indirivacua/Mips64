@@ -23,9 +23,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __DATAMEMORY_H
 #define __DATAMEMORY_H
 
-#include<map>
+#include<vector>
 
 class MemoryRegion;
+
+typedef struct {
+  std::string name;
+  MemoryRegion *mem;
+  WORD32 start;
+  int size;
+} RegionInfo;
 
 class DataMemory {
 
@@ -54,15 +61,15 @@ public:
 
 protected:
 
-  MemoryRegion *getRegion(WORD32 addr);
-  BOOL registerRegion(MemoryRegion *m, WORD32 addr, int size);
+  MemoryRegion *getRegion(WORD32 addr, WORD32 &newaddr);
+  BOOL registerRegion(const std::string &name, MemoryRegion *m, WORD32 addr, int size);
 
   WORD32 size;
   BYTE *data;
   BYTE *status;
   std::string *line;
 
-  MemoryRegion *regions;
+  std::vector<RegionInfo> regions;
 
 };
 
