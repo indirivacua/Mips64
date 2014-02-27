@@ -170,7 +170,7 @@ static int get_type(WORD32 instruct) {
   if (opcode == I_HALT)
     type = HALT;
 
-    return type;
+  return type;
 }
 
 static int parse(WORD32 instruct, instruction *ins) {
@@ -336,8 +336,10 @@ static int parse(WORD32 instruct, instruction *ins) {
 BOOL pipeline::available(int r) {
   if (r == 0)
     return TRUE;
+
   if (cpu->rreg[r].source <= NOT_AVAILABLE)
     return FALSE;
+
   return TRUE;
 }
 
@@ -394,7 +396,7 @@ BOOL pipeline::waw(int type, int function, int r) {
   case REG1I:
   case REG2I:
   case REG2S:
-    if (this->div.active && this->div.cycles<this->DIV_LATENCY && this->div.ins.rd == r)
+    if (this->div.active && this->div.cycles < this->DIV_LATENCY && this->div.ins.rd == r)
       return TRUE;
     for (i = 1; i < this->MUL_LATENCY; i++)
       if (this->m[i].active && this->m[i].ins.rd == r)
@@ -414,7 +416,7 @@ BOOL pipeline::waw(int type, int function, int r) {
     case F_MUL_D:
     case R_DMUL:
     case R_DMULU:
-      if (this->div.active && this->div.cycles<this->DIV_LATENCY && this->div.ins.rd == r)
+      if (this->div.active && this->div.cycles < this->DIV_LATENCY && this->div.ins.rd == r)
         return TRUE;
       for (i = 1; i < this->ADD_LATENCY; i++)
         if (this->a[i].active && this->a[i].ins.rd == r)
@@ -422,7 +424,7 @@ BOOL pipeline::waw(int type, int function, int r) {
       break;
     case F_ADD_D:
     case F_SUB_D:
-      if (this->div.active && this->div.cycles<this->DIV_LATENCY && this->div.ins.rd == r)
+      if (this->div.active && this->div.cycles < this->DIV_LATENCY && this->div.ins.rd == r)
         return TRUE;
       for (i = 1; i < this->MUL_LATENCY; i++)
         if (this->m[i].active && this->m[i].ins.rd == r)
@@ -507,8 +509,10 @@ int pipeline::IF() {
 BOOL pipeline::already_target(int reg) {
   if (this->div.active  && this->div.cycles == this->DIV_LATENCY  && this->div.ins.rd == reg)
     return TRUE;
+
   if (this->m[0].active && this->m[0].ins.rd == reg)
     return TRUE;
+
   if (this->a[0].active && this->a[0].ins.rd == reg)
     return TRUE;
 
@@ -524,14 +528,17 @@ BOOL pipeline::already_waitedfor(int reg) {
     if (this->m[0].ins.rs == reg || this->m[0].ins.rt == reg)
       return TRUE;
   }
+
   if (this->a[0].active) {
     if (this->a[0].ins.rs == reg || this->a[0].ins.rt == reg)
       return TRUE;
   }
+
   if (this->div.active && this->div.cycles == this->DIV_LATENCY) {
     if (this->div.ins.rs == reg || this->div.ins.rt == reg)
       return TRUE;
-    }
+  }
+
   /* V1.53 */
   if (this->integer.active) {
     if (this->integer.ins.src1 == reg || this->integer.ins.src2 == reg)
@@ -665,6 +672,7 @@ int pipeline::ID(int *rawreg) {
     A = cpu->rreg[ins.rs].val;
     B = cpu->rreg[ins.rt].val;
     break;
+
   default:
     break;
   }
@@ -683,49 +691,120 @@ int pipeline::ID(int *rawreg) {
   switch (type) {
   case REG2F:
   case REG2S:
-    if (already_target(ins.rs)) {*rawreg = ins.rs; return RAW;}
-    if (already_target(ins.rd)) {*rawreg = ins.rd; return WAW;}
-    if (already_waitedfor(ins.rd)) {*rawreg = ins.rd; return WAR;} // new
+    if (already_target(ins.rs)) {
+      *rawreg = ins.rs;
+      return RAW;
+    }
+    if (already_target(ins.rd)) {
+      *rawreg = ins.rd;
+      return WAW;
+    }
+    // new
+    if (already_waitedfor(ins.rd)) {
+      *rawreg = ins.rd;
+      return WAR;
+    }
     break;
+
   case REG2C:
   case STORE:
   case FSTORE:
-    if (already_target(ins.rs)) {*rawreg = ins.rs; return RAW;}
-    if (already_target(ins.rt)) {*rawreg = ins.rt; return RAW;}
+    if (already_target(ins.rs)) {
+      *rawreg = ins.rs;
+      return RAW;
+    }
+    if (already_target(ins.rt)) {
+      *rawreg = ins.rt;
+      return RAW;
+    }
     break;
+
   case REG2I:
   case LOAD:
   case FLOAD:
-    if (already_target(ins.rs)) {*rawreg = ins.rs; return RAW;}
-    if (already_target(ins.rt)) {*rawreg = ins.rt; return RAW;}
-    if (already_waitedfor(ins.rt)) {*rawreg = ins.rt; return WAR;}
+    if (already_target(ins.rs)) {
+      *rawreg = ins.rs;
+      return RAW;
+    }
+    if (already_target(ins.rt)) {
+      *rawreg = ins.rt;
+      return RAW;
+    }
+    if (already_waitedfor(ins.rt)) {
+      *rawreg = ins.rt;
+      return WAR;
+    }
     break;
+
   case REG1I:
-    if (already_target(ins.rt)) {*rawreg = ins.rt; return RAW;}
-    if (already_waitedfor(ins.rt)) {*rawreg = ins.rt; return WAR;}
+    if (already_target(ins.rt)) {
+      *rawreg = ins.rt;
+      return RAW;
+    }
+    if (already_waitedfor(ins.rt)) {
+      *rawreg = ins.rt;
+      return WAR;
+    }
     break;
+
   case REG3:
-    if (already_target(ins.rs)) {*rawreg = ins.rs; return RAW;}
-    if (already_target(ins.rt)) {*rawreg = ins.rt; return RAW;}
-    if (already_target(ins.rd)) {*rawreg = ins.rd; return WAW;}
-    if (already_waitedfor(ins.rd)) {*rawreg = ins.rd; return WAR;}
+    if (already_target(ins.rs)) {
+      *rawreg = ins.rs;
+      return RAW;
+    }
+    if (already_target(ins.rt)) {
+      *rawreg = ins.rt;
+      return RAW;
+    }
+    if (already_target(ins.rd)) {
+      *rawreg = ins.rd;
+      return WAW;
+    }
+    if (already_waitedfor(ins.rd)) {
+      *rawreg = ins.rd;
+      return WAR;
+    }
     break;
+
   case REGDI:
   case REGID:
-    if (already_target(ins.rt)) {*rawreg = ins.rt; return RAW;}
-    if (already_target(ins.rd)) {*rawreg = ins.rd; return WAW;}
-    if (already_waitedfor(ins.rd)) {*rawreg = ins.rd; return WAR;}
+    if (already_target(ins.rt)) {
+      *rawreg = ins.rt;
+      return RAW;
+    }
+    if (already_target(ins.rd)) {
+      *rawreg = ins.rd;
+      return WAW;
+    }
+    if (already_waitedfor(ins.rd)) {
+      *rawreg = ins.rd;
+      return WAR;
+    }
     break;
+
   case REG3F:
   case REG3X:
     switch (ins.function) {
       case F_ADD_D:
       case F_SUB_D:
-        if (this->a[0].active) return STALLED;
-        if (already_target(ins.rs)) {*rawreg = ins.rs; return RAW;}
-        if (already_target(ins.rt)) {*rawreg = ins.rt; return RAW;}
-        if (already_target(ins.rd)) {*rawreg = ins.rd; return WAW;}
-        if (already_waitedfor(ins.rd)) {*rawreg = ins.rd; return WAR;}
+        if (this->a[0].active)
+          return STALLED;
+        if (already_target(ins.rs)) {
+          *rawreg = ins.rs;
+          return RAW;
+        }
+        if (already_target(ins.rt)) {
+          *rawreg = ins.rt;
+          return RAW;
+        }
+        if (already_target(ins.rd)) {
+          *rawreg = ins.rd;
+          return WAW;
+        }
+        if (already_waitedfor(ins.rd)) {
+          *rawreg = ins.rd;
+          return WAR;
+        }
         this->a[0].rA = ins.rs;
         this->a[0].rB = ins.rt;
         this->a[0].active = TRUE;
@@ -733,16 +812,27 @@ int pipeline::ID(int *rawreg) {
         this->a[0].IR = this->if_id.IR;
         this->a[0].ins = ins;
         break;
+
       case F_MUL_D:
       case R_DMUL:
       case R_DMULU:
         //char txt[80];
         //sprintf(txt,"need ins.rs= %d and ins.rt= %d", ins.rs, ins.rt);
         //AfxMessageBox(txt);
-        if (this->m[0].active) return STALLED;
-        if (already_target(ins.rs)) {*rawreg = ins.rs; return RAW;}
-        if (already_target(ins.rt)) {*rawreg = ins.rt; return RAW;}
-        if (already_target(ins.rd)) {*rawreg = ins.rd; return WAW;}
+        if (this->m[0].active)
+          return STALLED;
+        if (already_target(ins.rs)) {
+          *rawreg = ins.rs;
+          return RAW;
+        }
+        if (already_target(ins.rt)) {
+          *rawreg = ins.rt;
+          return RAW;
+        }
+        if (already_target(ins.rd)) {
+          *rawreg = ins.rd;
+          return WAW;
+        }
         if (already_waitedfor(ins.rd)) {*rawreg = ins.rd; return WAR;}
         this->m[0].rA = ins.rs;
         this->m[0].rB = ins.rt;
@@ -1103,7 +1193,7 @@ void pipeline::EX_ADD(int *rawreg, int *status) {
   id_ex_reg idle;
 
   ADDS = this->ADD_LATENCY;
-  for (i = 0;i < ADDS; i++) 
+  for (i = 0;i < ADDS; i++)
     status[i] = OK;
   ins = this->a[ADDS-1].ins;
   idle.active = FALSE;
@@ -1373,13 +1463,13 @@ int pipeline::EX_INT(int *rawreg) {
           this->ex_mem.ALUOutput = fpA.s >> (fpB.u & 0x3F);
           break;
         case R_MOVZ:
-          if (fpB.u == 0) 
+          if (fpB.u == 0)
             this->ex_mem.ALUOutput = fpA.u;
           else
             condition = FALSE;
           break;
         case R_MOVN:
-          if (fpB.u != 0) 
+          if (fpB.u != 0)
             this->ex_mem.ALUOutput = fpA.u;
           else
             condition = FALSE;

@@ -38,10 +38,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #define RGB(R,G,B) (((R) << 16) + ((G) << 8) + (B))
 
-// Data Memory Status
-#define VACANT  0
-#define WRITTEN 1
-
 // Code Memory Status Bits
 // 0 => normal
 // 1 => BreakPoint set
