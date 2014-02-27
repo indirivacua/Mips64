@@ -25,11 +25,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include<vector>
 
-class MemoryRegion;
+#include "Region.h"
+#include "NullRegion.h"
 
 typedef struct {
   std::string name;
-  MemoryRegion *mem;
+  Region *mem;
   WORD32 start;
   int size;
 } RegionInfo;
@@ -61,8 +62,8 @@ public:
 
 protected:
 
-  MemoryRegion *getRegion(WORD32 addr, WORD32 &newaddr);
-  BOOL registerRegion(const std::string &name, MemoryRegion *m, WORD32 addr, int size);
+  Region *getRegion(WORD32 addr, WORD32 &newaddr);
+  BOOL registerRegion(const std::string &name, Region *m, WORD32 addr, int size);
 
   WORD32 size;
   BYTE *data;
@@ -70,6 +71,8 @@ protected:
   std::string *line;
 
   std::vector<RegionInfo> regions;
+
+  NullRegion null;
 
 };
 

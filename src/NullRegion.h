@@ -20,16 +20,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef __MEMORYREGION_H
-#define __MEMORYREGION_H
+#ifndef __NULLREGION_H
+#define __NULLREGION_H
 
 #include "Region.h"
 
-class MemoryRegion : public Region {
+class NullRegion : public Region {
 
 public:
-  MemoryRegion(int);
-  virtual ~MemoryRegion();
 
   BOOL reset();
 
