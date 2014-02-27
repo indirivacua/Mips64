@@ -1,7 +1,8 @@
 CXXFLAGS = -Wall -ggdb
 
 OBJS :=  pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.o \
-	CodeMemory.o DataMemory.o CPUConfig.o Terminal.o Screen.o PipelineHistory.o
+	CodeMemory.o DataMemory.o CPUConfig.o Terminal.o Screen.o PipelineHistory.o \
+         MemoryRegion.o NullRegion.o
 
 all: mips64
 
@@ -12,9 +13,14 @@ clean:
 	rm -rf *.o mips64
 
 # Gracias g++ -MM *.cpp
+
 CPUConfig.o: CPUConfig.cpp CPUConfig.h mytypes.h
 CodeMemory.o: CodeMemory.cpp mytypes.h CodeMemory.h
-DataMemory.o: DataMemory.cpp mytypes.h utils.h DataMemory.h
+DataMemory.o: DataMemory.cpp mytypes.h utils.h DataMemory.h \
+ MemoryRegion.h Region.h
+MemoryRegion.o: MemoryRegion.cpp mytypes.h utils.h MemoryRegion.h \
+ Region.h
+NullRegion.o: NullRegion.cpp mytypes.h utils.h NullRegion.h Region.h
 PipelineHistory.o: PipelineHistory.cpp simulator.h mytypes.h utils.h \
  Processor.h CPUConfig.h pipeline.h DataMemory.h CodeMemory.h Screen.h \
  assembler.h Terminal.h PipelineHistory.h
