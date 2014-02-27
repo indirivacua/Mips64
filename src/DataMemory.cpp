@@ -26,127 +26,86 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "utils.h"
 #include "DataMemory.h"
 
+#include "MemoryRegion.h"
+
 DataMemory::DataMemory(int size) {
-  this->size = size;
-  this->data = new BYTE[size];
-  this->status = new BYTE[size];
-  this->line = new std::string[size/8];
-  std::cout << "DataMemory:" << size << " " << this << std::endl;
+  MemoryRegion *mem = new MemoryRegion(size);
+  this->registerRegion(mem, 0, size);
+}
+
+BOOL DataMemory::registerRegion(MemoryRegion *m, WORD32 addr, int size) { 
+  regions = m; 
+  //...
+  return TRUE;
+}
+
+MemoryRegion *DataMemory::getRegion(WORD32 addr) {
+  return regions;
 }
 
 DataMemory::~DataMemory() {
-  delete data;
-  delete status;
-  delete line;
+  delete regions; 
 }
 
-#define DATA_VACANT     0
-#define DATA_WRITTEN    1 // see mytpes.h
-
 BOOL DataMemory::reset() {
-  unsigned int i;
-  for (i = 0; i < size; i++) {
-    this->status[i] = DATA_VACANT;
-    this->data[i] = 0;
-  }
-  for (i = 0; i < size/8; i++) {
-    this->line[i] = "";
-  }
-  return TRUE;
+  return regions->reset();
 }
 
 #define DATA_ERR   9  // see pipeline.h
 #define DATA_MISALIGNED 17  // see pipeline.h
 
 int DataMemory::readByte(WORD32 addr, BYTE &data) {
-  if (status[addr] == DATA_VACANT)
-    return DATA_ERR;
-
-  data = *(BYTE *)(&this->data[addr]);
-  return OK;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->readByte(addr, data);
 }
 
 int DataMemory::readHalf(WORD32 addr, WORD16 &data) {
-  for (int i = 0; i < 2; ++i)
-     if (status[addr + i] == DATA_VACANT)
-      return DATA_ERR;
-  if (addr % 2)
-    return DATA_MISALIGNED;
-
-  data = (*(WORD16 *)(&this->data[addr]));
-  return OK;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->readHalf(addr, data);
 }
 
 int DataMemory::readWord32(WORD32 addr, WORD32 &data) {
-  for (int i = 0; i < 4; ++i)
-     if (status[addr + i] == DATA_VACANT)
-      return DATA_ERR;
-  if (addr % 4)
-    return DATA_MISALIGNED;
-
-  data =  (*(WORD32 *)(&this->data[addr]));
-  return OK;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->readWord32(addr, data);
 }
 
 int DataMemory::readWord64(WORD32 addr, WORD64 &data) {
-  for (int i = 0; i < 8; ++i)
-     if (status[addr + i] == DATA_VACANT)
-      return DATA_ERR;
-  if (addr % 8)
-    return DATA_MISALIGNED;
-
-  data = (*(WORD64 *)(&this->data[addr]));
-  return OK;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->readWord64(addr, data);
 }
 
 
 BOOL DataMemory::writeByte(WORD32 addr, BYTE b) {
-  *(BYTE *)(&this->data[addr]) = b;
-  status[addr] = DATA_WRITTEN;
-  return TRUE;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->writeByte(addr, b);
 }
 
 BOOL DataMemory::writeHalf(WORD32 addr, WORD16 h) {
-  //h = swap16(h);
-  *(WORD16 *)(&this->data[addr]) = h;
-  for (int i = 0; i < 2; ++i)
-    status[addr + i] = DATA_WRITTEN;
-  return TRUE;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->writeHalf(addr, h);
 }
 
 BOOL DataMemory::writeWord32(WORD32 addr, WORD32 w) {
-  //w = swap32(w);
-  *(WORD32 *)(&data[addr]) = w;
-  for (int i = 0; i < 4; ++i)
-    status[addr + i] = DATA_WRITTEN;
-  return TRUE;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->writeWord32(addr, w);
 }
 
 BOOL DataMemory::writeWord64(WORD32 addr, WORD64 d) {
-  //d = swap64(d);
-  *(WORD64 *)(&data[addr]) = d;
-  for (int i = 0; i < 8; ++i)
-    status[addr + i] = DATA_WRITTEN;
-  return TRUE;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->writeWord64(addr, d);
 }
 
 BOOL DataMemory::getAsciiz(WORD32 addr, BYTE *dst, int size) {
-  BYTE *ptr = data + addr;
-  while (*ptr && --size) {
-    *dst = *ptr;
-    ++ptr;
-    ++dst;
-  }
-  *dst = 0;
-  return TRUE;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->getAsciiz(addr, dst, size);
 }
 
 BOOL DataMemory::isValidAddress(WORD32 addr) {
-  return (addr <= size);
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->isValidAddress(addr);
 }
 
 BOOL DataMemory::setAddressDescription(WORD32 addr, const std::string &description) {
-
-  line[addr/STEP] = description;
-  return TRUE;
+  MemoryRegion *mem = this->getRegion(addr);
+  return mem->setAddressDescription(addr, description);
 }

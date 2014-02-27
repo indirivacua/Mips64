@@ -20,18 +20,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#ifndef __DATAMEMORY_H
-#define __DATAMEMORY_H
+#ifndef __MEMORYREGION_H
+#define __MEMORYREGION_H
 
-#include<map>
 
-class MemoryRegion;
-
-class DataMemory {
+class MemoryRegion {
 
 public:
-  DataMemory(int);
-  virtual ~DataMemory();
+  MemoryRegion(int);
+  virtual ~MemoryRegion();
 
   BOOL reset();
 
@@ -53,16 +50,10 @@ public:
   WORD32 getSize() const { return size; };
 
 protected:
-
-  MemoryRegion *getRegion(WORD32 addr);
-  BOOL registerRegion(MemoryRegion *m, WORD32 addr, int size);
-
   WORD32 size;
   BYTE *data;
   BYTE *status;
   std::string *line;
-
-  MemoryRegion *regions;
 
 };
 
