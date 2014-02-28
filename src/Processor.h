@@ -35,9 +35,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define RUNNING 0
 #define STOPPED 1
 
-// HACER: Descablear MMIO de todo el codigo
-#define MMIO 0x10000
-
 typedef struct {
     WORD64 val;
     SIGNED32 source;

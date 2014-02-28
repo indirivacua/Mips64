@@ -37,7 +37,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "assembler.h"
 
-#define GSXY 50
+#define MMIO 0x10000
+
 
 /////////////////////////////////////////////////////////////////////////////
 // Simulator
@@ -48,7 +49,7 @@ Simulator::Simulator(CPUConfig *config)
     code(config->codesize)
  {
   Region *mmio = io.getMMRegion(); 
-  data.registerRegion("io", mmio, 0x10000);
+  data.registerRegion("io", mmio, MMIO);
 
   this->config = config;
   data.reset();
@@ -344,7 +345,6 @@ void Simulator::dump_Terminal() {
 }
 
 void Simulator::show_stats() {
-
   std::cout << "----- Estadisticas -----" << std::endl;
   std::cout << "Ciclo(s)               : " << cycles << std::endl;
   std::cout << "Instruccion(es)        : " << instructions << std::endl;

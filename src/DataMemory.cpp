@@ -28,8 +28,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Region.h"
 #include "MemoryRegion.h"
-#include "IORegion.h"
-
 
 DataMemory::DataMemory(int size) {
   MemoryRegion *mem = new MemoryRegion(size);
