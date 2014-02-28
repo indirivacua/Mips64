@@ -1,9 +1,8 @@
 Por Hacer:
 ----------
 
-- Hay que reorganizar muchooooooooo codigo
+- Hay que reorganizar codigo
   - Metodos para configurar el simulador
-  - La entrada/salida esta "muy cableada", ver si se puede separar
   - Emprolijar las clases, eliminar de la visibilidad publica todo
     lo que no se deberia ver desde fuera de la clase
 
