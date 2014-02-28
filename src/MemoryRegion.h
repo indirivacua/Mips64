@@ -49,12 +49,15 @@ public:
 
   BOOL isValidAddress(WORD32 addr);
   WORD32 getSize() const { return size; };
+  void disableCheckReads();
 
 protected:
   WORD32 size;
   BYTE *data;
   BYTE *status;
   std::string *line;
+
+  BOOL checkreads;
 
 };
 

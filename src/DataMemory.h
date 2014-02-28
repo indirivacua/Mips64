@@ -60,10 +60,11 @@ public:
   BOOL isValidAddress(WORD32 addr);
   WORD32 getSize() const { return size; };
 
+  BOOL registerRegion(const std::string &name, Region *m, WORD32 addr);
+
 protected:
 
   Region *getRegion(WORD32 addr, WORD32 &newaddr);
-  BOOL registerRegion(const std::string &name, Region *m, WORD32 addr, int size);
 
   WORD32 size;
   BYTE *data;

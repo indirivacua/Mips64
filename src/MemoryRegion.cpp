@@ -31,7 +31,8 @@ MemoryRegion::MemoryRegion(int size) {
   this->data = new BYTE[size];
   this->status = new BYTE[size];
   this->line = new std::string[size/8];
-  std::cout << "MemoryRegion:" << size << " " << this << std::endl;
+  //std::cout << "MemoryRegion:" << size << " " << this << std::endl;
+  checkreads = TRUE;
 }
 
 MemoryRegion::~MemoryRegion() {
@@ -59,56 +60,64 @@ BOOL MemoryRegion::reset() {
 #define DATA_MISALIGNED 17  // see pipeline.h
 
 int MemoryRegion::readByte(WORD32 addr, BYTE &data) {
+  BYTE *ptr = this->data + addr;
   if (status[addr] == DATA_VACANT)
     return DATA_ERR;
 
-  data = *(BYTE *)(&this->data[addr]);
+  data = *ptr;
   return OK;
 }
 
 int MemoryRegion::readHalf(WORD32 addr, WORD16 &data) {
+  BYTE *ptr = this->data + addr;
   for (int i = 0; i < 2; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
   if (addr % 2)
     return DATA_MISALIGNED;
 
-  data = (*(WORD16 *)(&this->data[addr]));
+  data = (*(WORD16 *)(ptr));
   return OK;
 }
 
 int MemoryRegion::readWord32(WORD32 addr, WORD32 &data) {
+  BYTE *ptr = this->data + addr;
   for (int i = 0; i < 4; ++i)
      if (status[addr + i] == DATA_VACANT)
       return DATA_ERR;
   if (addr % 4)
     return DATA_MISALIGNED;
 
-  data =  (*(WORD32 *)(&this->data[addr]));
+  data =  (*(WORD32 *)(ptr));
   return OK;
 }
 
 int MemoryRegion::readWord64(WORD32 addr, WORD64 &data) {
-  for (int i = 0; i < 8; ++i)
-     if (status[addr + i] == DATA_VACANT)
-      return DATA_ERR;
+  BYTE *ptr = this->data + addr;
+  data = 0;
+  if (checkreads)
+    for (int i = 0; i < 8; ++i)
+       if (status[addr + i] == DATA_VACANT)
+        return DATA_ERR;
   if (addr % 8)
     return DATA_MISALIGNED;
 
-  data = (*(WORD64 *)(&this->data[addr]));
+  data = (*(WORD64 *)(ptr));
   return OK;
 }
 
 
 BOOL MemoryRegion::writeByte(WORD32 addr, BYTE b) {
-  *(BYTE *)(&this->data[addr]) = b;
+  BYTE *ptr = data + addr;
+  *ptr = b;
   status[addr] = DATA_WRITTEN;
   return TRUE;
 }
 
 BOOL MemoryRegion::writeHalf(WORD32 addr, WORD16 h) {
   //h = swap16(h);
-  *(WORD16 *)(&this->data[addr]) = h;
+  BYTE *ptr = data + addr;
+  *(WORD16 *)(ptr) = h;
   for (int i = 0; i < 2; ++i)
     status[addr + i] = DATA_WRITTEN;
   return TRUE;
@@ -116,7 +125,9 @@ BOOL MemoryRegion::writeHalf(WORD32 addr, WORD16 h) {
 
 BOOL MemoryRegion::writeWord32(WORD32 addr, WORD32 w) {
   //w = swap32(w);
-  *(WORD32 *)(&data[addr]) = w;
+  BYTE *ptr = this->data + addr;
+  *(WORD32 *)(ptr) = w;
+std::cout << "writeWord32(" << addr << ", " << w<< ") --" << (int) ptr << std::endl;
   for (int i = 0; i < 4; ++i)
     status[addr + i] = DATA_WRITTEN;
   return TRUE;
@@ -124,7 +135,8 @@ BOOL MemoryRegion::writeWord32(WORD32 addr, WORD32 w) {
 
 BOOL MemoryRegion::writeWord64(WORD32 addr, WORD64 d) {
   //d = swap64(d);
-  *(WORD64 *)(&data[addr]) = d;
+  BYTE *ptr = data + addr;
+  *(WORD64 *)(ptr) = d;
   for (int i = 0; i < 8; ++i)
     status[addr + i] = DATA_WRITTEN;
   return TRUE;
@@ -149,4 +161,8 @@ BOOL MemoryRegion::setAddressDescription(WORD32 addr, const std::string &descrip
 
   line[addr/STEP] = description;
   return TRUE;
+}
+
+void MemoryRegion::disableCheckReads() {
+  checkreads = FALSE;
 }

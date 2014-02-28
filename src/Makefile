@@ -2,7 +2,7 @@ CXXFLAGS = -Wall -ggdb
 
 OBJS :=  pipeline.o utils.o simulator.o main.o assembler.o language.o Processor.o \
 	CodeMemory.o DataMemory.o CPUConfig.o Terminal.o Screen.o PipelineHistory.o \
-         MemoryRegion.o NullRegion.o
+         MemoryRegion.o NullRegion.o IO.o
 
 all: mips64
 

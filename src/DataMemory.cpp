@@ -28,18 +28,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Region.h"
 #include "MemoryRegion.h"
+#include "IORegion.h"
+
 
 DataMemory::DataMemory(int size) {
   MemoryRegion *mem = new MemoryRegion(size);
-  this->registerRegion("data", mem, 0, size);
+  this->registerRegion("data", mem, 0);
 }
 
-BOOL DataMemory::registerRegion(const std::string &name, Region *m, WORD32 addr, int size) { 
+DataMemory::~DataMemory() {
+  //delete regions;  ??
+}
+
+BOOL DataMemory::registerRegion(const std::string &name, Region *m, WORD32 addr) { 
   RegionInfo ri;
   ri.name = name;
   ri.mem = m;
   ri.start = addr;
-  ri.size = size;
+  ri.size = m->getSize();
 
   regions.push_back(ri);
   return TRUE;
@@ -55,13 +61,11 @@ Region *DataMemory::getRegion(WORD32 addr, WORD32 &newaddr) {
   return &null;
 }
 
-DataMemory::~DataMemory() {
-  //delete regions; 
-}
-
 BOOL DataMemory::reset() {
- // return regions->reset();
-return TRUE;
+  for (std::vector<RegionInfo>::iterator r = regions.begin(); r != regions.end(); ++r) {
+   r->mem->reset();
+  }
+  return TRUE;
 }
 
 int DataMemory::readByte(WORD32 addr, BYTE &data) {
@@ -92,6 +96,7 @@ int DataMemory::readWord64(WORD32 addr, WORD64 &data) {
 BOOL DataMemory::writeByte(WORD32 addr, BYTE b) {
   WORD32 regaddr;
   Region *mem = this->getRegion(addr, regaddr);
+  //std::cout << "memory"  << ":" << " writeByte(" << addr << "," << (int) b << ")" << std::endl;
   return mem->writeByte(regaddr, b);
 }
 

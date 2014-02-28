@@ -75,8 +75,6 @@ public:
   BOOL hasFPFlagOff() const { return !fp_cc; }
   BOOL setFPFlag(BOOL state) { fp_cc = state; return TRUE; }
 
-  BYTE   mm[16];
-
   reg    rreg[64];
   reg    wreg[64];
 

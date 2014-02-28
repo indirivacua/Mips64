@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+#include <string>
 #include <iostream>
 
 #include "mytypes.h"
@@ -44,11 +45,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 Simulator::Simulator(CPUConfig *config)
   : cpu(&code, &data),
     data(config->datasize),
-    code(config->codesize),
-    screen(GSXY, GSXY)
+    code(config->codesize)
  {
+  Region *mmio = io.getMMRegion(); 
+  data.registerRegion("io", mmio, 0x10000);
 
   this->config = config;
+  data.reset();
 
   simulation_running = FALSE;
   restart = FALSE;
@@ -196,69 +199,6 @@ void Simulator::process_result(RESULT result, BOOL show) {
   }
 }
 
-int Simulator::update_io() {
-  WORD32 func = *(WORD32 *)&cpu.mm[0];
-  int x, y, status = 0;
-
-  BYTE az[256];
-  if (!func)
-    return status;
-
-  char txt[30];
-  DOUBLE64 fp;
-  fp.u = *(WORD64 *)&cpu.mm[8];
-
-  switch (func) {
-  case 1:
-    sprintf(txt,"%" PRIu64 "\n", fp.u);
-    terminal.write(txt);
-    break;
-  case 2:
-    sprintf(txt,"%" PRIi64 "\n", fp.s);
-    terminal.write(txt);
-    break;
-  case 3:
-    sprintf(txt,"%lf\n", fp.d);
-    terminal.write(txt);
-    break;
-  case 4:
-    // need to test here if fp.u is a legal address!
-    data.getAsciiz(fp.u, az, 255);
-
-    if (fp.u<data.getSize())
-      terminal.write(std::string((const char *)az));
-    break;
-
-  case 5:
-    y = (WORD32) ((fp.u >> 32) & 255);
-    x = (WORD32) ((fp.u >> 40) & 255);
-    screen.setPixel(x, y, (WORD32) fp.u);
-    break;
-
-  case 6:
-    terminal.clear();
-    break;
-
-  case 7:
-   screen.clear();
-   break;
-
-  case 8:
-    terminal.readNumber((WORD64 *) &cpu.mm[8]);
-    break;
-
-  case 9:
-    terminal.readChar(&cpu.mm[8]);
-    break;
-
-  default:
-    break;
-  }
-
-  *(WORD32 *)&cpu.mm[0] = 0;
-  return status;
-}
-
 int Simulator::one_cycle(BOOL show) {
   int status = 0;
   RESULT result;
@@ -285,7 +225,7 @@ int Simulator::one_cycle(BOOL show) {
 
   history.update_history(cycles, result, cpu);
 
-  if (update_io())
+  if (io.update(&data))
     return WAITING_FOR_INPUT;
 
   return status;
@@ -352,14 +292,10 @@ void Simulator::OnExecuteRunto() {
 }
 
 int Simulator::openfile(const std::string &fname) {
-  unsigned int i;
   OnFileReset();
   data.reset(); // reset data memory
-  for (i = 0; i < 16; i++)
-    cpu.mm[i] = 0;
+  io.clear();
 
-  screen.clear();
-  terminal.clear();
   return 0;
 }
 
@@ -404,7 +340,7 @@ void Simulator::dump_reg() {
 }
 
 void Simulator::dump_Terminal() {
-  terminal.dump();
+  io.terminal_dump();
 }
 
 void Simulator::show_stats() {
@@ -427,6 +363,6 @@ void Simulator::show_stats() {
 }
 
 void Simulator::show_screen() {
-  screen.show();
+  io.show_screen();
 }
 

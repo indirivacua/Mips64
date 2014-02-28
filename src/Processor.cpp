@@ -46,8 +46,6 @@ void Processor::initialize(CPUConfig *config)  {
 void Processor::reset(BOOL full) {
   int i;
   this->PC = 0;
-  for (i = 0; i < 16; i++)
-    this->mm[i] = 0;
 
   this->status = RUNNING;
 
