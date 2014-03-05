@@ -14,7 +14,7 @@ clean:
 
 # Gracias g++ -MM *.cpp
 CPUConfig.o: CPUConfig.cpp CPUConfig.h mytypes.h
-CPUStats.o: CPUStats.cpp CPUStats.h
+CPUStats.o: CPUStats.cpp mytypes.h CPUConfig.h pipeline.h CPUStats.h
 CodeMemory.o: CodeMemory.cpp mytypes.h CodeMemory.h
 DataMemory.o: DataMemory.cpp mytypes.h utils.h DataMemory.h Region.h \
   NullRegion.h MemoryRegion.h

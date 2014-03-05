@@ -23,11 +23,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef __CPUSTATS_H
 #define __CPUSTATS_H
 
+class CPUConfig;
+
 class CPUStats {
 public:
-  CPUStats();
+  CPUStats(CPUConfig *config);
 
   void reset();
+  BOOL process_result(RESULT result, BOOL show);
+
   unsigned int cycles;
   unsigned int instructions;
   unsigned int loads;
@@ -38,6 +42,11 @@ public:
   unsigned int waw_stalls;
   unsigned int war_stalls;
   unsigned int structural_stalls;
+
+protected:
+  void check_stalls(int status, const char *str, int rawreg, char *txt);
+
+  CPUConfig *config;
 };
 
 #endif

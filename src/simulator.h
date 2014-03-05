@@ -72,8 +72,6 @@ class Simulator {
  protected:
   void clear();
   int one_cycle(BOOL);
-  void check_stalls(int,const char *,int, char *);
-  void process_result(RESULT, BOOL);
 
  public:
   void OnFileReset();
