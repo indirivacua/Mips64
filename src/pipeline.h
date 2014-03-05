@@ -69,6 +69,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define FROM_DIV       7
 
 typedef struct {
+  int type,function,opcode,tf,target;
+  int rs,rt,rd;
+  int src1,src2;
+  union {
+    SIGNED32 Imm;
+    WORD32 uImm;
+  };
+} instruction;
+
+typedef struct {
   WORD32 IR;  /* pointer to instruction in memory */
   instruction ins;
   WORD32 NPC;
@@ -106,6 +116,22 @@ typedef struct {
   BOOL condition;
 } mem_wb_reg;
 
+typedef struct {
+  int IF;
+  int ID;
+  int EX;
+  int MEM;
+  int WB;
+  int DIVIDER;
+  int ADDER[10];
+  int MULTIPLIER[10];
+  int idrr;
+  int exrr;
+  int memrr;
+  int addrr;
+  int mulrr;
+  int divrr;
+} RESULT;
 
 class Processor;
 class CodeMemory;

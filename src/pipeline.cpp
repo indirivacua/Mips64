@@ -486,7 +486,7 @@ int pipeline::IF() {
 
   if (!this->branch && branch_target_buffer && this->code->branchPredicted(cpu->getPC())) {
     // predict branch taken
-    this->if_id.NPC = cpu->getPC() + 4 + 4*ins.Imm;
+    this->if_id.NPC = cpu->getPC() + 4 + 4 * ins.Imm;
     this->if_id.predicted = TRUE;
 
   } else {
@@ -1357,8 +1357,10 @@ int pipeline::EX_INT(int *rawreg) {
           else                 this->ex_mem.ALUOutput = 0;
           break;
         case I_SLTIU:
-          if (fpA.u < ins.Imm) this->ex_mem.ALUOutput = 1;
-          else                 this->ex_mem.ALUOutput = 0;
+          if (fpA.u < ins.uImm) 
+            this->ex_mem.ALUOutput = 1;
+          else
+            this->ex_mem.ALUOutput = 0;
           break;
         }
       if (forwarding && ins.rt != 0) {

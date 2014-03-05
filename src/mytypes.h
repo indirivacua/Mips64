@@ -38,12 +38,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #define RGB(R,G,B) (((R) << 16) + ((G) << 8) + (B))
 
-// Code Memory Status Bits
-// 0 => normal
-// 1 => BreakPoint set
-// 2 => Branch Prediction ?
-// 4 => ERROR
-
 #define WHITE  RGB(255,255,255)
 #define BLACK  RGB(0,0,0)
 #define GREY   RGB(128,128,128)
@@ -83,32 +77,7 @@ typedef union {
 
 #define OK      0
 
-
 #define STEP 8
 #define MASK -1
-
-typedef struct {
-  int IF;
-  int ID;
-  int EX;
-  int MEM;
-  int WB;
-  int DIVIDER;
-  int ADDER[10];
-  int MULTIPLIER[10];
-  int idrr;
-  int exrr;
-  int memrr;
-  int addrr;
-  int mulrr;
-  int divrr;
-} RESULT;
-
-typedef struct {
-  int type,function,opcode,tf,target;
-  int rs,rt,rd;
-  int src1,src2;
-  SIGNED32 Imm;
-} instruction;
 
 #endif

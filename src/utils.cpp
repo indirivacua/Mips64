@@ -34,7 +34,7 @@ BOOL in_range(WORD32 num, WORD32 mask) {
   int n = num;
   if (n >= 0 && (num & mask) != num)
     return FALSE;
-  if (n < 0  && (num | mask) != -1)
+  if (n < 0  && (num | mask) != 0xFFFFFFFF)
     return FALSE;
   return TRUE;
 }
@@ -42,9 +42,9 @@ BOOL in_range(WORD32 num, WORD32 mask) {
 /* align objects on num-byte boundaries */
 int alignment(int ptr, int num) {
     int t, r = ptr;
-    t = r%num;
+    t = r % num;
     if (t > 0)
-      r += num-t;
+      r += num - t;
     return r;
 }
 

@@ -44,7 +44,7 @@ BOOL PipelineHistory::initialize(CPUConfig *config) {
 }
 
 void PipelineHistory::update_history(unsigned int cycles, const RESULT &result, Processor &cpu) {
-  int substage, stage;
+  unsigned int substage, stage;
   unsigned int i, cc;
   WORD32 previous;
   BOOL passed;
