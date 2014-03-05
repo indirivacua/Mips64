@@ -870,17 +870,6 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
     ++ptr;
 
     num = 0;
-    // ARREGLAR!!! no deberia usar el cast
-    // NOTA: Esta parte de la rutina se encarga de procesar una directiva .string o .stringz
-    //  Para manejar "mas fácil" el caso de stringz se modifica la cadena de entrada y se le
-    //  agrega el cero, si bien esto funciona, si nos ponemos estrictos y la linea que estamos
-    //  procesando es de solo lectura no lo podemos hacer.
-    //  Por ahora se pone iptr como char *, en lugar de const char *, y cuando se asigna
-    //  lo asignamos con un cast. Cuando este arreglado, iptr deberia ser const (o desaparecer)
-    //  Notar la linea mas abajo que es la que hace el trabajo sucio:
-    //            if (zero) *iptr = 0;     // stuff in a zero
-
-
     iptr = ptr;
     bs = FALSE;
     while (*iptr != sc) {
