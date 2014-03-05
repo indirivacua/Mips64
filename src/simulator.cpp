@@ -66,11 +66,9 @@ Simulator::~Simulator() {
 }
 
 void Simulator::clear() {
-  stats.cycles = stats.instructions = stats.loads = stats.stores = stats.branch_taken_stalls = stats.branch_misprediction_stalls = 0;
-  stats.raw_stalls = stats.waw_stalls = stats.war_stalls = stats.structural_stalls = 0;
+  stats.reset();
   cpu.setPC(0);
-    multi = 5;
-  stall_type = stalls = 0;
+  multi = 5;
 
   code.reset();
 }
@@ -278,7 +276,7 @@ void Simulator::OnExecuteRunto() {
     status = one_cycle(FALSE);
     if (status)
       break;
-  } while (stalls || ((!code.hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
+  } while (((!code.hasBreakpoint(cpu.getPC()) && cpu.getStatus() != HALTED && simulation_running)));
   simulation_running = FALSE;
   if (status == WAITING_FOR_INPUT) {
     sprintf(buf, "Simulacion Detenida luego de %d ciclos - Esperando Entrada", lapsed);

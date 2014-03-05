@@ -28,26 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "mytypes.h"
 #include "utils.h"
 #include "Processor.h"
-#include "Screen.h"
 #include "assembler.h"
 
 #include "IO.h"
-#include "Terminal.h"
-
 #include "PipelineHistory.h"
-
-struct CPUStats {
-  unsigned int cycles;
-  unsigned int instructions;
-  unsigned int loads;
-  unsigned int stores;
-  unsigned int branch_taken_stalls;
-  unsigned int branch_misprediction_stalls;
-  unsigned int raw_stalls;
-  unsigned int waw_stalls;
-  unsigned int war_stalls;
-  unsigned int structural_stalls;
-};
+#include "CPUStats.h"
 
 class Simulator {
  public: // create from serialization only
@@ -80,9 +65,6 @@ class Simulator {
 
   BOOL simulation_running;
   BOOL restart;
-  int stall_type;
-  int stalls;
-  int amount;
 
   PipelineHistory history;
   IO io;
