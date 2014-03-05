@@ -36,6 +36,19 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "PipelineHistory.h"
 
+struct CPUStats {
+  unsigned int cycles;
+  unsigned int instructions;
+  unsigned int loads;
+  unsigned int stores;
+  unsigned int branch_taken_stalls;
+  unsigned int branch_misprediction_stalls;
+  unsigned int raw_stalls;
+  unsigned int waw_stalls;
+  unsigned int war_stalls;
+  unsigned int structural_stalls;
+};
+
 class Simulator {
  public: // create from serialization only
   Simulator(CPUConfig *config);
@@ -50,6 +63,7 @@ class Simulator {
 
   CodeMemory *getCodeMemory() { return &code; }
   DataMemory *getDataMemory() { return &data; }
+  const CPUStats &getStats() const { return stats; }
 
  protected:
 
@@ -60,18 +74,9 @@ class Simulator {
 
   CPUConfig *config;
 
-  unsigned int cycles;
-  unsigned int instructions;
-  unsigned int loads;
-  unsigned int stores;
-  unsigned int branch_taken_stalls;
-  unsigned int branch_misprediction_stalls;
-  unsigned int raw_stalls;
-  unsigned int waw_stalls;
-  unsigned int war_stalls;
-  unsigned int structural_stalls;
-
   int multi;
+
+  CPUStats stats;
 
   BOOL simulation_running;
   BOOL restart;
@@ -80,7 +85,6 @@ class Simulator {
   int amount;
 
   PipelineHistory history;
-
   IO io;
 
  protected:
@@ -89,7 +93,6 @@ class Simulator {
   void check_stalls(int,const char *,int, char *);
   void process_result(RESULT, BOOL);
 
-  // Generated message map functions
  public:
   void OnFileReset();
   void OnExecuteSingle();

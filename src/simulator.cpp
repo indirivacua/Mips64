@@ -66,8 +66,8 @@ Simulator::~Simulator() {
 }
 
 void Simulator::clear() {
-  cycles = instructions = loads = stores = branch_taken_stalls = branch_misprediction_stalls = 0;
-  raw_stalls = waw_stalls = war_stalls = structural_stalls = 0;
+  stats.cycles = stats.instructions = stats.loads = stats.stores = stats.branch_taken_stalls = stats.branch_misprediction_stalls = 0;
+  stats.raw_stalls = stats.waw_stalls = stats.war_stalls = stats.structural_stalls = 0;
   cpu.setPC(0);
     multi = 5;
   stall_type = stalls = 0;
@@ -96,7 +96,7 @@ void Simulator::OnFullReset() {
 void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt) {
   char mess[100] = "";
   if (status == RAW) {
-    raw_stalls++;
+    stats.raw_stalls++;
     if (rawreg < 32)
       sprintf(mess,"  Atasco RAW en %s (R%d)", str, rawreg);
     else
@@ -104,7 +104,7 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
     strcat(txt, mess);
   }
   if (status == WAW) {
-    waw_stalls++;
+    stats.waw_stalls++;
     if (rawreg < 32)
       sprintf(mess,"  Atasco WAW en %s (R%d)", str, rawreg);
     else
@@ -112,7 +112,7 @@ void Simulator::check_stalls(int status, const char *str, int rawreg, char *txt)
     strcat(txt, mess);
   }
   if (status == WAR) {
-    war_stalls++;
+    stats.war_stalls++;
     if (rawreg < 32)
       sprintf(mess,"  Atasco WAR en %s (R%d)", str, rawreg);
     else
@@ -127,24 +127,24 @@ void Simulator::process_result(RESULT result, BOOL show) {
   char txt[300];
   //BOOL something = FALSE;
   if (result.WB == OK || result.WB == HALTED)
-    instructions++;
+    stats.instructions++;
   txt[0] = 0;
 
   if (!config->delay_slot && result.ID == BRANCH_TAKEN_STALL) {
     //something = TRUE;
-    branch_taken_stalls++;
+    stats.branch_taken_stalls++;
     strcat(txt,"  Atasco Branch Taken");
   }
   if (result.ID == BRANCH_MISPREDICTED_STALL) {
     //something = TRUE;
-    branch_misprediction_stalls++;
+    stats.branch_misprediction_stalls++;
     strcat(txt,"  Atasco Branch Misprediction");
   }
 
   if (result.MEM == LOADS || result.MEM == DATA_ERR)
-    loads++;
+    stats.loads++;
   if (result.MEM == STORES)
-    stores++;
+    stats.stores++;
 
   check_stalls(result.ID, "ID", result.idrr, txt);
   check_stalls(result.EX, "EX", result.exrr, txt);
@@ -155,19 +155,19 @@ void Simulator::process_result(RESULT result, BOOL show) {
 
   if (result.MEM != RAW) {
     if (result.EX == STALLED) {
-      structural_stalls++;
+      stats.structural_stalls++;
       strcat(txt,"  Atasco Estructural en EX");
     }
     if (result.DIVIDER == STALLED) {
-      structural_stalls++;
+      stats.structural_stalls++;
       strcat(txt,"  Atasco Estructural en FP-DIV");
     }
     if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED) {
-      structural_stalls++;
+      stats.structural_stalls++;
       strcat(txt,"  Atasco Estructural en FP-MUL");
     }
     if (result.ADDER[config->ADD_LATENCY-1] == STALLED) {
-      structural_stalls++;
+      stats.structural_stalls++;
       strcat(txt,"  Atasco Estructural en FP-ADD");
     }
   }
@@ -190,6 +190,19 @@ void Simulator::process_result(RESULT result, BOOL show) {
   if (result.MEM == DATA_MISALIGNED) {
     strcat(txt, " Error Fatal - LOAD/StTORE de memoria mal alineado!");
   }
+
+  // used to be in update_history but it is not part
+  if (result.MEM != RAW) {
+    if (result.EX == STALLED)
+      result.EX = STRUCTURAL;
+    if (result.DIVIDER == STALLED)
+      result.DIVIDER = STRUCTURAL;
+    if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED)
+      result.MULTIPLIER[config->MUL_LATENCY-1] = STRUCTURAL;
+    if (result.ADDER[config->ADD_LATENCY-1] == STALLED)
+      result.ADDER[config->ADD_LATENCY-1] = STRUCTURAL;
+  }
+
   if (show) {
 /*
     if (txt[0] == 0)
@@ -208,23 +221,9 @@ int Simulator::one_cycle(BOOL show) {
     return HALTED;
 
   status = cpu.clock_tick(&result);
-  ++cycles;
+  ++stats.cycles;
   process_result(result, show);
-
-  // used to be in update_history but it is not part
-  // Move to process_result ??
-  if (result.MEM != RAW) {
-    if (result.EX == STALLED)
-      result.EX = STRUCTURAL;
-    if (result.DIVIDER == STALLED)
-      result.DIVIDER = STRUCTURAL;
-    if (result.MULTIPLIER[config->MUL_LATENCY-1] == STALLED)
-      result.MULTIPLIER[config->MUL_LATENCY-1] = STRUCTURAL;
-    if (result.ADDER[config->ADD_LATENCY-1] == STALLED)
-      result.ADDER[config->ADD_LATENCY-1] = STRUCTURAL;
-  }
-
-  history.update_history(cycles, result, cpu);
+  history.update_history(stats.cycles, result, cpu);
 
   if (io.update(&data))
     return WAITING_FOR_INPUT;
@@ -342,24 +341,6 @@ void Simulator::dump_reg() {
 
 void Simulator::dump_Terminal() {
   io.terminal_dump();
-}
-
-void Simulator::show_stats() {
-  std::cout << "----- Estadisticas -----" << std::endl;
-  std::cout << "Ciclo(s)               : " << cycles << std::endl;
-  std::cout << "Instruccion(es)        : " << instructions << std::endl;
-  if (instructions)
-    std::cout << "CPI                    : " << (double) cycles/instructions << std::endl;
-  std::cout << "Total Loads            : " << loads << std::endl;
-  std::cout << "Total Stores           : " << stores << std::endl;
-  std::cout << "Atasco(s) RAW          : " << raw_stalls << std::endl;
-  std::cout << "Atasco(s) WAW          : " << waw_stalls << std::endl;
-  std::cout << "Atasco(s) WAR          : " << war_stalls << std::endl;
-  std::cout << "Atasco(s) Estructural  : " << structural_stalls << std::endl;
-  std::cout << "Atasco(s) Branch Taken : " << branch_taken_stalls << std::endl;
-  std::cout << "Atasco(s) Branch Mispr.: " << branch_misprediction_stalls << std::endl;
-  //std::cout << "Tamanio del Codigo     : " << codeptr << std::endl;
-
 }
 
 void Simulator::show_screen() {

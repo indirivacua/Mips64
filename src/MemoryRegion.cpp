@@ -20,8 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#include <iostream>
-
 #include "mytypes.h"
 #include "utils.h"
 #include "MemoryRegion.h"
@@ -127,7 +125,6 @@ BOOL MemoryRegion::writeWord32(WORD32 addr, WORD32 w) {
   //w = swap32(w);
   BYTE *ptr = this->data + addr;
   *(WORD32 *)(ptr) = w;
-std::cout << "writeWord32(" << addr << ", " << w<< ") --" << (int) ptr << std::endl;
   for (int i = 0; i < 4; ++i)
     status[addr + i] = DATA_WRITTEN;
   return TRUE;

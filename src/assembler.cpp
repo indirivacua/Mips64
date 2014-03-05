@@ -20,14 +20,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-#include "simulator.h"
-#include "language.h"
-#include "utils.h"
 
 #include <iostream>
+#include <algorithm>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "simulator.h"
+#include "language.h"
+#include "utils.h"
 
 int delimiter(int c) {
     if (c == ';' || c == '#')
@@ -353,7 +355,6 @@ int Assembler::openit(const std::string &fname) {
   code_symptr = 0;
   data_symptr = 0;
 
-  std::cout << "Abriendo archivo: " << fname << std::endl;
   asmfile = fopen(fname.c_str(), "rb");
   if (asmfile == NULL)
     return 1;
@@ -770,8 +771,7 @@ int Assembler::second_pass(const char *line, int /* lineptr */) {
       len = 7;
 
     std::string str1(start, len);
-    // ARREGLAR, poner en minusculas
-    //str1.MakeLower();
+    std::transform(str1.begin(), str1.end(), str1.begin(), tolower);
 
     mnemonic = str1;
   }
@@ -825,7 +825,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
   DOUBLE64 db;
   int k;
   int sc, ch;
-  char *iptr;
+  const char *iptr;
 
   if (ptr == NULL || *ptr != '.')
     return FALSE;
@@ -881,7 +881,7 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
     //            if (zero) *iptr = 0;     // stuff in a zero
 
 
-    iptr = (char *) ptr;
+    iptr = ptr;
     bs = FALSE;
     while (*iptr != sc) {
       if (delimiter(*iptr) == ENDLINE)
@@ -898,8 +898,6 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
       }
       iptr++;
     }
-    if (zero)
-      num++; // trailing 0 needed
     if (CODEORDATA == DATA) {
       if (pass == 1)  {
         dataptr += num;
@@ -909,7 +907,6 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
       if (pass == 2) {
         data->setAddressDescription(dataptr, line);
 
-        if (zero) *iptr = 0;     // stuff in a zero
         m = 0;
         bs = FALSE;
         while (m < num) {
@@ -931,6 +928,10 @@ BOOL Assembler::directive(int pass, const char *ptr, const char *line) {
             }
           }
           ptr++;
+        }
+        if (zero) {
+          data->writeByte(dataptr, 0);
+          ++dataptr;
         }
       }
     }

@@ -42,6 +42,24 @@ void ClearScreen() {
   putp( tigetstr( str ) );
 }
 
+void show_stats(const CPUStats &stats) {
+  std::cout << "----- Estadisticas -----" << std::endl;
+  std::cout << "Ciclo(s)               : " << stats.cycles << std::endl;
+  std::cout << "Instruccion(es)        : " << stats. instructions << std::endl;
+  if (stats.instructions)
+    std::cout << "CPI                    : " << (double) stats.cycles/stats.instructions << std::endl;
+  std::cout << "Total Loads            : " << stats.loads << std::endl;
+  std::cout << "Total Stores           : " << stats.stores << std::endl;
+  std::cout << "Atasco(s) RAW          : " << stats.raw_stalls << std::endl;
+  std::cout << "Atasco(s) WAW          : " << stats.waw_stalls << std::endl;
+  std::cout << "Atasco(s) WAR          : " << stats.war_stalls << std::endl;
+  std::cout << "Atasco(s) Estructural  : " << stats.structural_stalls << std::endl;
+  std::cout << "Atasco(s) Branch Taken : " << stats.branch_taken_stalls << std::endl;
+  std::cout << "Atasco(s) Branch Mispr.: " << stats.branch_misprediction_stalls << std::endl;
+  //std::cout << "Tamanio del Codigo     : " << codeptr << std::endl;
+
+}
+
 int main(int argc, char **argv) {
   int grafico = 0;
   char programa[MAX_PATH + 1];
@@ -103,6 +121,6 @@ int main(int argc, char **argv) {
     ++i;
   }
   x->dump_reg();
-  x->show_stats();
+  show_stats(x->getStats());
   return 0;
 }

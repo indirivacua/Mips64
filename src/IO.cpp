@@ -20,8 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 */
 
-
-#include <iostream>
 #include <stdio.h>
 
 #define __STDC_FORMAT_MACROS
@@ -60,10 +58,6 @@ BOOL IO::setData(WORD64 v) {
 WORD64 IO::getControl() {
   WORD64 control;
   mmio.readWord64(IO_CONTROL, control);
-/*
-  if (control)
-	std::cout << "getControl() = " <<  control << std::endl;
-*/
   return control;
 }
 
@@ -74,6 +68,7 @@ BOOL IO::clearControl() {
 int IO::update(DataMemory *data) {
   WORD32 func = getControl(); 
   int x, y, status = 0;
+  int res;
 
   BYTE az[256];
   if (!func)
@@ -97,10 +92,9 @@ int IO::update(DataMemory *data) {
     terminal.write(txt);
     break;
   case 4:
-    // need to test here if fp.u is a legal address!
-    data->getAsciiz(fp.u, az, 255);
+    res = data->getAsciiz(fp.u, az, 255);
 
-    if (fp.u<data->getSize())
+    if (res)
       terminal.write(std::string((const char *)az));
     break;
 
@@ -134,7 +128,7 @@ int IO::update(DataMemory *data) {
     break;
   }
 
-  clearControl(); //*(WORD32 *)&cpu.mm[0] = 0;
+  clearControl();
   return status;
 }
 
