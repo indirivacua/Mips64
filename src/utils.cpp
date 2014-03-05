@@ -67,65 +67,65 @@ int compare(const char *ptr1, const char *ptr2) {
 
 WORD64 strtoint64(const char *ptr, const char **end, int b) {
   WORD64 n = 0;
-    int ch, s = 0;
-    int base = 10;
+  int ch, s = 0;
+  int base = 10;
 
-    while (*ptr == ' ' || *ptr == 9)
-      ptr++;
-    if (*ptr == '-') {
-      s = 1;
-      ptr++;
-    } else if (*ptr == '+')
-      ptr++;
-    while (*ptr == ' ' || *ptr == 9)
-      ptr++;
+  while (*ptr == ' ' || *ptr == 9)
+    ptr++;
+  if (*ptr == '-') {
+    s = 1;
+    ptr++;
+  } else if (*ptr == '+')
+    ptr++;
+  while (*ptr == ' ' || *ptr == 9)
+    ptr++;
 
-    if (b > 0)
-      base = b;
-    else {
-      if (*ptr == '0') {
+  if (b > 0)
+    base = b;
+  else {
+    if (*ptr == '0') {
+      ptr++;
+      if (*ptr == 'x' || *ptr == 'X') {
+        base = 16;
         ptr++;
-        if (*ptr == 'x' || *ptr == 'X') {
-          base = 16;
-          ptr++;
-        } else
-          base = 8;
-      }
+      } else
+        base = 8;
     }
-    for (;;) {
-      ch=*ptr;
-      if (base == 8) {
-        if (ch < '0' || ch > '7')
-          break;
-        n = n * base + (ch - '0');
-      }
-      if (base == 10) {
-        if (ch < '0' || ch > '9')
-          break;
-        n = n * base + (ch - '0');
-      }
-      if (base == 16) {
-        if ((ch < '0' || ch > '9') &&
-            (ch < 'A' || ch > 'F') &&
-            (ch < 'a' || ch > 'f'))
-          break;
-        if (ch >= '0' && ch <= '9')
-          n = n * base + (ch - '0');
-        if (ch >= 'A' && ch <= 'F')
-          n = n * base + 10 + (ch - 'A');
-        if (ch >= 'a' && ch <= 'f')
-          n = n * base + 10 + (ch - 'a');
-      }
-      ptr++;
+  }
+  for (;;) {
+    ch = *ptr;
+    if (base == 8) {
+      if (ch < '0' || ch > '7')
+        break;
+      n = n * base + (ch - '0');
     }
+    if (base == 10) {
+      if (ch < '0' || ch > '9')
+        break;
+      n = n * base + (ch - '0');
+    }
+    if (base == 16) {
+      if ((ch < '0' || ch > '9') &&
+          (ch < 'A' || ch > 'F') &&
+          (ch < 'a' || ch > 'f'))
+        break;
+      if (ch >= '0' && ch <= '9')
+        n = n * base + (ch - '0');
+      if (ch >= 'A' && ch <= 'F')
+        n = n * base + 10 + (ch - 'A');
+      if (ch >= 'a' && ch <= 'f')
+        n = n * base + 10 + (ch - 'a');
+    }
+    ptr++;
+  }
 
-    if (end != NULL)
-      *end=ptr;
+  if (end != NULL)
+    *end = ptr;
 
-    if (s == 1)
-      return (~n) + 1;
+  if (s == 1)
+    return (~n) + 1;
 
-    return n;
+  return n;
 }
 
 
